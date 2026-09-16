@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hash Growth Radar</title>
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --card: #ffffff;
+    --ink: #1c1c1a;
+    --muted: #6b6b66;
+    --line: #cfcfc9;
+    --line-soft: #e4e4df;
+    --accent: #1f7a5c;
+    --accent-soft: #e6f3ee;
+    --warn-soft: #fdf1e6;
+    --warn: #b45f1a;
+    --blue-soft: #e8f0fb;
+    --blue: #2b5fa8;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    padding: 32px 24px 64px;
+  }
+  main { max-width: 1100px; margin: 0 auto; }
+
+  h1 { font-size: 2rem; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .tagline { color: var(--muted); margin: 0 0 20px; font-size: 1.05rem; }
+  h2 {
+    font-size: 1.15rem; margin: 44px 0 12px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--accent); padding-bottom: 6px; border-bottom: 2px solid var(--accent-soft);
+  }
+  h3 { font-size: 1.05rem; margin: 0 0 12px; }
+  h4 {
+    font-size: 0.8rem; margin: 18px 0 8px; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--muted); display: flex; align-items: center; gap: 8px;
+  }
+  h4 .n {
+    width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: #fff;
+    display: grid; place-items: center; font-size: 0.75rem; letter-spacing: 0;
+  }
+  p { margin: 0 0 12px; }
+  p:last-child { margin-bottom: 0; }
+
+  nav { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  nav a { text-decoration: none; color: var(--accent); background: var(--accent-soft); padding: 5px 12px; border-radius: 999px; font-size: 0.88rem; }
+
+  .card { background: var(--card); border: 1px solid var(--line-soft); border-radius: 12px; padding: 22px 24px; margin-bottom: 12px; }
+
+  .pains { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .pain { background: var(--warn-soft); border-radius: 10px; padding: 14px; }
+  .pain b { display: block; margin-bottom: 4px; color: var(--warn); }
+  .quotes { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-top: 14px; }
+  .quote { background: var(--accent-soft); border-radius: 10px; padding: 12px 14px; font-style: italic; color: #234; }
+
+  ol.steps { padding-left: 0; list-style: none; counter-reset: s; margin: 0; }
+  ol.steps li { counter-increment: s; position: relative; padding-left: 40px; margin-bottom: 10px; }
+  ol.steps li:last-child { margin-bottom: 0; }
+  ol.steps li::before {
+    content: counter(s); position: absolute; left: 0; top: 1px; width: 26px; height: 26px; border-radius: 50%;
+    background: var(--accent); color: #fff; font-weight: 600; display: grid; place-items: center; font-size: 0.8rem;
+  }
+  ol.steps strong { display: block; }
+
+  .setup { background: var(--blue-soft); border-radius: 10px; padding: 14px 16px; }
+  .setup ol.steps li::before { background: var(--blue); }
+  code { background: #fff; border: 1px solid var(--line-soft); border-radius: 5px; padding: 1px 6px; font-size: 0.9em; }
+
+  .tbl { overflow-x: auto; padding: 0; border: none; background: none; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.95rem; background: var(--card); border: 1px solid var(--line); }
+  th, td { text-align: left; padding: 11px 14px; border: 1px solid var(--line); vertical-align: top; }
+  th { background: #f0f0ec; color: var(--ink); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  tbody tr:nth-child(even) td { background: #fafaf8; }
+  td.k, th.k { width: 16%; white-space: nowrap; font-weight: 600; }
+  td.s, th.s { width: 12%; white-space: nowrap; }
+  .yes { color: var(--accent); font-weight: 600; }
+  .no { color: var(--warn); font-weight: 600; }
+
+  ul.plain { padding-left: 20px; margin: 0; }
+  ul.plain li { margin-bottom: 6px; }
+  ul.plain li:last-child { margin-bottom: 0; }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .tag { background: var(--bg); border: 1px solid var(--line-soft); border-radius: 999px; padding: 3px 10px; font-size: 0.85rem; }
+
+  .facts { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-top: 10px; }
+  .fact { background: var(--bg); border-radius: 8px; padding: 10px 12px; font-size: 0.9rem; }
+  .fact b { display: block; color: var(--ink); }
+  .fact span { color: var(--muted); }
+
+  .example { border-left: 3px solid var(--accent); padding: 8px 12px; margin: 12px 0 0; background: var(--bg); border-radius: 0 8px 8px 0; font-size: 0.93rem; }
+  .example i { color: var(--muted); }
+
+  .stage { display: grid; grid-template-columns: 34px 1fr auto; gap: 12px; align-items: start; padding: 12px 0; border-bottom: 1px solid var(--line-soft); }
+  .stage:last-child { border-bottom: none; padding-bottom: 0; }
+  .stage .n { width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 600; display: grid; place-items: center; font-size: 0.85rem; }
+  .stage b { display: block; }
+  .stage .who { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+  .who.ai { background: var(--blue-soft); color: var(--blue); }
+  .who.code { background: #eee; color: #444; }
+  .who.human { background: var(--accent-soft); color: var(--accent); }
+
+  .two { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .phase { border: 1px solid var(--line-soft); border-radius: 10px; padding: 16px 18px; background: var(--bg); }
+  .phase h3 { font-size: 1rem; }
+  .pill { display: inline-block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 8px; border-radius: 999px; margin-left: 6px; vertical-align: middle; }
+  .pill.now { background: var(--accent); color: #fff; }
+  .pill.later { background: #ddd; color: #333; }
+
+  .rules { background: var(--warn-soft); border-color: #f3d9c2; }
+  .rules h2 { color: var(--warn); margin-top: 0; border-color: #f3d9c2; }
+
+  .metrics { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+  .metric { background: var(--card); border: 1px solid var(--line-soft); border-radius: 10px; padding: 14px; }
+  .metric b { display: block; font-size: 1.4rem; color: var(--accent); }
+  .metric span { color: var(--muted); font-size: 0.9rem; }
+
+  .note { color: var(--muted); font-size: 0.92rem; margin-top: 10px; }
+  footer { margin-top: 40px; color: var(--muted); font-size: 0.85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Hash Growth Radar</h1>
+  <p class="tagline">Find the people who need Hash today, and show them to you. You decide whom to approach and what to say.</p>
+
+  <nav>
+    <a href="#pain">Pain points</a>
+    <a href="#what">What we build</a>
+    <a href="#youtube">YouTube</a>
+    <a href="#reddit">Reddit</a>
+    <a href="#summary">Cost &amp; legal summary</a>
+    <a href="#handling">What we do with the data</a>
+    <a href="#decide">Who makes the list</a>
+    <a href="#schedule">Schedule</a>
+    <a href="#rules">Rules</a>
+    <a href="#success">Success</a>
+  </nav>
+
+  <!-- ================= PAIN POINTS ================= -->
+  <h2 id="pain">Pain points</h2>
+  <div class="card">
+    <div class="pains">
+      <div class="pain"><b>Nobody knows Hash exists</b>Hash is the only calorie app that checks food against your medications and conditions. But it has a handful of reviews and no marketing has started.</div>
+      <div class="pain"><b>No budget, small team</b>Ads and influencers are out. Whatever we do must be nearly free and take under 30 minutes a day.</div>
+      <div class="pain"><b>The right people are asking, and we never see it</b>Every day, people with diabetes, PCOS, thyroid, or on blood thinners ask "what can I eat?" in online communities. Those questions are scattered across hundreds of places.</div>
+      <div class="pain"><b>Competitors own "count calories", not "eat safely with medicine"</b>Cal AI, HealthifyMe, MyFitnessPal fight over calorie counting. The medication conversation is wide open and it's exactly Hash's strength.</div>
+    </div>
+    <div class="quotes">
+      <div class="quote">"I just started metformin. What should I eat?"</div>
+      <div class="quote">"Is spinach safe with warfarin?"</div>
+      <div class="quote">"Which calorie app actually understands Indian food?"</div>
+      <div class="quote">"Any calorie app that knows my sugar tablets?"</div>
+    </div>
+  </div>
+
+  <!-- ================= WHAT WE BUILD ================= -->
+  <h2 id="what">What we build</h2>
+  <div class="card">
+    <p>A private dashboard for the Hash team that finds the audience. On a schedule, without anyone clicking, it:</p>
+    <ol class="steps">
+      <li><strong>Collects</strong> new comments from YouTube automatically, and Reddit posts you paste by hand until Reddit approves API access (details per platform below). Other platforms were looked at and dropped: Hacker News (too few of our people), the app stores (no way to contact a reviewer), Product Hunt (needs emailed permission, tiny volume).</li>
+      <li><strong>Understands and ranks</strong> them, keeping only the 10 people who best match Hash.</li>
+      <li><strong>Shows them to you</strong>: where they asked, what they asked, which medicine or condition, how well it fits. Nothing else.</li>
+    </ol>
+    <p>That is the whole job. The tool never writes a reply, never suggests one, and never posts anything. You open the thread and decide, in your own words, whether and how to approach that person.</p>
+    <p class="note">The next two sections explain each platform the same way: what it has, what we can do with it, how we get the data legally, and what the limits and costs are.</p>
+  </div>
+
+  <!-- ================= YOUTUBE ================= -->
+  <h2 id="youtube">YouTube</h2>
+  <div class="card">
+    <h4><span class="n">1</span> What this platform has</h4>
+    <p>Videos about diet for specific conditions, and app review videos, each with hundreds of public comments. Many comments are direct questions to the creator that never get answered: <i>"I'm on metformin, can I follow this?"</i>. Comments stay visible to everyone who watches the video later, for months. Topics we watch, in English and Hinglish:</p>
+    <div class="tags"><span class="tag">diabetes diet</span><span class="tag">PCOS diet plan</span><span class="tag">thyroid diet</span><span class="tag">Indian weight loss diet</span><span class="tag">calorie tracking app review</span><span class="tag">Cal AI review</span><span class="tag">HealthifyMe review</span></div>
+
+    <h4><span class="n">2</span> What we can do with it</h4>
+    <ul class="plain">
+      <li>Search for recent, popular videos on those topics, a few times a day.</li>
+      <li>Read new comments under each video and keep only the questions, especially ones mentioning a medicine, a condition, or an app.</li>
+      <li>Open the comment from the tool and answer it yourself, from your own YouTube account.</li>
+    </ul>
+    <div class="example">
+      <b>Example.</b> Comment under a PCOS diet video: <i>"I'm on metformin and letrozole, can I follow this diet? Any app that tracks this?"</i><br>
+      Tagged as: medication + food question, condition = PCOS, app request = yes, fit score 95.
+    </div>
+
+    <h4><span class="n">3</span> How we get the data, legally</h4>
+    <div class="setup">
+      <p>Google gives every developer an official free door called the YouTube Data API. Setting it up takes ten minutes, once.</p>
+      <ol class="steps">
+        <li><strong>Log in</strong> with any Google account and open <code>console.cloud.google.com</code>.</li>
+        <li><strong>Create a project</strong> (top bar, "New project"), name it Hash Growth Radar.</li>
+        <li><strong>Enable the API:</strong> menu → "APIs &amp; Services" → "Library" → search "YouTube Data API v3" → Enable.</li>
+        <li><strong>Create a key:</strong> "APIs &amp; Services" → "Credentials" → "Create credentials" → "API key". Copy it.</li>
+        <li><strong>Put the key into the tool's environment variables.</strong> Reading videos and comments now works.</li>
+      </ol>
+    </div>
+
+    <h4><span class="n">4</span> Limits and cost</h4>
+    <div class="facts">
+      <div class="fact"><b>Free</b><span>no card needed</span></div>
+      <div class="fact"><b>100 searches / day</b><span>free allowance for topic searches</span></div>
+      <div class="fact"><b>10,000 units / day</b><span>free allowance for everything else</span></div>
+      <div class="fact"><b>Every 2 hours</b><span>how often we check</span></div>
+    </div>
+    <div class="tbl" style="margin-top:12px">
+      <table>
+        <thead><tr><th>Action</th><th class="s">Cost in units</th><th>Our daily use</th></tr></thead>
+        <tbody>
+          <tr><td>Search for videos on a topic</td><td class="s">1 of the 100 daily searches</td><td>4 per run, 12 runs a day = 48, out of 100 allowed. Topics rotate so all 9 come up daily</td></tr>
+          <tr><td>Read a page of comments under a video</td><td class="s">1 unit</td><td>200 videos = about 300 units, out of 10,000</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Verified 16 Sep 2026 on Google's quota page: topic searches have their own allowance of 100 calls a day, separate from the 10,000 units for everything else. Both reset daily at midnight Pacific time (12:30 PM or 1:30 PM in India depending on the season). We use about a fifth of the search allowance and a few percent of the units. One rule to respect: data pulled from YouTube must not be kept longer than 30 days. Our "last 7 days only" rule already covers it.</p>
+  </div>
+
+  <!-- ================= REDDIT ================= -->
+  <h2 id="reddit">Reddit</h2>
+  <div class="card">
+    <h4><span class="n">1</span> What this platform has</h4>
+    <p>Reddit is made of thousands of groups called subreddits, each starting with "r/". Every subreddit is a community around one topic, created years ago by ordinary users, with thousands to hundreds of thousands of members. People post questions and other members answer. Everything is public. These already exist; we create nothing.</p>
+    <ul class="plain">
+      <li><strong>Condition communities</strong>, where people ask what to eat with their medicine or diagnosis.
+        <div class="tags"><span class="tag">r/diabetes</span><span class="tag">r/type2diabetes</span><span class="tag">r/prediabetes</span><span class="tag">r/PCOS</span><span class="tag">r/Hypothyroidism</span><span class="tag">r/hypertension</span><span class="tag">r/ClotSurvivors</span><span class="tag">r/Cholesterol</span></div>
+      </li>
+      <li><strong>Diet communities</strong>, where people compare tracking apps.
+        <div class="tags"><span class="tag">r/loseit</span><span class="tag">r/nutrition</span><span class="tag">r/1200isplenty</span><span class="tag">r/intermittentfasting</span></div>
+      </li>
+      <li><strong>Indian communities</strong>, where Indian food tracking comes up.
+        <div class="tags"><span class="tag">r/IndianFitness</span><span class="tag">r/india</span><span class="tag">r/IndianFood</span></div>
+      </li>
+    </ul>
+
+    <h4><span class="n">2</span> What we can do with it</h4>
+    <ul class="plain">
+      <li>Read the newest posts in each community we watch, every 2 hours.</li>
+      <li>Search all of Reddit for phrases like <i>metformin diet</i>, <i>warfarin vitamin K</i>, <i>levothyroxine food</i>, <i>best calorie tracker</i>, <i>calorie app Indian food</i>.</li>
+      <li>Read the comments under a matched post, since the real question is often buried there.</li>
+      <li>Open the thread from the tool and approach the person yourself, from your own account, in your own words.</li>
+    </ul>
+    <div class="example">
+      <b>Example.</b> Post in r/type2diabetes: <i>"Doctor put me on metformin last week. Is it fine to keep eating rice and roti?"</i><br>
+      Tagged as: medication + food question, condition = type 2 diabetes, medicine = metformin, fit score 92.
+    </div>
+
+    <h4><span class="n">3</span> How we get the data, legally</h4>
+    <div class="setup">
+      <p><strong>Read directly from Reddit's Responsible Builder Policy on 16 Sep 2026 (page says "updated 3 months ago").</strong> Its first rule, quoted: "Approval is required: You must request access and get explicit approval before accessing any Reddit data through our API." For commercial use it says: "you'll need to get explicit written approval. You can contact us here and our team will be in touch if your proposal fits our criteria." Both routes go through the same support request form. Non-commercial developers are pointed to Reddit's own app platform, Devvit, first, and told to file a ticket only if Devvit doesn't fit. Reported approval wait from developers: 2 to 4 weeks, sometimes no reply. Tools that read Reddit pages without approval break these terms and can get the account banned, so we do not do that.</p>
+      <p style="margin-top:12px"><strong>One rule changes how we build, on every platform.</strong> The policy says: "You are strictly prohibited from processing data to derive or infer potentially sensitive characteristics about Reddit users (e.g., health...)". So the tool must never build a picture of a <em>person</em>. It tags the <em>question</em> ("this post asks about food with metformin"), never the poster ("this user has diabetes"). It does not store usernames, does not link posts by the same author, and deletes every item after 7 days. The daily list shows the post and its tags, nothing about who wrote it. This is also simply the right way to treat health questions from strangers.</p>
+      <p style="margin-top:12px"><strong>So we run Reddit in two phases.</strong></p>
+      <ol class="steps">
+        <li><strong>Phase 1, by hand, from day one.</strong> Once or twice a day, open the communities above and Reddit's own search for the phrases below, in your browser. Paste the link of any promising post into the tool. The tool then does everything else: tagging and ranking. About 10 minutes a day. Nothing to register, nothing to wait for.</li>
+        <li><strong>Step A: register the app (instant, gives codes, gives NO data).</strong> At <code>reddit.com/prefs/apps</code>, logged in, click "create another app", type "script", any name, redirect URL <code>http://localhost:8080</code>. Reddit shows two codes on the spot. <em>These codes do not return any data yet.</em> Since June 2026 they only start working after Step B is approved.</li>
+        <li><strong>Step B: ask for permission (instant to send, weeks to hear back).</strong> Open the request form at <code>support.reddithelp.com/hc/en-us/requests/new</code>, pick the data access or developer category, and describe the tool honestly: an internal tool that helps one founder find public posts to answer by hand, a few dozen requests per hour, tags topics not people, stores nothing about users, no data resale, no AI training, no automated posting. Then wait for Reddit's email. Developers report 2 to 4 weeks, sometimes no reply.</li>
+        <li><strong>Phase 2, automatic, only after a yes.</strong> Put the two codes into the tool's settings and tick "Reddit API enabled". From then on it reads Reddit on its own. If Reddit says no, or never replies, Phase 1 continues; it works, it is just more manual.</li>
+      </ol>
+      <p class="note" style="margin-top:12px"><strong>Honest caveat.</strong> Reddit's free access is for non-commercial use. Hash is a company, and Reddit may decide this counts as commercial, which needs written approval and, by developer reports, a paid agreement far beyond us. Our request is small and honest, but approval is not guaranteed. Phase 1 needs no approval at all, because a person reading public Reddit posts in a browser and replying is just a normal user. The policy also bans "posting identical or substantially similar content across subreddits", which is one more reason the tool gives you no text to copy.</p>
+    </div>
+
+    <h4><span class="n">4</span> Limits and cost</h4>
+    <div class="facts">
+      <div class="fact"><b>Free</b><span>if approved as non-commercial</span></div>
+      <div class="fact"><b>100 requests / minute</b><span>the approved free allowance</span></div>
+      <div class="fact"><b>Under 1 / minute</b><span>what we would use</span></div>
+      <div class="fact"><b>2 to 4 weeks</b><span>reported approval wait</span></div>
+    </div>
+    <p class="note">One request is one page of results, roughly 25 to 100 posts. Checking 15 communities and 9 search phrases every 2 hours is about 25 requests per 2 hours, under 1 percent of the allowance. Phase 1 (by hand) has no limit and no cost.</p>
+  </div>
+
+  <!-- ================= SUMMARY ================= -->
+  <h2 id="summary">Cost and legal summary</h2>
+  <div class="card tbl">
+    <table>
+      <thead><tr><th class="k">Platform</th><th class="s">Cost</th><th class="s">Legal?</th><th class="s">Setup time</th><th>Free limit vs our use</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Reddit</td><td class="s yes">Free</td><td class="s no">Approval needed</td><td class="s">2 to 4 weeks</td><td>By hand from day one. Apply for access; if approved, 100 requests/min free and the tool takes over. Business use may be refused</td></tr>
+        <tr><td class="k">YouTube</td><td class="s yes">Free</td><td class="s yes">Yes</td><td class="s">10 min</td><td>100 searches/day plus 10,000 units/day. We use 48 searches and a few hundred units</td></tr>
+      </tbody>
+    </table>
+    <p class="note"><strong>In short:</strong> fully automatic from day one on YouTube. Reddit is by hand until Reddit approves access, then automatic. Everything after collection (tagging, ranking) is automatic on both.</p>
+    <p class="note"><strong>Checked on 16 Sep 2026 against:</strong> Google's YouTube quota page and Reddit's Responsible Builder Policy, read directly on support.reddithelp.com in the founder's browser.</p>
+    <p class="note"><strong>Looked at and dropped (16 Sep 2026):</strong> Hacker News (free and legal, but too few of Hash's people), App Store and Play Store (no free legal way to read other apps' reviews, and no way to contact a reviewer), Product Hunt (API is non-commercial by default, tiny volume). <strong>Not searched:</strong> X / Twitter (charges for access), Quora (blocks tools), Facebook and WhatsApp groups (closed, not searchable), Instagram (comments not searchable by topic).</p>
+  </div>
+
+  <!-- ================= HANDLING ================= -->
+  <h2 id="handling">What we do with the data, and where AI is needed</h2>
+  <div class="card">
+    <p>Every run collects a few hundred items. Most are useless. Here is what happens to them, in order, and who does each step: plain code, AI, or you. AI is used only where reading and understanding language is required. Everything else is ordinary code, which is faster, free, and never makes things up.</p>
+
+    <div class="stage"><div class="n">1</div><div><b>Store the raw item</b>Text, link, community, time. No username. Saved as-is so nothing is lost.</div><span class="who code">Code</span></div>
+    <div class="stage"><div class="n">2</div><div><b>Remove duplicates and old items</b>Same post seen twice, or anything older than 7 days, is dropped.</div><span class="who code">Code</span></div>
+    <div class="stage"><div class="n">3</div><div><b>Quick keyword filter</b>Must contain at least one relevant word (a medicine, a condition, "calorie", "app", "diet", "track"). Must not be obvious noise (memes, giveaways, job posts). Cuts about 80 percent before any AI runs, which keeps AI cost tiny.</div><span class="who code">Code</span></div>
+    <div class="stage"><div class="n">4</div><div><b>Understand and tag</b>The AI reads each remaining item and answers fixed questions: What is the person asking (app recommendation, nutrition question, medicine and food question, competitor complaint, or irrelevant)? Which condition? Which medicine? Which competitor, if any? How well does this match Hash, 0 to 100? Is this someone we should not approach at all (dosage, emergency, diagnosis)? This is where AI is genuinely needed, because "Is roti okay with my sugar tablets?" has none of the obvious keywords but is a perfect match. A small, free AI model does this.</div><span class="who ai">AI</span></div>
+    <div class="stage"><div class="n">5</div><div><b>Rank and keep the top 10</b>Sort by match score and freshness. Only the top 10 are shown on the Today page; each platform page shows its own list.</div><span class="who code">Code</span></div>
+    <div class="stage"><div class="n">6</div><div><b>You look and decide</b>Each card shows the platform, the community, the post, the tags, and an "Open thread" button. You read it, open it, and approach the person however you see fit. Then you press "Approached" or "Skip" so the card leaves the list. What you said is never stored.</div><span class="who human">You</span></div>
+    <div class="stage"><div class="n">7</div><div><b>Delete after 7 days</b>Every item, tagged or not, is deleted a week after collection.</div><span class="who code">Code</span></div>
+
+    <h4 style="margin-top:22px">So, do we need AI?</h4>
+    <p>Yes, for exactly one job: understanding what a post means (step 4). Everything else is ordinary code. On Google's free Gemini tier this costs nothing.</p>
+  </div>
+
+  <!-- ================= DECIDE ================= -->
+  <h2 id="decide">Who makes the list</h2>
+  <div class="card">
+    <p>Not every post that matches is worth your time. After tagging (step 4 above), the tool sorts each item into one of the buckets below. Only the first four buckets reach the list, ranked in that order.</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th class="k">The person is...</th><th class="s">On the list?</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td class="k">Asking about food with a medicine or condition</td><td class="s yes">Yes, top priority</td><td>This is exactly the question Hash answers. Nobody else is serving these people.</td></tr>
+          <tr><td class="k">Asking for an app recommendation</td><td class="s yes">Yes</td><td>They are choosing an app right now.</td></tr>
+          <tr><td class="k">Complaining about a competitor app</td><td class="s yes">Yes</td><td>They already track food and are unhappy with what they have.</td></tr>
+          <tr><td class="k">Asking a general nutrition question, no medicine</td><td class="s yes">Sometimes</td><td>Only when the match score is high. Lower priority.</td></tr>
+          <tr><td class="k">Asking for a dosage, a diagnosis, or in an emergency</td><td class="s no">Never</td><td>Marked "not suitable". Only a doctor should be talking to them.</td></tr>
+          <tr><td class="k">Discussing eating disorders or mental health</td><td class="s no">Never</td><td>Too sensitive for a product to enter.</td></tr>
+          <tr><td class="k">Everything else</td><td class="s no">Dropped</td><td>Off-topic, older than 7 days, or a rant with no question.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h4>What a card shows</h4>
+    <p>Platform, community (for example r/type2diabetes or the YouTube channel), when it was posted, the post text, the video title if it is a YouTube comment, the tags (what is asked, medicine, condition, competitor, language, urgency), a one-line summary of the question, a fit score, and the link. No username, no suggested reply.</p>
+  </div>
+
+  <!-- ================= SCHEDULE ================= -->
+  <h2 id="schedule">Schedule: it runs by itself</h2>
+  <div class="card">
+    <p>Once the app is deployed, the database's own scheduler (Supabase Cron) wakes it up. No button pressing, no third service. Three jobs:</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th class="k">Job</th><th class="s">When</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td class="k">Collect</td><td class="s">Every 2 hours</td><td>Runs the automatic collectors (YouTube now, Reddit once approved), filters, tags, ranks.</td></tr>
+          <tr><td class="k">Finish tagging</td><td class="s">Every hour at :30</td><td>Tags anything that was left waiting because the free AI limit was hit.</td></tr>
+          <tr><td class="k">Clean up</td><td class="s">Daily, 08:30 IST</td><td>Deletes items older than 7 days.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Checked against Supabase's documentation on 16 Sep 2026: schedules from every second to once a year, at most 8 jobs at once, each under 10 minutes. Ours are three short jobs. The schedule is one SQL file (<code>supabase/migrations/0002_cron.sql</code>) and can be changed with one line. Until the app is deployed, the "Run now" buttons on each platform page do the same work by hand.</p>
+  </div>
+
+  <!-- ================= RULES ================= -->
+  <div class="card rules" id="rules">
+    <h2>Rules we never break</h2>
+    <ul class="plain">
+      <li>The tool finds people. It never writes, suggests, or posts a reply. What you say is yours, and it is never stored.</li>
+      <li>We always use each platform's official door. We never scrape pages.</li>
+      <li>We tag the question, never the person. No usernames stored, no profiles built, everything deleted after 7 days.</li>
+      <li>People asking for a dosage, a diagnosis, or in an emergency are never put on the list.</li>
+    </ul>
+  </div>
+
+  <!-- ================= SUCCESS ================= -->
+  <h2 id="success">Success after 30 days</h2>
+  <div class="metrics">
+    <div class="metric"><b>7 / 10</b><span>daily cards that are really worth approaching</span></div>
+    <div class="metric"><b>&lt; 10 min</b><span>per day to go through the list</span></div>
+    <div class="metric"><b>0</b><span>cards showing a username or a suggested reply</span></div>
+    <div class="metric"><b>0</b><span>manual runs needed once deployed</span></div>
+  </div>
+
+  <footer>Internal document for the Hash Health team.</footer>
+</main>
+</body>
+</html>
