@@ -73,7 +73,7 @@ Locally there is no schedule; the "Run now" buttons do the same work by hand. Su
 1. Push to GitHub and import the repo in Vercel (any Node host works; the app is plain Next.js).
 2. Add every variable from `.env.local` under Project → Settings → Environment Variables (Production). Deploy.
 3. In Supabase → Integrations, enable **Cron** and **pg_net** (or just run the SQL, it enables both).
-4. Open `supabase/migrations/0002_cron.sql`, replace `<APP_URL>` with your deployed URL and `<CRON_SECRET>` with the same value you set in step 2, paste it into the SQL Editor and run it. Safe to run again later with a new URL or secret.
+4. Open `supabase/migrations/0002_cron.sql` (the app URL is already filled in), replace `<CRON_SECRET>` with the same value you set in step 2, paste it into the SQL Editor and run it. Safe to run again later with a new URL or secret. Keep the filled-in copy out of git: any file named `*.local.sql` is ignored.
 
 That registers three jobs inside your database. Checked against supabase.com/docs/guides/cron on 16 Sep 2026: any schedule from every second to once a year, at most 8 jobs at once, each under 10 minutes.
 

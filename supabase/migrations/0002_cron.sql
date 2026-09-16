@@ -1,8 +1,9 @@
 -- Supabase Cron: the database itself wakes the deployed app on a schedule.
 -- Nothing else (no Vercel cron, no external scheduler) is needed.
 --
--- BEFORE RUNNING, replace the two placeholders below:
---   <APP_URL>      your deployed app, e.g. https://hash-growth-radar.vercel.app  (no trailing slash)
+-- BEFORE RUNNING, replace the placeholder below (or paste the git-ignored
+-- 0002_cron.local.sql, which has it filled in):
+--   https://hash-growth-radar.vercel.app      your deployed app, e.g. https://hash-growth-radar.vercel.app  (no trailing slash)
 --   <CRON_SECRET>  the same value as CRON_SECRET in the app's environment variables
 --
 -- Then paste into Supabase → SQL Editor → Run. Needs a deployed app: the
@@ -30,9 +31,9 @@ declare
 begin
   select id into v_url from vault.secrets where name = 'radar_app_url';
   if v_url is null then
-    perform vault.create_secret('<APP_URL>', 'radar_app_url');
+    perform vault.create_secret('https://hash-growth-radar.vercel.app', 'radar_app_url');
   else
-    perform vault.update_secret(v_url, '<APP_URL>');
+    perform vault.update_secret(v_url, 'https://hash-growth-radar.vercel.app');
   end if;
 
   select id into v_secret from vault.secrets where name = 'radar_cron_secret';
