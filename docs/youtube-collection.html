@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hash Growth Radar · How YouTube collection works</title>
+<style>
+  :root {
+    --bg: #f7f7f5; --card: #ffffff; --ink: #1c1c1a; --muted: #6b6b66;
+    --line: #cfcfc9; --line-soft: #e4e4df;
+    --accent: #1f7a5c; --accent-soft: #e6f3ee;
+    --warn-soft: #fdf1e6; --warn: #b45f1a;
+    --blue-soft: #e8f0fb; --blue: #2b5fa8;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; padding: 32px 24px 64px; }
+  main { max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 2rem; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .tagline { color: var(--muted); margin: 0 0 20px; font-size: 1.05rem; }
+  h2 { font-size: 1.15rem; margin: 44px 0 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); padding-bottom: 6px; border-bottom: 2px solid var(--accent-soft); }
+  h4 { font-size: 0.8rem; margin: 18px 0 8px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+  p { margin: 0 0 12px; } p:last-child { margin-bottom: 0; }
+  nav { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  nav a { text-decoration: none; color: var(--accent); background: var(--accent-soft); padding: 5px 12px; border-radius: 999px; font-size: 0.88rem; }
+  .card { background: var(--card); border: 1px solid var(--line-soft); border-radius: 12px; padding: 22px 24px; margin-bottom: 12px; }
+  code { background: #fff; border: 1px solid var(--line-soft); border-radius: 5px; padding: 1px 6px; font-size: 0.9em; }
+  pre { background: #1c1c1a; color: #eaeae5; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.85rem; line-height: 1.5; margin: 10px 0 0; }
+  pre code { background: none; border: none; padding: 0; color: inherit; font-size: inherit; }
+  .tbl { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.95rem; background: var(--card); border: 1px solid var(--line); }
+  th, td { text-align: left; padding: 10px 14px; border: 1px solid var(--line); vertical-align: top; }
+  th { background: #f0f0ec; font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  tbody tr:nth-child(even) td { background: #fafaf8; }
+  td.k, th.k { width: 18%; font-weight: 600; }
+  td.s, th.s { width: 12%; white-space: nowrap; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .yes { color: var(--accent); font-weight: 600; }
+  .no { color: var(--warn); font-weight: 600; }
+  ul.plain { padding-left: 20px; margin: 0; } ul.plain li { margin-bottom: 6px; } ul.plain li:last-child { margin-bottom: 0; }
+  ol.steps { padding-left: 0; list-style: none; counter-reset: s; margin: 0; }
+  ol.steps li { counter-increment: s; position: relative; padding-left: 40px; margin-bottom: 10px; }
+  ol.steps li:last-child { margin-bottom: 0; }
+  ol.steps li::before { content: counter(s); position: absolute; left: 0; top: 1px; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 600; display: grid; place-items: center; font-size: 0.8rem; }
+  ol.steps strong { display: block; }
+  .facts { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); margin-top: 10px; }
+  .fact { background: var(--bg); border-radius: 8px; padding: 10px 12px; font-size: 0.9rem; }
+  .fact b { display: block; color: var(--ink); font-size: 1.1rem; }
+  .fact span { color: var(--muted); }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .tag { background: var(--bg); border: 1px solid var(--line-soft); border-radius: 999px; padding: 3px 10px; font-size: 0.85rem; }
+  .callout { background: var(--warn-soft); border-radius: 10px; padding: 14px 16px; }
+  .callout b { color: var(--warn); }
+  .good { background: var(--accent-soft); border-radius: 10px; padding: 14px 16px; }
+  .note { color: var(--muted); font-size: 0.92rem; margin-top: 10px; }
+  footer { margin-top: 40px; color: var(--muted); font-size: 0.85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>How YouTube collection works</h1>
+  <p class="tagline">What Google gives for free, what each run spends, what the timer does, which words it searches, and why fetching the same things again is fine.</p>
+
+  <nav>
+    <a href="#free">What is free</a>
+    <a href="#spend">What we spend</a>
+    <a href="#cron">What the timer does</a>
+    <a href="#endpoints">The two endpoints</a>
+    <a href="#keywords">The keywords</a>
+    <a href="#rotation">Same keywords every time?</a>
+    <a href="#repeat">Already-fetched data</a>
+    <a href="#time">Is it time-based?</a>
+    <a href="#change">Changing it</a>
+  </nav>
+
+  <!-- ================= FREE ================= -->
+  <h2 id="free">What Google gives for free</h2>
+  <div class="card">
+    <p>The <strong>YouTube Data API v3</strong> is Google's official, read-only door to public YouTube data. Any Google account can create an API key for it in the Google Cloud console. No card, no billing account, no approval. Verified on Google's quota page on 16 Sep 2026.</p>
+    <div class="facts">
+      <div class="fact"><b>10,000 units</b><span>per day, for everything except topic searches</span></div>
+      <div class="fact"><b>100 searches</b><span>per day, a separate allowance just for topic searches</span></div>
+      <div class="fact"><b>Resets daily</b><span>at midnight Pacific time (12:30 or 13:30 in India)</span></div>
+      <div class="fact"><b>₹0</b><span>and it stays ₹0: if the allowance runs out, requests are refused, never billed</span></div>
+    </div>
+    <h4>What one call costs</h4>
+    <div class="tbl">
+      <table>
+        <thead><tr><th class="k">Call</th><th>What it gives</th><th class="s">Cost</th></tr></thead>
+        <tbody>
+          <tr><td class="k">search.list</td><td>Up to 50 videos matching a phrase</td><td class="s">1 of the 100 daily searches</td></tr>
+          <tr><td class="k">commentThreads.list</td><td>Up to 100 top-level comments under one video</td><td class="s">1 unit of the 10,000</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Those are the only two calls the tool makes. It never posts, never reads a channel's subscribers, never reads who wrote a comment.</p>
+  </div>
+
+  <!-- ================= SPEND ================= -->
+  <h2 id="spend">What we spend, with the default settings</h2>
+  <div class="card">
+    <div class="tbl">
+      <table>
+        <thead><tr><th class="k">Setting</th><th class="s">Value</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td class="k">Topics per run</td><td class="s num">4</td><td>4 <code>search.list</code> calls per run</td></tr>
+          <tr><td class="k">Videos per topic</td><td class="s num">5</td><td>Up to 20 videos per run, so up to 20 <code>commentThreads.list</code> calls</td></tr>
+          <tr><td class="k">Comments per video</td><td class="s num">50</td><td>Up to 1,000 comments read per run (still 1 unit per video, the count does not change the cost)</td></tr>
+          <tr><td class="k">Runs per day</td><td class="s num">12</td><td>Every 2 hours</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h4 style="margin-top:18px">Per day</h4>
+    <div class="tbl">
+      <table>
+        <thead><tr><th class="k">Allowance</th><th class="s">We use</th><th class="s">Of</th><th class="s">Share</th><th>Headroom</th></tr></thead>
+        <tbody>
+          <tr><td class="k">Topic searches</td><td class="s num">48</td><td class="s num">100</td><td class="s num">48%</td><td>Room for up to 8 topics per run before the day's limit is reached</td></tr>
+          <tr><td class="k">Units</td><td class="s num">≤ 240</td><td class="s num">10,000</td><td class="s num">2.4%</td><td>Could read 40 times more videos and still fit</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">The search allowance is the tight one, which is why the tool spreads searches across the day instead of searching every topic every run. If a run ever exceeds it, YouTube answers "quotaExceeded", the run is recorded with that error, and the next run after midnight Pacific works again. Nothing else breaks.</p>
+  </div>
+
+  <!-- ================= CRON ================= -->
+  <h2 id="cron">What the timer does</h2>
+  <div class="card">
+    <p>A timer called <code>radar_collect</code> lives inside the Supabase database. Every 2 hours (05:30, 07:30, 09:30 ... India time) it does one thing: sends one web request to the app.</p>
+    <pre><code>GET https://hash-growth-radar.vercel.app/api/cron/collect
+Authorization: Bearer &lt;CRON_SECRET&gt;</code></pre>
+    <ol class="steps" style="margin-top:14px">
+      <li><strong>The app checks the secret</strong> and replies within a second: <code>202 {"ok":true,"started":true}</code>. Anything without the right secret gets <code>401</code> and nothing runs.</li>
+      <li><strong>The app keeps working after replying</strong>, for up to 5 minutes. It opens a run record, reads the settings, picks this run's 4 topics, calls YouTube, filters, stores, tags, and closes the run record with the counts you see on the YouTube page.</li>
+      <li><strong>The timer does not wait</strong> for any of that. It has already moved on. Its own log (<code>cron.job_run_details</code>) only says "request sent, got 202".</li>
+    </ol>
+    <p class="note">Two other timers exist: <code>radar_process</code> every hour at :00 India time, which finishes any tagging that was left waiting because the free AI limit was hit, and <code>radar_cleanup</code> daily at 08:30, which deletes everything older than 7 days. Neither touches YouTube.</p>
+  </div>
+
+  <!-- ================= ENDPOINTS ================= -->
+  <h2 id="endpoints">The two endpoints, exactly</h2>
+  <div class="card">
+    <p>YouTube has no "search comments by topic" call. So the app does it in two hops: find videos on the topic, then read the comments under each video.</p>
+
+    <h4>Hop 1 · find videos on a topic · <code>search.list</code></h4>
+    <pre><code>GET https://www.googleapis.com/youtube/v3/search
+    ?part=snippet
+    &amp;q=PCOS diet plan                      ← this run's topic
+    &amp;type=video                            ← videos only, no channels or playlists
+    &amp;order=relevance                       ← YouTube's own ranking, i.e. the popular, well-matched ones
+    &amp;publishedAfter=2026-06-18T00:00:00Z   ← 90 days before today
+    &amp;maxResults=5                          ← "videos per topic"
+    &amp;relevanceLanguage=en
+    &amp;key=…</code></pre>
+    <p class="note">Kept from the answer: video id, video title, channel name. The channel becomes the "community" on the card (for example <code>YouTube · Sonia Narang</code>).</p>
+
+    <h4>Hop 2 · read the newest comments · <code>commentThreads.list</code>, once per video</h4>
+    <pre><code>GET https://www.googleapis.com/youtube/v3/commentThreads
+    ?part=snippet
+    &amp;videoId=…                             ← one of the videos from hop 1
+    &amp;order=time                            ← newest first
+    &amp;textFormat=plainText
+    &amp;maxResults=50                         ← "comments per video"
+    &amp;key=…</code></pre>
+    <p class="note">Kept from the answer: comment id, comment text, when it was posted, like count. Google also sends the commenter's display name in that answer; the app does not read it and there is no column to store it.</p>
+  </div>
+
+  <!-- ================= KEYWORDS ================= -->
+  <h2 id="keywords">The keywords it searches</h2>
+  <div class="card">
+    <p>Nine topics, set in the code and editable on the Settings page. They are the <code>q=</code> of hop 1. YouTube searches video titles, descriptions and tags for them.</p>
+    <div class="tags">
+      <span class="tag">diabetes diet</span><span class="tag">type 2 diabetes what to eat</span><span class="tag">PCOS diet plan</span><span class="tag">thyroid diet</span><span class="tag">hypothyroidism diet</span><span class="tag">Indian weight loss diet</span><span class="tag">calorie tracking app review</span><span class="tag">Cal AI review</span><span class="tag">HealthifyMe review</span>
+    </div>
+    <p style="margin-top:12px">Six are condition diets, where comments like <i>"I'm on metformin, can I follow this?"</i> appear. Three are app reviews, where comments like <i>"does it know Indian food?"</i> appear. These topics find the <em>videos</em>; a second, separate keyword list (medicines, conditions, app words) is then applied to each <em>comment</em> before the AI sees it.</p>
+  </div>
+
+  <!-- ================= ROTATION ================= -->
+  <h2 id="rotation">Does it search the same keywords every time?</h2>
+  <div class="card">
+    <p><strong>No, not in one run. Yes, over a day.</strong> Each run searches 4 of the 9 topics, and each run continues from where the previous one stopped. The pattern for one day looks like this:</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th class="s">Run</th><th>Topics searched</th></tr></thead>
+        <tbody>
+          <tr><td class="s num">1</td><td>diabetes diet · type 2 diabetes what to eat · PCOS diet plan · thyroid diet</td></tr>
+          <tr><td class="s num">2</td><td>hypothyroidism diet · Indian weight loss diet · calorie tracking app review · Cal AI review</td></tr>
+          <tr><td class="s num">3</td><td>HealthifyMe review · diabetes diet · type 2 diabetes what to eat · PCOS diet plan</td></tr>
+          <tr><td class="s num">4</td><td>thyroid diet · hypothyroidism diet · Indian weight loss diet · calorie tracking app review</td></tr>
+          <tr><td class="s num">5</td><td>Cal AI review · HealthifyMe review · diabetes diet · type 2 diabetes what to eat</td></tr>
+          <tr><td class="s num">6</td><td>PCOS diet plan · thyroid diet · hypothyroidism diet · Indian weight loss diet</td></tr>
+          <tr><td class="s num">7</td><td>calorie tracking app review · Cal AI review · HealthifyMe review · diabetes diet</td></tr>
+          <tr><td class="s num">8</td><td>type 2 diabetes what to eat · PCOS diet plan · thyroid diet · hypothyroidism diet</td></tr>
+          <tr><td class="s num">9</td><td>Indian weight loss diet · calorie tracking app review · Cal AI review · HealthifyMe review</td></tr>
+          <tr><td class="s num">10</td><td>diabetes diet · type 2 diabetes what to eat · PCOS diet plan · thyroid diet</td></tr>
+          <tr><td class="s num">11</td><td>hypothyroidism diet · Indian weight loss diet · calorie tracking app review · Cal AI review</td></tr>
+          <tr><td class="s num">12</td><td>HealthifyMe review · diabetes diet · type 2 diabetes what to eat · PCOS diet plan</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Result: every topic is searched 5 or 6 times a day, roughly every 4 hours, for 48 searches in total. The starting point is derived from the clock (the number of 2-hour windows since 1970), so it needs no memory and keeps moving even if a run is missed. Which run is "run 1" on a given day shifts slightly, but the pattern is always this one.</p>
+  </div>
+
+  <!-- ================= REPEAT ================= -->
+  <h2 id="repeat">Does it fetch already-fetched data?</h2>
+  <div class="card">
+    <div class="callout">
+      <p><b>Yes, most of what a run fetches was already fetched before. That is expected and costs almost nothing.</b> Two runs of "PCOS diet plan" four hours apart will return mostly the same 5 popular videos, and most of their 50 newest comments were already seen. What changes is the few comments posted in between, and those are exactly what we want.</p>
+    </div>
+    <p style="margin-top:12px">The repeats are removed after fetching, in three layers:</p>
+    <ol class="steps">
+      <li><strong>Older than 7 days.</strong> Any comment posted more than a week ago is dropped before storing. This is also the privacy rule: nothing older than a week exists in the database.</li>
+      <li><strong>Same comment id.</strong> Every YouTube comment has a permanent id. The <code>items</code> table refuses a second row with the same id, so a comment seen two hours ago is silently ignored now. Nothing is counted, filtered, or tagged twice.</li>
+      <li><strong>Same video, different run.</strong> Not a problem: reading a video's comments again costs 1 unit, and the new comments come first because of "newest first".</li>
+    </ol>
+    <div class="good" style="margin-top:12px">
+      <p><strong>Where you can see it.</strong> On the YouTube page every run shows "fetched" and "new". The first run today showed fetched 117, new 117. A later run of the same topics will typically show fetched around 100, new under 10. The AI is called only for the "new" ones that also pass the keyword filter.</p>
+    </div>
+  </div>
+
+  <!-- ================= TIME ================= -->
+  <h2 id="time">Is the search time-based?</h2>
+  <div class="card">
+    <p>Partly, and on purpose in two different ways:</p>
+    <ul class="plain">
+      <li><strong>Videos: last 90 days, ranked by relevance.</strong> Not "videos from the last 2 hours". A diet video keeps collecting question comments for weeks after it is published, and those comments are the audience. A brand-new video shows up once YouTube ranks it among the top 5 for the topic.</li>
+      <li><strong>Comments: newest first, last 7 days kept.</strong> Each run reads the 50 most recent comments under each video, so the comments that arrived since the last run are always inside that window on any normal video.</li>
+      <li><strong>Not used: a "since last run" cursor.</strong> The comment endpoint has no "only comments after time X" filter. Newest-first plus the id check does the same job with no state to keep.</li>
+    </ul>
+    <p class="note">Edge case: a viral video with more than 50 new comments in 2 hours would have some comments slip past the window. Raising "comments per video" to 100 covers it at no extra cost; the cap of 50 is a default, not a limit.</p>
+  </div>
+
+  <!-- ================= CHANGE ================= -->
+  <h2 id="change">Changing it, and what it costs</h2>
+  <div class="card">
+    <p>Everything above is driven by four fields on the Settings page plus the cron schedule. The one rule to keep in mind: <strong>topics per run × runs per day must stay under 100.</strong></p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th class="k">Change</th><th>Effect</th><th>Cost</th></tr></thead>
+        <tbody>
+          <tr><td class="k">Add topics (for example Hindi ones: <i>sugar patient diet</i>, <i>PCOS diet in Hindi</i>)</td><td>More videos, more comments, wider reach. Each topic still comes up several times a day through the rotation.</td><td>None on its own; the rotation keeps searches at 4 per run. Topics just come around a little less often.</td></tr>
+          <tr><td class="k">Topics per run: 4 → 8</td><td>Every topic every run with 9 topics.</td><td>96 of 100 searches. The maximum with 12 runs a day.</td></tr>
+          <tr><td class="k">Videos per topic: 5 → 10</td><td>Reaches smaller channels, doubles the comments read.</td><td>Units go from about 240 to about 480 a day. Trivial.</td></tr>
+          <tr><td class="k">Comments per video: 50 → 100</td><td>Safer on busy videos.</td><td>None. Still 1 unit per video.</td></tr>
+          <tr><td class="k">Runs: every 2 hours → every hour</td><td>Fresher list.</td><td>Searches double to 96 a day at 4 per run. Change the cron schedule to <code>0 * * * *</code>.</td></tr>
+          <tr><td class="k">Order: relevance → date</td><td>Newest videos instead of popular ones. Less repetition, more noise.</td><td>None. One word in the code, not a setting yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>Internal document for the Hash Health team. Describes the code as deployed on 16 Sep 2026. Related: <code>overview.html</code>, <code>behind-the-scenes.html</code>.</footer>
+</main>
+</body>
+</html>
