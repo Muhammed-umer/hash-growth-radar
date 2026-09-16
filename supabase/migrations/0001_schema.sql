@@ -3,7 +3,7 @@
 -- builds everything; on an existing project it changes nothing (every
 -- statement is "if not exists" / "or replace"), so it is safe to run again.
 --
--- Matches src/lib/types.ts. Privacy rule (docs/overview.html): we tag the
+-- Matches src/lib/types.ts. Privacy rule (README.md): we tag the
 -- QUESTION, never the PERSON. There is deliberately no author / username
 -- column anywhere in this schema, and the cleanup cron deletes items after 7 days.
 

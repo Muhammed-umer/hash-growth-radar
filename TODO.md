@@ -5,7 +5,7 @@ Scope (changed 16 Sep 2026 by the founder): the tool only FINDS the audience. Co
 ## 0. Foundations
 - [x] Node 24.18, npm 11.5, git 2.47
 - [x] Next.js 16.3 (App Router, TypeScript, Tailwind 4, src/)
-- [x] Docs: docs/overview.html, docs/PRODUCT.md, docs/behind-the-scenes.html, docs/youtube-collection.html, README.md
+- [x] Docs: docs/PRODUCT.md, README.md (the HTML docs were removed on 16 Sep 2026; new ones to be written later)
 - [x] Deps: @supabase/supabase-js 2.116, @google/genai 2.22, @anthropic-ai/sdk 0.126, zod 4.6, vitest 3
 - [x] `.env.example` with every key and where to get it
 

@@ -66,7 +66,7 @@ export const DEFAULT_SETTINGS = {
   youtube_videos_per_topic: 5,
   youtube_comments_per_video: 50,
 
-  // Verified to exist on 16 Sep 2026 (member counts in docs/overview.html).
+  // Verified to exist on 16 Sep 2026.
   reddit_subreddits: [
     "diabetes",
     "type2diabetes",
