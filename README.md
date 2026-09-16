@@ -4,6 +4,7 @@ Internal tool for the Hash Health team. It finds people online who are asking th
 
 - What it is and why, in plain language: [docs/PRODUCT.md](docs/PRODUCT.md)
 - Full explanation per platform, how data is collected legally, and what happens to it: [docs/overview.html](docs/overview.html) (open in a browser)
+- What happens in the background, call by call: [docs/behind-the-scenes.html](docs/behind-the-scenes.html)
 - Build checklist: [TODO.md](TODO.md)
 
 ## How it works
@@ -62,11 +63,16 @@ npm run dev
 Open http://localhost:3000, then:
 
 - Settings: check that every required key shows "set" and the AI provider shows "ready".
-- YouTube page → "Run collection now". You should see a run row and, after tagging, people in the list.
+- YouTube page → the list fills up as the schedule runs. To trigger one run by hand (locally or on the deployed app), call the cron route with your secret:
+
+  ```bash
+  curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/cron/collect?wait=1"
+  ```
+
 - Reddit page → paste a post link and text.
 - Today page → the top 10 across platforms. Open a thread, approach the person yourself, then press "Approached" or "Skip".
 
-Locally there is no schedule; the "Run now" buttons do the same work by hand. Supabase Cron cannot reach your laptop.
+Locally there is no schedule (Supabase Cron cannot reach your laptop), but `npm run dev` reads the same Supabase database the deployed app writes to, so everything the cron collected is already there. Use the curl above only if you want an extra run right now.
 
 ### 4. Deploy and schedule
 
@@ -111,7 +117,7 @@ Only after a yes: put the two codes in `.env.local` as `REDDIT_CLIENT_ID` / `RED
 
 ### Login
 
-There is no login yet, by decision. The dashboard is open to anyone who has the URL, so keep the deployed URL private: anyone who finds it can read the list and press "Run collection now", which spends your YouTube and Gemini allowances. When you want a password gate, implement it in `src/lib/auth.ts` (every page and action already calls `requireUser()`), for example a signed cookie checked against an `APP_PASSWORD` env var. The cron routes are already protected by `CRON_SECRET`.
+There is no login yet, by decision. The dashboard is open to anyone who has the URL, so keep the deployed URL private: anyone who finds it can read the list and paste posts, which spends your Gemini allowance. When you want a password gate, implement it in `src/lib/auth.ts` (every page and action already calls `requireUser()`), for example a signed cookie checked against an `APP_PASSWORD` env var. The cron routes are already protected by `CRON_SECRET`.
 
 ## Scripts
 

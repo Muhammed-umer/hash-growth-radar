@@ -242,7 +242,7 @@ export async function drainJobs(budgetMs: number): Promise<{ processed: number; 
     } catch (e) {
       if (e instanceof AllKeysParkedError) {
         // Not this job's fault. Hand it back untouched and stop; the next
-        // cron run (or the "Tag now" button) picks the queue up again.
+        // cron run picks the queue up again.
         await defer(job, e.retryInMs, e.message);
         break;
       }

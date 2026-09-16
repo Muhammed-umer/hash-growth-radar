@@ -188,7 +188,7 @@
     <h4 style="margin-top:18px">What is on the screen</h4>
     <ul class="plain">
       <li><strong>Today:</strong> the 10 best people across both platforms, plus counts: to look at, waiting for AI, approached, skipped, not suitable.</li>
-      <li><strong>YouTube page:</strong> status counts, last run, a "Run collection now" button, the people found there, what was dropped and why, run history.</li>
+      <li><strong>YouTube page:</strong> status counts, last scheduled run, the people found there, what was dropped and why, run history.</li>
       <li><strong>Reddit page:</strong> the same, plus the paste form and the list of communities to browse.</li>
       <li><strong>Settings:</strong> which keys are set (never the values), AI health, the YouTube topics, the Reddit communities and search phrases, and the keyword filter.</li>
     </ul>
@@ -347,7 +347,7 @@
         </tbody>
       </table>
     </div>
-    <p class="note">Checked against Supabase's documentation on 16 Sep 2026: schedules from every second to once a year, at most 8 jobs at once, each under 10 minutes. Ours are three short jobs. The schedule is one SQL file (<code>supabase/migrations/0002_cron.sql</code>) and can be changed with one line. The "Run now" buttons on each platform page do the same work by hand whenever you want.</p>
+    <p class="note">Checked against Supabase's documentation on 16 Sep 2026: schedules from every second to once a year, at most 8 jobs at once, each under 10 minutes. Ours are three short jobs. The schedule is one SQL file (<code>supabase/migrations/0002_cron.sql</code>) and can be changed with one line. There are no manual buttons; the schedule is the only thing that collects. A call-by-call account of one run is in <code>docs/behind-the-scenes.html</code>.</p>
   </div>
 
   <!-- ================= RULES ================= -->
@@ -373,7 +373,7 @@
         <tbody>
           <tr><td class="k">Reddit on autopilot</td><td class="s yes">Already built</td><td>A second automatic source, and the bigger one: condition communities are where the "what can I eat with my medicine" questions live.</td><td>Send Reddit's access request (Step B above). Then two codes and one tick in Settings.</td></tr>
           <tr><td class="k">"Paste from anywhere" page</td><td class="s">Small</td><td>Quora and Facebook groups have thousands of exactly these questions and you can answer as yourself. Neither can be read by a tool, but a paste box would run them through the same tagging and ranking.</td><td>Ten minutes of browsing a day from you. Quora requires saying you built the app when you mention it; many Facebook health groups ban product mentions, so there you help first.</td></tr>
-          <tr><td class="k">A password on the dashboard</td><td class="s">Small</td><td>Today anyone with the URL can read the list and press "Run now", which spends the YouTube and AI allowances.</td><td>One password in the environment variables; the code already has one place to plug it in.</td></tr>
+          <tr><td class="k">A password on the dashboard</td><td class="s">Small</td><td>Today anyone with the URL can read the list and paste posts, which spends the AI allowance.</td><td>One password in the environment variables; the code already has one place to plug it in.</td></tr>
           <tr><td class="k">More YouTube topics, Hinglish</td><td class="s">Tiny</td><td>Hindi-language diet channels have huge comment sections. Adding topics like <i>sugar ke liye diet</i> or <i>PCOS diet in Hindi</i> reaches them.</td><td>Edit the topic list in Settings. Each extra topic costs about 12 of the 100 daily searches, so 8 topics per run is the ceiling.</td></tr>
           <tr><td class="k">Daily email</td><td class="s">Small</td><td>The top 10 in your inbox each morning, so you never have to remember to open the dashboard.</td><td>A free email-sending account. Nothing about the people is emailed beyond what the card shows.</td></tr>
           <tr><td class="k">X (Twitter)</td><td class="s no">Paid</td><td>Has the right people, especially Indian diabetes and PCOS accounts.</td><td>Reading the search API is a paid plan. Worth it only once the free sources are exhausted.</td></tr>

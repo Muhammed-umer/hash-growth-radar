@@ -6,12 +6,12 @@ import { STATUS_LABEL, timeAgo } from "@/lib/format";
 import { countsFor, loadQueue, recentDropped, recentRuns, statusCounts } from "@/lib/queries";
 import { getSettings } from "@/lib/settings";
 import { ItemCard } from "@/components/item-card";
-import { PostForm, RunNowForm } from "@/components/forms";
+import { PostForm } from "@/components/forms";
 import { RunTable } from "@/components/run-table";
 import { Section, Stat } from "@/components/stat";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 300; // "Run collection now" on this page may run up to 240 s
+export const maxDuration = 300; // the Reddit paste action tags inline and may take a couple of minutes
 
 type NavPlatform = (typeof NAV_PLATFORMS)[number];
 
@@ -60,7 +60,7 @@ export default async function PlatformPage({ params }: { params: Promise<{ platf
         </div>
         <div className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
           <div className="rounded-lg border border-stone-200 bg-white p-3">
-            <div className="text-xs font-semibold uppercase text-stone-500">Last run</div>
+            <div className="text-xs font-semibold uppercase text-stone-500">Last run{isAuto ? " (scheduled every 2 hours)" : ""}</div>
             {lastRun ? (
               <p className="mt-1">
                 {timeAgo(lastRun.started_at, now)} · <b>{lastRun.status}</b> · fetched {lastRun.fetched}, new {lastRun.stored}, queued {lastRun.queued}, tagged {lastRun.tagged}
@@ -98,17 +98,6 @@ export default async function PlatformPage({ params }: { params: Promise<{ platf
           </div>
         </div>
       </Section>
-
-      {isAuto && (
-        <Section title="Collect">
-          <div className="rounded-xl border border-stone-200 bg-white p-4">
-            <p className="mb-3 text-sm text-stone-600">
-              Once deployed, Supabase Cron runs this on a schedule (every 2 hours by default, see supabase/migrations/0002_cron.sql). Run it now to see results immediately.
-            </p>
-            <RunNowForm platform={platform} />
-          </div>
-        </Section>
-      )}
 
       {platform === "reddit" && (
         <Section title={redditAuto ? "Paste a post by hand" : "Paste a post"}>

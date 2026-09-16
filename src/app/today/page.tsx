@@ -4,11 +4,9 @@ import { NAV_PLATFORMS, PLATFORM_INFO, TOP_N } from "@/lib/config";
 import { timeAgo } from "@/lib/format";
 import { countsFor, jobCounts, loadQueue, statusCounts } from "@/lib/queries";
 import { ItemCard } from "@/components/item-card";
-import { ProcessQueueButton } from "@/components/forms";
 import { Section, Stat } from "@/components/stat";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 300; // the "Tag now" server action on this page may run up to 240 s
 
 export default async function TodayPage() {
   await requireUser();
@@ -18,14 +16,9 @@ export default async function TodayPage() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-end gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">Today</h1>
-          <p className="text-sm text-stone-600">The {TOP_N} people most worth approaching, across every platform. Open the thread and decide yourself.</p>
-        </div>
-        <div className="ml-auto">
-          <ProcessQueueButton pendingJobs={jobs.pending + jobs.running} />
-        </div>
+      <div>
+        <h1 className="text-2xl font-semibold">Today</h1>
+        <p className="text-sm text-stone-600">The {TOP_N} people most worth approaching, across every platform. Open the thread and decide yourself. Refreshed every 2 hours by the schedule.</p>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">

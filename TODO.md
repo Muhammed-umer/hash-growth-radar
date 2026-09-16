@@ -5,7 +5,7 @@ Scope (changed 16 Sep 2026 by the founder): the tool only FINDS the audience. Co
 ## 0. Foundations
 - [x] Node 24.18, npm 11.5, git 2.47
 - [x] Next.js 16.3 (App Router, TypeScript, Tailwind 4, src/)
-- [x] Docs: docs/overview.html, docs/PRODUCT.md, README.md
+- [x] Docs: docs/overview.html, docs/PRODUCT.md, docs/behind-the-scenes.html, README.md
 - [x] Deps: @supabase/supabase-js 2.116, @google/genai 2.22, @anthropic-ai/sdk 0.126, zod 4.6, vitest 3
 - [x] `.env.example` with every key and where to get it
 
@@ -25,13 +25,13 @@ Scope (changed 16 Sep 2026 by the founder): the tool only FINDS the audience. Co
 
 ## 3. Routes / actions
 - [x] `api/cron/collect`, `process` answer 202 and work in the background via `after()` (Supabase's HTTP call waits ~10 s); `?wait=1` runs inline. `cleanup` inline. All gated by CRON_SECRET
-- [x] Server actions: approached, skip, run now, process queue, paste post, save settings
+- [x] Server actions: approached, skip, paste post, save settings (manual run buttons removed 16 Sep 2026: the cron is the only collector)
 - [x] No login for now (user's decision); `requireUser()` stub in `src/lib/auth.ts`
 
 ## 4. UI
 - [x] Navbar: Today · YouTube · Reddit · Settings, with badges
 - [x] `/today` top 10 + counts (to look at, waiting for AI, failed, approached, skipped, not suitable)
-- [x] `/platforms/[platform]` status, config check, run now / paste forms, people list, dropped-with-reason, runs table
+- [x] `/platforms/[platform]` status, config check, Reddit paste form, people list, dropped-with-reason, runs table
 - [x] `/settings` env presence, AI health, watch lists, keyword filter
 - [x] Card: platform, community, time, post, video title, tags, summary, score; buttons Open thread / Copy link / Approached / Skip. No draft, no reply text
 

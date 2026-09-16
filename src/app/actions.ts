@@ -3,9 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth";
 import { manualPost } from "@/lib/collectors/manual";
-import { PLATFORM_INFO, type SettingsShape } from "@/lib/config";
+import { type SettingsShape } from "@/lib/config";
 import { db } from "@/lib/db";
-import { collectPlatform, drainJobs, intake } from "@/lib/pipeline/run";
+import { intake } from "@/lib/pipeline/run";
 import { parseLines, saveSettings } from "@/lib/settings";
 import { PLATFORMS, type Platform, type RunRow } from "@/lib/types";
 
@@ -61,31 +61,8 @@ export async function markApproached(id: string): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
-// Collection actions
+// Manual intake (Reddit paste). Automatic collection is cron-only.
 // ---------------------------------------------------------------------------
-
-export async function runPlatformNow(_prev: ActionState | null, formData: FormData): Promise<ActionState> {
-  await requireUser();
-  const platform = asPlatform(formData.get("platform"));
-  const run = await collectPlatform(platform, "manual", 240_000);
-  revalidateAll();
-  const label = PLATFORM_INFO[platform].label;
-  if (run.status === "ok") {
-    return {
-      ok: true,
-      message: `${label}: fetched ${run.fetched}, new ${run.stored}, duplicates ${run.duplicates}, filtered ${run.filtered_out}, queued ${run.queued}, tagged ${run.tagged}.`,
-      run,
-    };
-  }
-  return { ok: false, message: `${label}: ${run.status}. ${run.error ?? ""}`, run };
-}
-
-export async function processQueueNow(): Promise<ActionState> {
-  await requireUser();
-  const r = await drainJobs(240_000);
-  revalidateAll();
-  return { ok: true, message: `Tagged ${r.processed} item(s), ${r.failed} failed (they retry later).` };
-}
 
 export async function submitPost(_prev: ActionState | null, formData: FormData): Promise<ActionState> {
   await requireUser();
