@@ -129,20 +129,23 @@
   <p class="tagline">Find the people who need Hash today, and show them to you. You decide whom to approach and what to say.</p>
 
   <nav>
-    <a href="#pain">Pain points</a>
-    <a href="#what">What we build</a>
+    <a href="#problem">1 · The problem</a>
+    <a href="#built">2 · What we have built</a>
+    <a href="#how">How it works</a>
     <a href="#youtube">YouTube</a>
     <a href="#reddit">Reddit</a>
-    <a href="#summary">Cost &amp; legal summary</a>
-    <a href="#handling">What we do with the data</a>
     <a href="#decide">Who makes the list</a>
     <a href="#schedule">Schedule</a>
     <a href="#rules">Rules</a>
+    <a href="#future">3 · What can be done next</a>
+    <a href="#dropped">Checked and dropped</a>
     <a href="#success">Success</a>
   </nav>
 
-  <!-- ================= PAIN POINTS ================= -->
-  <h2 id="pain">Pain points</h2>
+  <!-- ======================================================================
+       PART 1: THE PROBLEM
+       ====================================================================== -->
+  <h2 id="problem">Part 1 · The problem</h2>
   <div class="card">
     <div class="pains">
       <div class="pain"><b>Nobody knows Hash exists</b>Hash is the only calorie app that checks food against your medications and conditions. But it has a handful of reviews and no marketing has started.</div>
@@ -156,47 +159,84 @@
       <div class="quote">"Which calorie app actually understands Indian food?"</div>
       <div class="quote">"Any calorie app that knows my sugar tablets?"</div>
     </div>
+    <p class="note" style="margin-top:14px">In one line: the people who need Hash are already asking for it in public, and nobody on the team has time to go and find them every day.</p>
   </div>
 
-  <!-- ================= WHAT WE BUILD ================= -->
-  <h2 id="what">What we build</h2>
+  <!-- ======================================================================
+       PART 2: WHAT WE HAVE BUILT
+       ====================================================================== -->
+  <h2 id="built">Part 2 · What we have built</h2>
   <div class="card">
-    <p>A private dashboard for the Hash team that finds the audience. On a schedule, without anyone clicking, it:</p>
+    <p><strong>Hash Growth Radar</strong>, a private dashboard, live at <code>hash-growth-radar.vercel.app</code> since 16 Sep 2026. On a schedule, without anyone clicking, it:</p>
     <ol class="steps">
-      <li><strong>Collects</strong> new comments from YouTube automatically, and Reddit posts you paste by hand until Reddit approves API access (details per platform below). Other platforms were looked at and dropped: Hacker News (too few of our people), the app stores (no way to contact a reviewer), Product Hunt (needs emailed permission, tiny volume).</li>
-      <li><strong>Understands and ranks</strong> them, keeping only the 10 people who best match Hash.</li>
-      <li><strong>Shows them to you</strong>: where they asked, what they asked, which medicine or condition, how well it fits. Nothing else.</li>
+      <li><strong>Collects</strong> new comments from YouTube automatically, and Reddit posts you paste by hand until Reddit approves API access.</li>
+      <li><strong>Understands and ranks</strong> them with a small free AI model, keeping only the 10 people who best match Hash.</li>
+      <li><strong>Shows them to you</strong>: where they asked, what they asked, which medicine or condition, how well it fits, and the link. Nothing else.</li>
     </ol>
-    <p>That is the whole job. The tool never writes a reply, never suggests one, and never posts anything. You open the thread and decide, in your own words, whether and how to approach that person.</p>
-    <p class="note">The next two sections explain each platform the same way: what it has, what we can do with it, how we get the data legally, and what the limits and costs are.</p>
+    <p>That is the whole job. The tool never writes a reply, never suggests one, and never posts anything. You open the thread and decide, in your own words, whether and how to approach that person. Then you press "Approached" or "Skip" and the card leaves the list.</p>
+
+    <h4 style="margin-top:18px">Status today</h4>
+    <div class="facts">
+      <div class="fact"><b>YouTube</b><span>automatic, every 2 hours</span></div>
+      <div class="fact"><b>Reddit</b><span>paste by hand, access request pending</span></div>
+      <div class="fact"><b>AI tagging</b><span>Google Gemini, free tier, 4 keys rotated</span></div>
+      <div class="fact"><b>Cost</b><span>0 per month</span></div>
+      <div class="fact"><b>Login</b><span>none yet, URL kept private</span></div>
+      <div class="fact"><b>Data kept</b><span>7 days, no usernames</span></div>
+    </div>
+
+    <h4 style="margin-top:18px">What is on the screen</h4>
+    <ul class="plain">
+      <li><strong>Today:</strong> the 10 best people across both platforms, plus counts: to look at, waiting for AI, approached, skipped, not suitable.</li>
+      <li><strong>YouTube page:</strong> status counts, last run, a "Run collection now" button, the people found there, what was dropped and why, run history.</li>
+      <li><strong>Reddit page:</strong> the same, plus the paste form and the list of communities to browse.</li>
+      <li><strong>Settings:</strong> which keys are set (never the values), AI health, the YouTube topics, the Reddit communities and search phrases, and the keyword filter.</li>
+    </ul>
+  </div>
+
+  <!-- ================= HOW IT WORKS ================= -->
+  <h2 id="how">How it works, step by step</h2>
+  <div class="card">
+    <p>Every run collects a few hundred items. Most are useless. Here is what happens to them, in order, and who does each step: plain code, AI, or you. AI is used only where reading and understanding language is required. Everything else is ordinary code, which is faster, free, and never makes things up.</p>
+
+    <div class="stage"><div class="n">1</div><div><b>Store the raw item</b>Text, link, community, time. No username. Saved as-is so nothing is lost.</div><span class="who code">Code</span></div>
+    <div class="stage"><div class="n">2</div><div><b>Remove duplicates and old items</b>Same post seen twice, or anything older than 7 days, is dropped.</div><span class="who code">Code</span></div>
+    <div class="stage"><div class="n">3</div><div><b>Quick keyword filter</b>Must contain at least one relevant word (a medicine, a condition, "calorie", "app", "diet", "track"). Must not be obvious noise (memes, giveaways, job posts). Cuts about 80 percent before any AI runs, which keeps AI cost at zero.</div><span class="who code">Code</span></div>
+    <div class="stage"><div class="n">4</div><div><b>Understand and tag</b>The AI reads each remaining item and answers fixed questions: What is the person asking (app recommendation, nutrition question, medicine and food question, competitor complaint, or irrelevant)? Which condition? Which medicine? Which competitor, if any? How well does this match Hash, 0 to 100? Is this someone we should not approach at all (dosage, emergency, diagnosis)? This is where AI is genuinely needed, because "Is roti okay with my sugar tablets?" has none of the obvious keywords but is a perfect match.</div><span class="who ai">AI</span></div>
+    <div class="stage"><div class="n">5</div><div><b>Rank and keep the top 10</b>Sort by match score and freshness. Only the top 10 are shown on the Today page; each platform page shows its own list.</div><span class="who code">Code</span></div>
+    <div class="stage"><div class="n">6</div><div><b>You look and decide</b>Each card shows the platform, the community, the post, the tags, and an "Open thread" button. You read it, open it, and approach the person however you see fit. Then you press "Approached" or "Skip". What you said is never stored.</div><span class="who human">You</span></div>
+    <div class="stage"><div class="n">7</div><div><b>Delete after 7 days</b>Every item, tagged or not, is deleted a week after collection.</div><span class="who code">Code</span></div>
+
+    <h4 style="margin-top:22px">So, do we need AI?</h4>
+    <p>Yes, for exactly one job: understanding what a post means (step 4). Everything else is ordinary code. On Google's free Gemini tier this costs nothing; four keys are rotated so the free per-minute limit is never a problem.</p>
   </div>
 
   <!-- ================= YOUTUBE ================= -->
-  <h2 id="youtube">YouTube</h2>
+  <h2 id="youtube">YouTube <span class="pill now">Automatic</span></h2>
   <div class="card">
     <h4><span class="n">1</span> What this platform has</h4>
     <p>Videos about diet for specific conditions, and app review videos, each with hundreds of public comments. Many comments are direct questions to the creator that never get answered: <i>"I'm on metformin, can I follow this?"</i>. Comments stay visible to everyone who watches the video later, for months. Topics we watch, in English and Hinglish:</p>
-    <div class="tags"><span class="tag">diabetes diet</span><span class="tag">PCOS diet plan</span><span class="tag">thyroid diet</span><span class="tag">Indian weight loss diet</span><span class="tag">calorie tracking app review</span><span class="tag">Cal AI review</span><span class="tag">HealthifyMe review</span></div>
+    <div class="tags"><span class="tag">diabetes diet</span><span class="tag">type 2 diabetes what to eat</span><span class="tag">PCOS diet plan</span><span class="tag">thyroid diet</span><span class="tag">hypothyroidism diet</span><span class="tag">Indian weight loss diet</span><span class="tag">calorie tracking app review</span><span class="tag">Cal AI review</span><span class="tag">HealthifyMe review</span></div>
 
-    <h4><span class="n">2</span> What we can do with it</h4>
+    <h4><span class="n">2</span> What we do with it</h4>
     <ul class="plain">
-      <li>Search for recent, popular videos on those topics, a few times a day.</li>
-      <li>Read new comments under each video and keep only the questions, especially ones mentioning a medicine, a condition, or an app.</li>
-      <li>Open the comment from the tool and answer it yourself, from your own YouTube account.</li>
+      <li>Every 2 hours, search for recent, relevant videos on 4 of the topics (they rotate, so all 9 come up every day).</li>
+      <li>Read the newest comments under each video and keep only the questions, especially ones mentioning a medicine, a condition, or an app.</li>
+      <li>Show you the comment with its tags. You open it and answer yourself, from your own YouTube account.</li>
     </ul>
     <div class="example">
-      <b>Example.</b> Comment under a PCOS diet video: <i>"I'm on metformin and letrozole, can I follow this diet? Any app that tracks this?"</i><br>
-      Tagged as: medication + food question, condition = PCOS, app request = yes, fit score 95.
+      <b>Example, real, from the first run.</b> Comment under "The 5 Foods That REVERSED Diabetes In Clinical Trials": <i>"Please send me menues to help with type II diabetes."</i><br>
+      Tagged as: medicine + food question, condition = type 2 diabetes, fit score 90. Top of the list.
     </div>
 
     <h4><span class="n">3</span> How we get the data, legally</h4>
     <div class="setup">
-      <p>Google gives every developer an official free door called the YouTube Data API. Setting it up takes ten minutes, once.</p>
+      <p>Google gives every developer an official free door called the YouTube Data API. Set up once, in ten minutes, already done:</p>
       <ol class="steps">
         <li><strong>Log in</strong> with any Google account and open <code>console.cloud.google.com</code>.</li>
         <li><strong>Create a project</strong> (top bar, "New project"), name it Hash Growth Radar.</li>
         <li><strong>Enable the API:</strong> menu → "APIs &amp; Services" → "Library" → search "YouTube Data API v3" → Enable.</li>
-        <li><strong>Create a key:</strong> "APIs &amp; Services" → "Credentials" → "Create credentials" → "API key". Copy it.</li>
+        <li><strong>Create a key:</strong> "APIs &amp; Services" → "Credentials" → "Create credentials" → "API key". Restrict it to the YouTube Data API only.</li>
         <li><strong>Put the key into the tool's environment variables.</strong> Reading videos and comments now works.</li>
       </ol>
     </div>
@@ -212,16 +252,16 @@
       <table>
         <thead><tr><th>Action</th><th class="s">Cost in units</th><th>Our daily use</th></tr></thead>
         <tbody>
-          <tr><td>Search for videos on a topic</td><td class="s">1 of the 100 daily searches</td><td>4 per run, 12 runs a day = 48, out of 100 allowed. Topics rotate so all 9 come up daily</td></tr>
-          <tr><td>Read a page of comments under a video</td><td class="s">1 unit</td><td>200 videos = about 300 units, out of 10,000</td></tr>
+          <tr><td>Search for videos on a topic</td><td class="s">1 of the 100 daily searches</td><td>4 per run, 12 runs a day = 48, out of 100 allowed</td></tr>
+          <tr><td>Read a page of comments under a video</td><td class="s">1 unit</td><td>About 240 videos a day = about 240 units, out of 10,000</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="note">Verified 16 Sep 2026 on Google's quota page: topic searches have their own allowance of 100 calls a day, separate from the 10,000 units for everything else. Both reset daily at midnight Pacific time (12:30 PM or 1:30 PM in India depending on the season). We use about a fifth of the search allowance and a few percent of the units. One rule to respect: data pulled from YouTube must not be kept longer than 30 days. Our "last 7 days only" rule already covers it.</p>
+    <p class="note">Verified 16 Sep 2026 on Google's quota page: topic searches have their own allowance of 100 calls a day, separate from the 10,000 units for everything else. Both reset daily at midnight Pacific time (12:30 PM or 1:30 PM in India depending on the season). One rule to respect: data pulled from YouTube must not be kept longer than 30 days. Our "last 7 days only" rule already covers it.</p>
   </div>
 
   <!-- ================= REDDIT ================= -->
-  <h2 id="reddit">Reddit</h2>
+  <h2 id="reddit">Reddit <span class="pill later">By hand until approved</span></h2>
   <div class="card">
     <h4><span class="n">1</span> What this platform has</h4>
     <p>Reddit is made of thousands of groups called subreddits, each starting with "r/". Every subreddit is a community around one topic, created years ago by ordinary users, with thousands to hundreds of thousands of members. People post questions and other members answer. Everything is public. These already exist; we create nothing.</p>
@@ -237,30 +277,28 @@
       </li>
     </ul>
 
-    <h4><span class="n">2</span> What we can do with it</h4>
+    <h4><span class="n">2</span> What we do with it</h4>
     <ul class="plain">
-      <li>Read the newest posts in each community we watch, every 2 hours.</li>
-      <li>Search all of Reddit for phrases like <i>metformin diet</i>, <i>warfarin vitamin K</i>, <i>levothyroxine food</i>, <i>best calorie tracker</i>, <i>calorie app Indian food</i>.</li>
-      <li>Read the comments under a matched post, since the real question is often buried there.</li>
-      <li>Open the thread from the tool and approach the person yourself, from your own account, in your own words.</li>
+      <li><strong>Today, by hand:</strong> once or twice a day, open the communities above and Reddit's own search for phrases like <i>metformin diet</i>, <i>warfarin vitamin K</i>, <i>levothyroxine food</i>, <i>best calorie tracker</i>, <i>calorie app Indian food</i>. Paste the link of any promising post into the Reddit page. The tool tags and ranks it like a YouTube comment. About 10 minutes.</li>
+      <li><strong>After approval, automatically:</strong> the tool reads the newest posts in each community and runs the searches every 2 hours on its own. That code is already built and switches on with one tick in Settings.</li>
+      <li>Either way, you open the thread from the tool and approach the person yourself, from your own account.</li>
     </ul>
     <div class="example">
       <b>Example.</b> Post in r/type2diabetes: <i>"Doctor put me on metformin last week. Is it fine to keep eating rice and roti?"</i><br>
-      Tagged as: medication + food question, condition = type 2 diabetes, medicine = metformin, fit score 92.
+      Tagged as: medicine + food question, condition = type 2 diabetes, medicine = metformin, fit score 92.
     </div>
 
     <h4><span class="n">3</span> How we get the data, legally</h4>
     <div class="setup">
-      <p><strong>Read directly from Reddit's Responsible Builder Policy on 16 Sep 2026 (page says "updated 3 months ago").</strong> Its first rule, quoted: "Approval is required: You must request access and get explicit approval before accessing any Reddit data through our API." For commercial use it says: "you'll need to get explicit written approval. You can contact us here and our team will be in touch if your proposal fits our criteria." Both routes go through the same support request form. Non-commercial developers are pointed to Reddit's own app platform, Devvit, first, and told to file a ticket only if Devvit doesn't fit. Reported approval wait from developers: 2 to 4 weeks, sometimes no reply. Tools that read Reddit pages without approval break these terms and can get the account banned, so we do not do that.</p>
-      <p style="margin-top:12px"><strong>One rule changes how we build, on every platform.</strong> The policy says: "You are strictly prohibited from processing data to derive or infer potentially sensitive characteristics about Reddit users (e.g., health...)". So the tool must never build a picture of a <em>person</em>. It tags the <em>question</em> ("this post asks about food with metformin"), never the poster ("this user has diabetes"). It does not store usernames, does not link posts by the same author, and deletes every item after 7 days. The daily list shows the post and its tags, nothing about who wrote it. This is also simply the right way to treat health questions from strangers.</p>
-      <p style="margin-top:12px"><strong>So we run Reddit in two phases.</strong></p>
+      <p><strong>Read directly from Reddit's Responsible Builder Policy on 16 Sep 2026 (page says "updated 3 months ago").</strong> Its first rule, quoted: "Approval is required: You must request access and get explicit approval before accessing any Reddit data through our API." For commercial use it says: "you'll need to get explicit written approval. You can contact us here and our team will be in touch if your proposal fits our criteria." Both routes go through the same support request form. Reported approval wait from developers: 2 to 4 weeks, sometimes no reply. Tools that read Reddit pages without approval break these terms and can get the account banned, so we do not do that.</p>
+      <p style="margin-top:12px"><strong>One rule shaped the whole tool.</strong> The policy says: "You are strictly prohibited from processing data to derive or infer potentially sensitive characteristics about Reddit users (e.g., health...)". So the tool never builds a picture of a <em>person</em>. It tags the <em>question</em> ("this post asks about food with metformin"), never the poster ("this user has diabetes"). It does not store usernames, does not link posts by the same author, and deletes every item after 7 days. We apply this on YouTube too. It is also simply the right way to treat health questions from strangers.</p>
+      <p style="margin-top:12px"><strong>Getting the automatic access, two steps:</strong></p>
       <ol class="steps">
-        <li><strong>Phase 1, by hand, from day one.</strong> Once or twice a day, open the communities above and Reddit's own search for the phrases below, in your browser. Paste the link of any promising post into the tool. The tool then does everything else: tagging and ranking. About 10 minutes a day. Nothing to register, nothing to wait for.</li>
         <li><strong>Step A: register the app (instant, gives codes, gives NO data).</strong> At <code>reddit.com/prefs/apps</code>, logged in, click "create another app", type "script", any name, redirect URL <code>http://localhost:8080</code>. Reddit shows two codes on the spot. <em>These codes do not return any data yet.</em> Since June 2026 they only start working after Step B is approved.</li>
-        <li><strong>Step B: ask for permission (instant to send, weeks to hear back).</strong> Open the request form at <code>support.reddithelp.com/hc/en-us/requests/new</code>, pick the data access or developer category, and describe the tool honestly: an internal tool that helps one founder find public posts to answer by hand, a few dozen requests per hour, tags topics not people, stores nothing about users, no data resale, no AI training, no automated posting. Then wait for Reddit's email. Developers report 2 to 4 weeks, sometimes no reply.</li>
-        <li><strong>Phase 2, automatic, only after a yes.</strong> Put the two codes into the tool's settings and tick "Reddit API enabled". From then on it reads Reddit on its own. If Reddit says no, or never replies, Phase 1 continues; it works, it is just more manual.</li>
+        <li><strong>Step B: ask for permission (instant to send, weeks to hear back).</strong> Open the request form at <code>support.reddithelp.com/hc/en-us/requests/new</code>, pick the data access or developer category, and describe the tool honestly: an internal tool that helps one founder find public posts to answer by hand, a few dozen requests per hour, tags topics not people, stores nothing about users, no data resale, no AI training, no automated posting. Then wait for Reddit's email.</li>
+        <li><strong>After a yes:</strong> put the two codes into the tool's environment variables and tick "Reddit API enabled" in Settings. From then on it reads Reddit on its own. If Reddit says no, or never replies, the paste form continues to work; it is just more manual.</li>
       </ol>
-      <p class="note" style="margin-top:12px"><strong>Honest caveat.</strong> Reddit's free access is for non-commercial use. Hash is a company, and Reddit may decide this counts as commercial, which needs written approval and, by developer reports, a paid agreement far beyond us. Our request is small and honest, but approval is not guaranteed. Phase 1 needs no approval at all, because a person reading public Reddit posts in a browser and replying is just a normal user. The policy also bans "posting identical or substantially similar content across subreddits", which is one more reason the tool gives you no text to copy.</p>
+      <p class="note" style="margin-top:12px"><strong>Honest caveat.</strong> Reddit's free access is for non-commercial use. Hash is a company, and Reddit may decide this counts as commercial, which needs written approval and, by developer reports, a paid agreement far beyond us. Our request is small and honest, but approval is not guaranteed. Pasting by hand needs no approval at all, because a person reading public Reddit posts in a browser and replying is just a normal user.</p>
     </div>
 
     <h4><span class="n">4</span> Limits and cost</h4>
@@ -270,45 +308,13 @@
       <div class="fact"><b>Under 1 / minute</b><span>what we would use</span></div>
       <div class="fact"><b>2 to 4 weeks</b><span>reported approval wait</span></div>
     </div>
-    <p class="note">One request is one page of results, roughly 25 to 100 posts. Checking 15 communities and 9 search phrases every 2 hours is about 25 requests per 2 hours, under 1 percent of the allowance. Phase 1 (by hand) has no limit and no cost.</p>
-  </div>
-
-  <!-- ================= SUMMARY ================= -->
-  <h2 id="summary">Cost and legal summary</h2>
-  <div class="card tbl">
-    <table>
-      <thead><tr><th class="k">Platform</th><th class="s">Cost</th><th class="s">Legal?</th><th class="s">Setup time</th><th>Free limit vs our use</th></tr></thead>
-      <tbody>
-        <tr><td class="k">Reddit</td><td class="s yes">Free</td><td class="s no">Approval needed</td><td class="s">2 to 4 weeks</td><td>By hand from day one. Apply for access; if approved, 100 requests/min free and the tool takes over. Business use may be refused</td></tr>
-        <tr><td class="k">YouTube</td><td class="s yes">Free</td><td class="s yes">Yes</td><td class="s">10 min</td><td>100 searches/day plus 10,000 units/day. We use 48 searches and a few hundred units</td></tr>
-      </tbody>
-    </table>
-    <p class="note"><strong>In short:</strong> fully automatic from day one on YouTube. Reddit is by hand until Reddit approves access, then automatic. Everything after collection (tagging, ranking) is automatic on both.</p>
-    <p class="note"><strong>Checked on 16 Sep 2026 against:</strong> Google's YouTube quota page and Reddit's Responsible Builder Policy, read directly on support.reddithelp.com in the founder's browser.</p>
-    <p class="note"><strong>Looked at and dropped (16 Sep 2026):</strong> Hacker News (free and legal, but too few of Hash's people), App Store and Play Store (no free legal way to read other apps' reviews, and no way to contact a reviewer), Product Hunt (API is non-commercial by default, tiny volume). <strong>Not searched:</strong> X / Twitter (charges for access), Quora (blocks tools), Facebook and WhatsApp groups (closed, not searchable), Instagram (comments not searchable by topic).</p>
-  </div>
-
-  <!-- ================= HANDLING ================= -->
-  <h2 id="handling">What we do with the data, and where AI is needed</h2>
-  <div class="card">
-    <p>Every run collects a few hundred items. Most are useless. Here is what happens to them, in order, and who does each step: plain code, AI, or you. AI is used only where reading and understanding language is required. Everything else is ordinary code, which is faster, free, and never makes things up.</p>
-
-    <div class="stage"><div class="n">1</div><div><b>Store the raw item</b>Text, link, community, time. No username. Saved as-is so nothing is lost.</div><span class="who code">Code</span></div>
-    <div class="stage"><div class="n">2</div><div><b>Remove duplicates and old items</b>Same post seen twice, or anything older than 7 days, is dropped.</div><span class="who code">Code</span></div>
-    <div class="stage"><div class="n">3</div><div><b>Quick keyword filter</b>Must contain at least one relevant word (a medicine, a condition, "calorie", "app", "diet", "track"). Must not be obvious noise (memes, giveaways, job posts). Cuts about 80 percent before any AI runs, which keeps AI cost tiny.</div><span class="who code">Code</span></div>
-    <div class="stage"><div class="n">4</div><div><b>Understand and tag</b>The AI reads each remaining item and answers fixed questions: What is the person asking (app recommendation, nutrition question, medicine and food question, competitor complaint, or irrelevant)? Which condition? Which medicine? Which competitor, if any? How well does this match Hash, 0 to 100? Is this someone we should not approach at all (dosage, emergency, diagnosis)? This is where AI is genuinely needed, because "Is roti okay with my sugar tablets?" has none of the obvious keywords but is a perfect match. A small, free AI model does this.</div><span class="who ai">AI</span></div>
-    <div class="stage"><div class="n">5</div><div><b>Rank and keep the top 10</b>Sort by match score and freshness. Only the top 10 are shown on the Today page; each platform page shows its own list.</div><span class="who code">Code</span></div>
-    <div class="stage"><div class="n">6</div><div><b>You look and decide</b>Each card shows the platform, the community, the post, the tags, and an "Open thread" button. You read it, open it, and approach the person however you see fit. Then you press "Approached" or "Skip" so the card leaves the list. What you said is never stored.</div><span class="who human">You</span></div>
-    <div class="stage"><div class="n">7</div><div><b>Delete after 7 days</b>Every item, tagged or not, is deleted a week after collection.</div><span class="who code">Code</span></div>
-
-    <h4 style="margin-top:22px">So, do we need AI?</h4>
-    <p>Yes, for exactly one job: understanding what a post means (step 4). Everything else is ordinary code. On Google's free Gemini tier this costs nothing.</p>
+    <p class="note">One request is one page of results, roughly 25 to 100 posts. Checking 15 communities and 9 search phrases every 2 hours is about 25 requests per 2 hours, under 1 percent of the allowance. By hand has no limit and no cost.</p>
   </div>
 
   <!-- ================= DECIDE ================= -->
   <h2 id="decide">Who makes the list</h2>
   <div class="card">
-    <p>Not every post that matches is worth your time. After tagging (step 4 above), the tool sorts each item into one of the buckets below. Only the first four buckets reach the list, ranked in that order.</p>
+    <p>Not every post that matches is worth your time. After tagging, the tool sorts each item into one of the buckets below. Only the first four buckets reach the list, ranked in that order.</p>
     <div class="tbl">
       <table>
         <thead><tr><th class="k">The person is...</th><th class="s">On the list?</th><th>Why</th></tr></thead>
@@ -330,18 +336,18 @@
   <!-- ================= SCHEDULE ================= -->
   <h2 id="schedule">Schedule: it runs by itself</h2>
   <div class="card">
-    <p>Once the app is deployed, the database's own scheduler (Supabase Cron) wakes it up. No button pressing, no third service. Three jobs:</p>
+    <p>The database's own scheduler (Supabase Cron) wakes the deployed app. No button pressing, no third service. Three jobs, all registered and running since 16 Sep 2026:</p>
     <div class="tbl">
       <table>
-        <thead><tr><th class="k">Job</th><th class="s">When</th><th>What it does</th></tr></thead>
+        <thead><tr><th class="k">Job</th><th class="s">When (India time)</th><th>What it does</th></tr></thead>
         <tbody>
-          <tr><td class="k">Collect</td><td class="s">Every 2 hours</td><td>Runs the automatic collectors (YouTube now, Reddit once approved), filters, tags, ranks.</td></tr>
-          <tr><td class="k">Finish tagging</td><td class="s">Every hour at :30</td><td>Tags anything that was left waiting because the free AI limit was hit.</td></tr>
-          <tr><td class="k">Clean up</td><td class="s">Daily, 08:30 IST</td><td>Deletes items older than 7 days.</td></tr>
+          <tr><td class="k">Collect</td><td class="s">Every 2 hours, at 05:30, 07:30, 09:30 ...</td><td>Runs the automatic collectors (YouTube now, Reddit once approved), filters, tags, ranks.</td></tr>
+          <tr><td class="k">Finish tagging</td><td class="s">Every hour, on the hour</td><td>Tags anything that was left waiting because the free AI limit was hit.</td></tr>
+          <tr><td class="k">Clean up</td><td class="s">Daily, 08:30</td><td>Deletes items older than 7 days.</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="note">Checked against Supabase's documentation on 16 Sep 2026: schedules from every second to once a year, at most 8 jobs at once, each under 10 minutes. Ours are three short jobs. The schedule is one SQL file (<code>supabase/migrations/0002_cron.sql</code>) and can be changed with one line. Until the app is deployed, the "Run now" buttons on each platform page do the same work by hand.</p>
+    <p class="note">Checked against Supabase's documentation on 16 Sep 2026: schedules from every second to once a year, at most 8 jobs at once, each under 10 minutes. Ours are three short jobs. The schedule is one SQL file (<code>supabase/migrations/0002_cron.sql</code>) and can be changed with one line. The "Run now" buttons on each platform page do the same work by hand whenever you want.</p>
   </div>
 
   <!-- ================= RULES ================= -->
@@ -355,16 +361,60 @@
     </ul>
   </div>
 
+  <!-- ======================================================================
+       PART 3: WHAT CAN BE DONE NEXT
+       ====================================================================== -->
+  <h2 id="future">Part 3 · What can be done next</h2>
+  <div class="card">
+    <p>In order of value. Each is independent; none is needed for the tool to keep working as it does today.</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th class="k">Idea</th><th class="s">Effort</th><th>What it gives</th><th>What it needs</th></tr></thead>
+        <tbody>
+          <tr><td class="k">Reddit on autopilot</td><td class="s yes">Already built</td><td>A second automatic source, and the bigger one: condition communities are where the "what can I eat with my medicine" questions live.</td><td>Send Reddit's access request (Step B above). Then two codes and one tick in Settings.</td></tr>
+          <tr><td class="k">"Paste from anywhere" page</td><td class="s">Small</td><td>Quora and Facebook groups have thousands of exactly these questions and you can answer as yourself. Neither can be read by a tool, but a paste box would run them through the same tagging and ranking.</td><td>Ten minutes of browsing a day from you. Quora requires saying you built the app when you mention it; many Facebook health groups ban product mentions, so there you help first.</td></tr>
+          <tr><td class="k">A password on the dashboard</td><td class="s">Small</td><td>Today anyone with the URL can read the list and press "Run now", which spends the YouTube and AI allowances.</td><td>One password in the environment variables; the code already has one place to plug it in.</td></tr>
+          <tr><td class="k">More YouTube topics, Hinglish</td><td class="s">Tiny</td><td>Hindi-language diet channels have huge comment sections. Adding topics like <i>sugar ke liye diet</i> or <i>PCOS diet in Hindi</i> reaches them.</td><td>Edit the topic list in Settings. Each extra topic costs about 12 of the 100 daily searches, so 8 topics per run is the ceiling.</td></tr>
+          <tr><td class="k">Daily email</td><td class="s">Small</td><td>The top 10 in your inbox each morning, so you never have to remember to open the dashboard.</td><td>A free email-sending account. Nothing about the people is emailed beyond what the card shows.</td></tr>
+          <tr><td class="k">X (Twitter)</td><td class="s no">Paid</td><td>Has the right people, especially Indian diabetes and PCOS accounts.</td><td>Reading the search API is a paid plan. Worth it only once the free sources are exhausted.</td></tr>
+          <tr><td class="k">Bluesky</td><td class="s">Unverified</td><td>Open and free, no approval, public search endpoint.</td><td>Its public endpoint returned "403 Forbidden" from India on 16 Sep 2026, from two different machines. Re-check before building anything.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ================= DROPPED ================= -->
+  <h2 id="dropped">Checked and dropped</h2>
+  <div class="card">
+    <p>These were considered, checked against the real rules or the real site on 16 Sep 2026, and set aside. Listed so nobody has to re-check them.</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th class="k">Platform</th><th class="s">Free door?</th><th>Why it was dropped</th></tr></thead>
+        <tbody>
+          <tr><td class="k">App Store, Play Store</td><td class="s no">No</td><td>The idea was to read competitors' 1 to 3 star reviews. Apple's public review feed now returns nothing, Google has no API for other apps' reviews, and reading the store pages breaks their terms. Even by hand, a reviewer cannot be contacted, so it was research only, not outreach.</td></tr>
+          <tr><td class="k">Hacker News</td><td class="s yes">Yes</td><td>Free and legal (public search, no key). Built and tested, then removed: too few of Hash's people, a handful a week, mostly not the ones asking about medicine and food.</td></tr>
+          <tr><td class="k">Product Hunt</td><td class="s no">Permission by email</td><td>API is non-commercial by default, tiny volume of relevant questions.</td></tr>
+          <tr><td class="k">Quora, Facebook groups</td><td class="s no">No</td><td>Full of the right questions, but no feed and their rules forbid tools reading pages. Possible by hand only (see Part 3).</td></tr>
+          <tr><td class="k">Practo, 1mg and similar</td><td class="s no">No</td><td>Exactly the questions, but only doctors may answer. Research only.</td></tr>
+          <tr><td class="k">TuDiabetes forum</td><td class="s">–</td><td>Would have had a public feed. The site now says "TuDiabetes.org has closed."</td></tr>
+          <tr><td class="k">WhatsApp, Telegram, Instagram, TikTok</td><td class="s no">No</td><td>Closed groups or comments not searchable by topic.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note"><strong>Checked on 16 Sep 2026 against:</strong> Google's YouTube quota page, Reddit's Responsible Builder Policy (read directly on support.reddithelp.com), Supabase's cron documentation, Apple's review feed (tested directly, three apps, two countries), Product Hunt's API terms, the Algolia Hacker News API, Bluesky's public endpoint (tested), and the TuDiabetes site (tested).</p>
+  </div>
+
   <!-- ================= SUCCESS ================= -->
   <h2 id="success">Success after 30 days</h2>
   <div class="metrics">
     <div class="metric"><b>7 / 10</b><span>daily cards that are really worth approaching</span></div>
     <div class="metric"><b>&lt; 10 min</b><span>per day to go through the list</span></div>
     <div class="metric"><b>0</b><span>cards showing a username or a suggested reply</span></div>
-    <div class="metric"><b>0</b><span>manual runs needed once deployed</span></div>
+    <div class="metric"><b>0</b><span>manual runs needed</span></div>
+    <div class="metric"><b>0</b><span>rupees per month</span></div>
   </div>
 
-  <footer>Internal document for the Hash Health team.</footer>
+  <footer>Internal document for the Hash Health team. Last updated 16 Sep 2026.</footer>
 </main>
 </body>
 </html>
