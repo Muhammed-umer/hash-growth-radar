@@ -3,6 +3,7 @@
 Internal tool for the Hash Health team. It finds people online who are asking the questions Hash answers (food with a medicine or condition, "which calorie app understands Indian food"), tags and ranks them, and shows you the best ones each day. You open the thread and approach the person yourself. The tool never writes, suggests, or posts a reply.
 
 - What it is and why, in plain language: [docs/PRODUCT.md](docs/PRODUCT.md)
+- YouTube, exactly: the API, the allowance, every parameter we pass, what we keep, the AI form, the topics and their rotation: [docs/youtube.html](docs/youtube.html) (open in a browser)
 - Build checklist: [TODO.md](TODO.md)
 
 ## How it works

@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hash Growth Radar · YouTube, exactly</title>
+<style>
+  :root {
+    --bg: #f7f7f5; --card: #ffffff; --ink: #1c1c1a; --muted: #6b6b66;
+    --line: #cfcfc9; --line-soft: #e4e4df;
+    --accent: #1f7a5c; --accent-soft: #e6f3ee;
+    --warn-soft: #fdf1e6; --warn: #b45f1a;
+    --blue-soft: #e8f0fb; --blue: #2b5fa8;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; padding: 32px 24px 64px; }
+  main { max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 2rem; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .tagline { color: var(--muted); margin: 0 0 20px; font-size: 1.05rem; }
+  h2 { font-size: 1.15rem; margin: 44px 0 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); padding-bottom: 6px; border-bottom: 2px solid var(--accent-soft); }
+  h4 { font-size: 0.8rem; margin: 18px 0 8px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+  p { margin: 0 0 12px; } p:last-child { margin-bottom: 0; }
+  nav { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  nav a { text-decoration: none; color: var(--accent); background: var(--accent-soft); padding: 5px 12px; border-radius: 999px; font-size: 0.88rem; }
+  .card { background: var(--card); border: 1px solid var(--line-soft); border-radius: 12px; padding: 22px 24px; margin-bottom: 12px; }
+  code { background: #fff; border: 1px solid var(--line-soft); border-radius: 5px; padding: 1px 6px; font-size: 0.9em; }
+  pre { background: #1c1c1a; color: #eaeae5; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.85rem; line-height: 1.5; margin: 10px 0 0; }
+  pre code { background: none; border: none; padding: 0; color: inherit; font-size: inherit; }
+  .tbl { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.93rem; background: var(--card); border: 1px solid var(--line); }
+  th, td { text-align: left; padding: 9px 12px; border: 1px solid var(--line); vertical-align: top; }
+  th { background: #f0f0ec; font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  tbody tr:nth-child(even) td { background: #fafaf8; }
+  td.k, th.k { width: 20%; font-weight: 600; white-space: nowrap; }
+  td.s, th.s { width: 13%; white-space: nowrap; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .yes { color: var(--accent); font-weight: 600; }
+  .no { color: var(--muted); }
+  ul.plain { padding-left: 20px; margin: 0; } ul.plain li { margin-bottom: 6px; } ul.plain li:last-child { margin-bottom: 0; }
+  ol.steps { padding-left: 0; list-style: none; counter-reset: s; margin: 0; }
+  ol.steps li { counter-increment: s; position: relative; padding-left: 40px; margin-bottom: 10px; }
+  ol.steps li:last-child { margin-bottom: 0; }
+  ol.steps li::before { content: counter(s); position: absolute; left: 0; top: 1px; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 600; display: grid; place-items: center; font-size: 0.8rem; }
+  ol.steps strong { display: block; }
+  .facts { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); margin-top: 10px; }
+  .fact { background: var(--bg); border-radius: 8px; padding: 10px 12px; font-size: 0.9rem; }
+  .fact b { display: block; color: var(--ink); font-size: 1.1rem; }
+  .fact span { color: var(--muted); }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .tag { background: var(--bg); border: 1px solid var(--line-soft); border-radius: 999px; padding: 3px 10px; font-size: 0.85rem; }
+  .callout { background: var(--warn-soft); border-radius: 10px; padding: 14px 16px; }
+  .callout b { color: var(--warn); }
+  .good { background: var(--accent-soft); border-radius: 10px; padding: 14px 16px; }
+  .note { color: var(--muted); font-size: 0.92rem; margin-top: 10px; }
+  .src { font-size: 0.82rem; color: var(--muted); margin-top: 8px; }
+  footer { margin-top: 40px; color: var(--muted); font-size: 0.85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>YouTube, exactly</h1>
+  <p class="tagline">What we got from Google, what it allows, what we send, what comes back, what we keep, and what the AI does with it. Every parameter below is taken from Google's reference pages and from the code as deployed on 16 Sep 2026.</p>
+
+  <nav>
+    <a href="#api">1 · The API we have</a>
+    <a href="#quota">2 · The allowance</a>
+    <a href="#search">3 · Finding videos</a>
+    <a href="#comments">4 · Reading comments</a>
+    <a href="#store">5 · Storing</a>
+    <a href="#ai">6 · The AI</a>
+    <a href="#topics">7 · The topics</a>
+    <a href="#rotation">8 · 4 topics per run</a>
+    <a href="#repeat">9 · Repeats</a>
+    <a href="#settings">10 · Settings</a>
+  </nav>
+
+  <!-- ================= 1 API ================= -->
+  <h2 id="api">1 · The API we have</h2>
+  <div class="card">
+    <p><strong>YouTube Data API v3</strong>, Google's official interface to public YouTube data. We use it with an <strong>API key</strong> created in the Google Cloud console under a project named Hash Growth Radar, restricted to this one API. An API key allows <em>reading public data only</em>. Anything that acts as a user (posting a comment, liking, subscribing, reading private data) needs a different kind of login that we do not have and do not want.</p>
+    <h4>What the API can read with a key</h4>
+    <ul class="plain">
+      <li>Search videos, channels and playlists by phrase (<code>search.list</code>). <span class="yes">We use this.</span></li>
+      <li>Comment threads under a video (<code>commentThreads.list</code>). <span class="yes">We use this.</span></li>
+      <li>Details of specific videos: views, likes, comment count, duration, category (<code>videos.list</code>). <span class="no">Not used.</span></li>
+      <li>Channel details, playlists, captions, categories, regions. <span class="no">Not used.</span></li>
+    </ul>
+    <p class="note">The tool makes exactly two kinds of request to Google. Nothing is ever written to YouTube.</p>
+  </div>
+
+  <!-- ================= 2 QUOTA ================= -->
+  <h2 id="quota">2 · The allowance, and what we spend</h2>
+  <div class="card">
+    <p>Google's words: <em>"Projects that enable the YouTube Data API have a default quota allocation of 100 search.list calls, 100 videos.insert calls, and 10,000 units per day combined for all other endpoints."</em> And: <em>"Daily quotas reset at midnight Pacific Time (PT)."</em> That is 12:30 PM or 1:30 PM in India depending on the season.</p>
+    <div class="facts">
+      <div class="fact"><b>100 searches</b><span>per day. One <code>search.list</code> call = 1 search, its own bucket</span></div>
+      <div class="fact"><b>10,000 units</b><span>per day for everything else. One <code>commentThreads.list</code> call = 1 unit</span></div>
+      <div class="fact"><b>₹0</b><span>free, no card. Over the limit, calls are refused with "quotaExceeded", never billed</span></div>
+      <div class="fact"><b>More on request</b><span>Google has a "Quota extension request form" if we ever need it</span></div>
+    </div>
+    <p class="note">Also from Google: <em>"All API requests, including invalid requests, incur at least a one-point quota cost."</em> So a broken call still costs.</p>
+
+    <h4>What one run and one day spend, with the default settings</h4>
+    <div class="tbl">
+      <table>
+        <thead><tr><th class="k">Call</th><th class="s">Per run</th><th class="s">Runs per day</th><th class="s">Per day</th><th class="s">Allowance</th><th>Share</th></tr></thead>
+        <tbody>
+          <tr><td class="k">search.list (find videos)</td><td class="s num">4</td><td class="s num">12</td><td class="s num">48</td><td class="s num">100</td><td>48%</td></tr>
+          <tr><td class="k">commentThreads.list (read comments)</td><td class="s num">up to 20</td><td class="s num">12</td><td class="s num">up to 240 units</td><td class="s num">10,000</td><td>2.4%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">The 100 searches are the tight resource. Everything in section 8 is designed around them.</p>
+    <p class="src">Sources: developers.google.com/youtube/v3/getting-started and /determine_quota_cost, read 16 Sep 2026.</p>
+  </div>
+
+  <!-- ================= 3 SEARCH ================= -->
+  <h2 id="search">3 · Finding videos: <code>search.list</code></h2>
+  <div class="card">
+    <p>One call per topic. This is the request the tool sends, then the full list of what Google <em>accepts</em> and which ones we actually pass.</p>
+    <pre><code>GET https://www.googleapis.com/youtube/v3/search
+    ?part=snippet
+    &amp;q=PCOS diet plan
+    &amp;type=video
+    &amp;order=relevance
+    &amp;publishedAfter=2026-06-18T00:00:00.000Z
+    &amp;maxResults=5
+    &amp;relevanceLanguage=en
+    &amp;key=…</code></pre>
+
+    <h4>Every input Google accepts, and what we pass</h4>
+    <div class="tbl">
+      <table>
+        <thead><tr><th class="k">Parameter</th><th>Meaning</th><th class="s">We pass</th><th>Our value and why</th></tr></thead>
+        <tbody>
+          <tr><td class="k">part</td><td>Required. Which part of each result to return. Only <code>snippet</code> is allowed here.</td><td class="s yes">yes</td><td><code>snippet</code>: gives video id, title, channel, publish date, description.</td></tr>
+          <tr><td class="k">q</td><td>The search phrase.</td><td class="s yes">yes</td><td>One of our topics, for example <code>PCOS diet plan</code>.</td></tr>
+          <tr><td class="k">type</td><td><code>video</code>, <code>channel</code> or <code>playlist</code>.</td><td class="s yes">yes</td><td><code>video</code>. We only want videos, because only videos have comment threads.</td></tr>
+          <tr><td class="k">order</td><td>Six values: <code>relevance</code> (default), <code>date</code> newest first, <code>viewCount</code> most viewed, <code>rating</code> highest rated, <code>title</code> alphabetical, <code>videoCount</code> (channels only).</td><td class="s yes">yes</td><td><code>relevance</code>: YouTube's best match. Popular, on-topic videos with active comment sections.</td></tr>
+          <tr><td class="k">publishedAfter</td><td>Only videos uploaded at or after this time.</td><td class="s yes">yes</td><td>90 days before now. Old videos have old comments; we keep only comments from the last 7 days anyway.</td></tr>
+          <tr><td class="k">maxResults</td><td>0 to 50. Default 5.</td><td class="s yes">yes</td><td><code>5</code> ("videos per topic" in Settings).</td></tr>
+          <tr><td class="k">relevanceLanguage</td><td>Prefer results in this language (ISO code). Results in other languages may still appear.</td><td class="s yes">yes</td><td><code>en</code>. Hinglish videos are usually titled in English, so they are not excluded.</td></tr>
+          <tr><td class="k">key</td><td>The API key.</td><td class="s yes">yes</td><td>From the environment variable <code>YOUTUBE_API_KEY</code>. Never sent to the browser.</td></tr>
+          <tr><td class="k">publishedBefore</td><td>Only videos uploaded before this time.</td><td class="s no">no</td><td>Not needed.</td></tr>
+          <tr><td class="k">regionCode</td><td>Results available in a country (ISO code, e.g. IN).</td><td class="s no">no</td><td>Could bias towards India. Not used yet; Hash works globally.</td></tr>
+          <tr><td class="k">videoDuration</td><td><code>any</code>, <code>short</code> (under 4 min), <code>medium</code> (4 to 20), <code>long</code> (over 20).</td><td class="s no">no</td><td>All lengths.</td></tr>
+          <tr><td class="k">videoCategoryId</td><td>Only a YouTube category.</td><td class="s no">no</td><td>Diet videos sit in several categories.</td></tr>
+          <tr><td class="k">channelId</td><td>Only one channel's videos.</td><td class="s no">no</td><td>We search all channels.</td></tr>
+          <tr><td class="k">safeSearch</td><td><code>moderate</code> (default), <code>none</code>, <code>strict</code>.</td><td class="s no">no</td><td>Default applies.</td></tr>
+          <tr><td class="k">videoCaption</td><td><code>any</code>, <code>closedCaption</code>, <code>none</code>.</td><td class="s no">no</td><td>Not relevant.</td></tr>
+          <tr><td class="k">videoDefinition</td><td><code>any</code>, <code>high</code>, <code>standard</code>.</td><td class="s no">no</td><td>Not relevant.</td></tr>
+          <tr><td class="k">videoDimension, videoEmbeddable, videoLicense, videoSyndicated, videoType, videoPaidProductPlacement</td><td>Technical filters on the video file or license.</td><td class="s no">no</td><td>Not relevant.</td></tr>
+          <tr><td class="k">channelType, eventType, location, locationRadius, topicId</td><td>Channel kind, live events, geography, Freebase topic.</td><td class="s no">no</td><td>Not relevant.</td></tr>
+          <tr><td class="k">pageToken</td><td>Fetch the next page of results.</td><td class="s no">no</td><td>We take only the first page (5 results).</td></tr>
+          <tr><td class="k">forMine, forDeveloper, forContentOwner, onBehalfOfContentOwner</td><td>Search your own videos. Need a user login.</td><td class="s no">no</td><td>Not possible with an API key, and not wanted.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4>What comes back, and what we keep</h4>
+    <p>For each video: the video id, title, description, channel id, channel title, publish date, thumbnails. <strong>We keep three things:</strong> the video id (to read its comments next), the title (shown on the card as "Under the video: …"), and the channel title (shown as the community, for example <code>YouTube · Sonia Narang</code>).</p>
+    <p class="note">YouTube returns results in the requested order. It does not return a score or rank number for a video. View and like counts would need a separate <code>videos.list</code> call (1 unit per 50 videos), which the tool does not make today.</p>
+    <p class="src">Source: developers.google.com/youtube/v3/docs/search/list, read 16 Sep 2026. Code: <code>src/lib/collectors/youtube.ts</code>.</p>
+  </div>
+
+  <!-- ================= 4 COMMENTS ================= -->
+  <h2 id="comments">4 · Reading comments: <code>commentThreads.list</code></h2>
+  <div class="card">
+    <p>One call per video found in step 3. A "comment thread" is a top-level comment plus its replies; we read the top-level comment only.</p>
+    <pre><code>GET https://www.googleapis.com/youtube/v3/commentThreads
+    ?part=snippet
+    &amp;videoId=…
+    &amp;order=time
+    &amp;textFormat=plainText
+    &amp;maxResults=50
+    &amp;key=…</code></pre>
+
+    <h4>Every input Google accepts, and what we pass</h4>
+    <div class="tbl">
+      <table>
+        <thead><tr><th class="k">Parameter</th><th>Meaning</th><th class="s">We pass</th><th>Our value and why</th></tr></thead>
+        <tbody>
+          <tr><td class="k">part</td><td>Required. <code>id</code>, <code>snippet</code>, <code>replies</code>.</td><td class="s yes">yes</td><td><code>snippet</code>: the top-level comment's text and details. Replies are not fetched.</td></tr>
+          <tr><td class="k">videoId</td><td>Exactly one of these three filters must be given: <code>videoId</code> (threads on one video), <code>id</code> (specific threads), <code>allThreadsRelatedToChannelId</code> (all threads on a channel).</td><td class="s yes">yes</td><td>The video id from step 3.</td></tr>
+          <tr><td class="k">order</td><td>Two values only: <code>time</code> (default, newest first) and <code>relevance</code> (what YouTube shows as "Top comments").</td><td class="s yes">yes</td><td><code>time</code>. Newest first, so comments posted since the last run are always at the top.</td></tr>
+          <tr><td class="k">textFormat</td><td><code>html</code> (default) or <code>plainText</code>.</td><td class="s yes">yes</td><td><code>plainText</code>, so the text needs no cleaning before the AI reads it.</td></tr>
+          <tr><td class="k">maxResults</td><td>1 to 100. Default 20.</td><td class="s yes">yes</td><td><code>50</code> ("comments per video" in Settings). Still 1 unit whatever the number.</td></tr>
+          <tr><td class="k">key</td><td>The API key.</td><td class="s yes">yes</td><td>Same key.</td></tr>
+          <tr><td class="k">searchTerms</td><td>Only comments containing these words.</td><td class="s no">no</td><td>Not used. It would let YouTube pre-filter for words like "metformin"; we filter ourselves after fetching. Possible improvement, untested.</td></tr>
+          <tr><td class="k">moderationStatus</td><td><code>published</code> (default), <code>heldForReview</code>, <code>likelySpam</code>. The last two need the channel owner's login.</td><td class="s no">no</td><td>Default: published comments only.</td></tr>
+          <tr><td class="k">pageToken</td><td>Next page of comments.</td><td class="s no">no</td><td>First page only (50 newest).</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4>What comes back, and what we keep</h4>
+    <div class="tbl">
+      <table>
+        <thead><tr><th class="k">Field from Google</th><th>What it is</th><th class="s">We keep</th></tr></thead>
+        <tbody>
+          <tr><td class="k">topLevelComment.id</td><td>The comment's permanent id</td><td class="s yes">yes, as the item's external id (this is what stops duplicates)</td></tr>
+          <tr><td class="k">textOriginal</td><td>The comment text as written</td><td class="s yes">yes, as the item's body</td></tr>
+          <tr><td class="k">publishedAt</td><td>When it was posted</td><td class="s yes">yes, as posted_at (and to drop anything older than 7 days)</td></tr>
+          <tr><td class="k">likeCount</td><td>Likes on the comment</td><td class="s yes">yes, stored in meta; not used in ranking yet</td></tr>
+          <tr><td class="k">authorDisplayName, authorChannelId, authorProfileImageUrl</td><td>Who wrote it</td><td class="s no"><strong>no. Not read, and there is no column for it.</strong></td></tr>
+          <tr><td class="k">textDisplay, updatedAt, viewerRating, canRate, totalReplyCount</td><td>HTML version of the text, edit time, our own rating, reply count</td><td class="s no">no</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">If a video has comments switched off, Google answers "commentsDisabled"; the tool counts it and moves on. A single failing video never stops the run.</p>
+    <p class="src">Source: developers.google.com/youtube/v3/docs/commentThreads/list, read 16 Sep 2026. Code: <code>src/lib/collectors/youtube.ts</code>.</p>
+  </div>
+
+  <!-- ================= 5 STORE ================= -->
+  <h2 id="store">5 · How a comment is stored</h2>
+  <div class="card">
+    <p>Each kept comment becomes one row in the <code>items</code> table of the Supabase database. Before the row is written, three checks run in this order:</p>
+    <ol class="steps">
+      <li><strong>Posted within the last 7 days?</strong> If not, dropped without storing. Nothing older than a week ever enters the database.</li>
+      <li><strong>Seen before?</strong> The table has a uniqueness rule on (platform, external id). The external id is the YouTube comment id, so a comment fetched in an earlier run is silently ignored. Nothing is counted or tagged twice.</li>
+      <li><strong>Keyword filter.</strong> Plain code, no AI: the text must be at least 15 characters, must contain at least one word from the allow list (medicines like <code>metformin</code>, conditions like <code>PCOS</code>, tracking words like <code>calorie</code> or <code>app</code>, phrases like <code>what to eat</code>), must contain no word from the block list (<code>giveaway</code>, <code>crypto</code>, <code>hiring</code>, <code>meme</code> …), and must look like a question (a <code>?</code> or a phrase like "can I", "should I", "which app"). Whole words only, so <code>app</code> does not match <code>apple</code>.</li>
+    </ol>
+    <h4 style="margin-top:16px">The row</h4>
+    <div class="tbl">
+      <table>
+        <thead><tr><th class="k">Column</th><th>Value for a YouTube comment</th></tr></thead>
+        <tbody>
+          <tr><td class="k">platform</td><td><code>youtube</code></td></tr>
+          <tr><td class="k">source_kind</td><td><code>auto</code> (collected by the timer, not pasted)</td></tr>
+          <tr><td class="k">external_id</td><td>the YouTube comment id</td></tr>
+          <tr><td class="k">url</td><td><code>https://www.youtube.com/watch?v=&lt;video&gt;&amp;lc=&lt;comment&gt;</code>, which opens the video with that comment highlighted</td></tr>
+          <tr><td class="k">community</td><td><code>YouTube · &lt;channel title&gt;</code></td></tr>
+          <tr><td class="k">title</td><td>empty (comments have no title)</td></tr>
+          <tr><td class="k">body</td><td>the comment text</td></tr>
+          <tr><td class="k">posted_at</td><td>when the comment was posted</td></tr>
+          <tr><td class="k">collected_at</td><td>when we stored it (the 7-day deletion counts from here)</td></tr>
+          <tr><td class="k">status</td><td><code>filtered</code> with a reason, or <code>queued</code> for the AI</td></tr>
+          <tr><td class="k">meta</td><td>video id, video title, like count, the topic that found it</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">There is no username column in this table or any other. A daily job deletes every row 7 days after <code>collected_at</code>. Google's own rule for API data is 30 days at most; ours is stricter.</p>
+    <p class="src">Code: <code>src/lib/pipeline/prefilter.ts</code>, <code>src/lib/pipeline/run.ts</code>, <code>supabase/migrations/0001_schema.sql</code>.</p>
+  </div>
+
+  <!-- ================= 6 AI ================= -->
+  <h2 id="ai">6 · Why the AI, and what it does</h2>
+  <div class="card">
+    <div class="callout">
+      <p><b>The keyword filter cannot understand a sentence.</b> "Is roti okay with my sugar tablets?" contains no medicine name and no condition name, yet it is a perfect match. "Metformin is the worst, switched to keto, feeling great" contains a medicine name and is useless. Telling those apart needs reading, and that is the one job the AI has.</p>
+    </div>
+    <p style="margin-top:12px">For each <code>queued</code> item, one request goes to Google's Gemini (model <code>gemini-3.5-flash-lite</code>, free tier; four keys rotated so the per-minute limit is never hit). The request contains fixed instructions, the comment text (platform, channel, text; no username, no link), and a strict schema for the answer. The model must return this form and nothing else:</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th class="k">Field</th><th>What the AI fills in</th></tr></thead>
+        <tbody>
+          <tr><td class="k">intent</td><td>One of five groups, below.</td></tr>
+          <tr><td class="k">conditions</td><td>Health conditions named in the text itself, e.g. <code>["type 2 diabetes"]</code>. Never guessed.</td></tr>
+          <tr><td class="k">medicines</td><td>Medicines named in the text itself, e.g. <code>["metformin"]</code>. Never guessed.</td></tr>
+          <tr><td class="k">competitor</td><td>A competitor app named in the text, or nothing.</td></tr>
+          <tr><td class="k">fit_score</td><td>0 to 100: how directly a medicine- and condition-aware food tracker answers this exact text.</td></tr>
+          <tr><td class="k">urgency</td><td>low, medium, high.</td></tr>
+          <tr><td class="k">language</td><td>en, hinglish, other.</td></tr>
+          <tr><td class="k">do_not_reply + reason</td><td>true when this is not someone to approach: asks for a dosage or a diagnosis, describes an emergency, or is about eating disorders or mental health.</td></tr>
+          <tr><td class="k">summary</td><td>One plain sentence saying what is asked, with no name in it.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4 style="margin-top:16px">The five groups</h4>
+    <div class="tbl">
+      <table>
+        <thead><tr><th class="k">intent</th><th>Meaning</th><th>Example</th><th class="s">Becomes</th></tr></thead>
+        <tbody>
+          <tr><td class="k">medicine_food_question</td><td>Asks what to eat, avoid, or time around a medicine or a named condition</td><td>"Can I keep eating rice on metformin?"</td><td class="s">to look at, +15</td></tr>
+          <tr><td class="k">app_recommendation</td><td>Asks for or compares calorie, diet or food-logging apps</td><td>"Which app understands Indian food?"</td><td class="s">to look at, +10</td></tr>
+          <tr><td class="k">competitor_complaint</td><td>Complains about a specific competitor app</td><td>"Cal AI keeps calling my dal pasta"</td><td class="s">to look at, +5</td></tr>
+          <tr><td class="k">nutrition_question</td><td>General diet question, no medicine or condition</td><td>"Is oats good for weight loss?"</td><td class="s">to look at, +0</td></tr>
+          <tr><td class="k">irrelevant</td><td>Praise, jokes, spam, no question</td><td>"Great video sir"</td><td class="s">dropped</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note" style="margin-top:12px"><strong>After the answer comes back</strong>, plain code takes over again: the answer is checked against the schema (an out-of-range score or an unknown group is rejected and asked once more); the row in <code>tags</code> is written; <em>do_not_reply</em> makes the item <code>not suitable</code>, <em>irrelevant</em> makes it <code>filtered</code>, anything else makes it <code>tagged</code> (on the list) with score = fit score + the group bonus above + urgency (0, 3 or 6) − 2 per day of age, capped at −14. The Today page shows the 10 highest scores.</p>
+    <p class="src">Code: <code>src/lib/ai/prompts.ts</code>, <code>src/lib/types.ts</code>, <code>src/lib/pipeline/score.ts</code>, <code>src/lib/pipeline/run.ts</code>.</p>
+  </div>
+
+  <!-- ================= 7 TOPICS ================= -->
+  <h2 id="topics">7 · The topics</h2>
+  <div class="card">
+    <p>Nine search phrases. Each becomes the <code>q</code> of one <code>search.list</code> call. They are defaults in the code and editable on the Settings page.</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th class="s">#</th><th class="k">Topic</th><th>Who comments under these videos</th></tr></thead>
+        <tbody>
+          <tr><td class="s num">1</td><td class="k">diabetes diet</td><td>People with diabetes asking what they can eat</td></tr>
+          <tr><td class="s num">2</td><td class="k">type 2 diabetes what to eat</td><td>Same audience, phrased the way people search</td></tr>
+          <tr><td class="s num">3</td><td class="k">PCOS diet plan</td><td>PCOS patients, often on metformin or letrozole</td></tr>
+          <tr><td class="s num">4</td><td class="k">thyroid diet</td><td>Thyroid patients, often on levothyroxine</td></tr>
+          <tr><td class="s num">5</td><td class="k">hypothyroidism diet</td><td>Same audience, the medical wording</td></tr>
+          <tr><td class="s num">6</td><td class="k">Indian weight loss diet</td><td>Indian food questions: roti, rice, dal</td></tr>
+          <tr><td class="s num">7</td><td class="k">calorie tracking app review</td><td>People choosing an app</td></tr>
+          <tr><td class="s num">8</td><td class="k">Cal AI review</td><td>People using or judging that competitor</td></tr>
+          <tr><td class="s num">9</td><td class="k">HealthifyMe review</td><td>Same, for the Indian competitor</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Topics 1 to 6 find people asking about food with a medicine or condition. Topics 7 to 9 find people choosing or complaining about a calorie app. The topics choose the <em>videos</em>; the keyword filter in section 5 is applied to each <em>comment</em> separately.</p>
+  </div>
+
+  <!-- ================= 8 ROTATION ================= -->
+  <h2 id="rotation">8 · Why 4 topics per run, and which 4</h2>
+  <div class="card">
+    <p>The timer runs 12 times a day. Searching all 9 topics every run would be 108 searches, over the 100 allowed. So each run searches 4, and consecutive runs continue through the list.</p>
+    <h4>The rule</h4>
+    <ol class="steps">
+      <li><strong>Count 2-hour blocks since 1 January 1970</strong> (the zero point every computer clock uses). This "window number" goes up by one every 2 hours.</li>
+      <li><strong>Multiply by 4</strong> (topics per run).</li>
+      <li><strong>Divide by 9</strong> (number of topics) and keep the remainder. That is the position in the list where this run starts.</li>
+      <li><strong>Take 4 topics from there</strong>, wrapping to the top of the list at the end.</li>
+    </ol>
+    <h4 style="margin-top:16px">One day, run by run</h4>
+    <div class="tbl">
+      <table>
+        <thead><tr><th class="s">Run</th><th>Topics searched</th></tr></thead>
+        <tbody>
+          <tr><td class="s num">1</td><td>diabetes diet · type 2 diabetes what to eat · PCOS diet plan · thyroid diet</td></tr>
+          <tr><td class="s num">2</td><td>hypothyroidism diet · Indian weight loss diet · calorie tracking app review · Cal AI review</td></tr>
+          <tr><td class="s num">3</td><td>HealthifyMe review · diabetes diet · type 2 diabetes what to eat · PCOS diet plan</td></tr>
+          <tr><td class="s num">4</td><td>thyroid diet · hypothyroidism diet · Indian weight loss diet · calorie tracking app review</td></tr>
+          <tr><td class="s num">5</td><td>Cal AI review · HealthifyMe review · diabetes diet · type 2 diabetes what to eat</td></tr>
+          <tr><td class="s num">6</td><td>PCOS diet plan · thyroid diet · hypothyroidism diet · Indian weight loss diet</td></tr>
+          <tr><td class="s num">7</td><td>calorie tracking app review · Cal AI review · HealthifyMe review · diabetes diet</td></tr>
+          <tr><td class="s num">8</td><td>type 2 diabetes what to eat · PCOS diet plan · thyroid diet · hypothyroidism diet</td></tr>
+          <tr><td class="s num">9</td><td>Indian weight loss diet · calorie tracking app review · Cal AI review · HealthifyMe review</td></tr>
+          <tr><td class="s num">10</td><td>diabetes diet · type 2 diabetes what to eat · PCOS diet plan · thyroid diet</td></tr>
+          <tr><td class="s num">11</td><td>hypothyroidism diet · Indian weight loss diet · calorie tracking app review · Cal AI review</td></tr>
+          <tr><td class="s num">12</td><td>HealthifyMe review · diabetes diet · type 2 diabetes what to eat · PCOS diet plan</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Every topic is searched 5 or 6 times a day, roughly every 4 hours, for 48 searches in total. Which run is "run 1" shifts with the date, but the pattern is always this. Because the start comes from the clock and not from memory, a missed run does not break the sequence; the next run simply takes its own slice.</p>
+    <p class="src">Code: <code>rotateTopics()</code> in <code>src/lib/collectors/youtube.ts</code>.</p>
+  </div>
+
+  <!-- ================= 9 REPEAT ================= -->
+  <h2 id="repeat">9 · The same 5 videos and the same 50 comments, again</h2>
+  <div class="card">
+    <div class="callout">
+      <p><b>Within 4 hours the top 5 videos for a topic rarely change. So most runs return the same 5 videos, and most of their 50 newest comments were already seen.</b> This is expected. What we want from a video is not the video, it is the comments that arrived since we last looked, and a popular diet video keeps receiving question comments for weeks.</p>
+    </div>
+    <h4 style="margin-top:14px">How the repeats are handled</h4>
+    <ul class="plain">
+      <li><strong>Same video again:</strong> costs 1 unit. Reading it again is the point.</li>
+      <li><strong>Same comment again:</strong> rejected by the uniqueness rule on the comment id (section 5, step 2). It is not stored, not filtered, not sent to the AI. Only comments new since the last look go through.</li>
+      <li><strong>Where you see it:</strong> every run record on the YouTube page shows "fetched" and "new". The first run showed fetched 117, new 117. A later run of the same topics shows a similar "fetched" and a small "new".</li>
+    </ul>
+    <h4 style="margin-top:14px">The 50-comment window</h4>
+    <ul class="plain">
+      <li><strong>Quiet video</strong> (fewer than 50 new comments since the last look, which is almost every video): the newest 50 contain all the new ones plus some known ones. Known ones are dropped, new ones pass. Nothing is missed.</li>
+      <li><strong>Busy video</strong> (more than 50 new comments in about 4 hours): comments beyond the 50th newest are not seen. This is the one real gap. "Comments per video" can be raised to 100 in Settings at no extra cost (still 1 unit per video).</li>
+      <li><strong>Why not "comments since time X"?</strong> The comment endpoint has no such filter (section 4 lists every parameter it has). Newest-first plus the id check is the only way, and it needs no memory.</li>
+    </ul>
+    <p class="note">A brand-new video appears only once YouTube ranks it in the top 5 for the phrase. Switching <code>order</code> to <code>date</code> would show new uploads immediately at the cost of more low-quality videos. Not done; it is one word in the code.</p>
+  </div>
+
+  <!-- ================= 10 SETTINGS ================= -->
+  <h2 id="settings">10 · The settings, and what each one costs</h2>
+  <div class="card">
+    <p>All on the Settings page except the schedule, which is one line of SQL. The rule to keep: <strong>topics per run × runs per day must stay under 100.</strong></p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th class="k">Setting</th><th class="s">Default</th><th class="s">Allowed</th><th>Effect</th><th>Cost of raising it</th></tr></thead>
+        <tbody>
+          <tr><td class="k">YouTube topics</td><td class="s">9 phrases</td><td class="s">any list</td><td>Which videos are found. Adding Hindi phrases reaches Hindi channels.</td><td>None: still 4 searches per run. Each topic just comes around less often.</td></tr>
+          <tr><td class="k">Searches per run</td><td class="s num">4</td><td class="s">0 to 100</td><td>How many topics each run searches.</td><td>× 12 runs. 8 is the ceiling with the 2-hour schedule (96 of 100).</td></tr>
+          <tr><td class="k">Videos per topic</td><td class="s num">5</td><td class="s">1 to 50</td><td>Reaches smaller channels.</td><td>1 unit per extra video per run. 10 → about 480 units a day.</td></tr>
+          <tr><td class="k">Comments per video</td><td class="s num">50</td><td class="s">1 to 100</td><td>Safer on busy videos.</td><td>None. Still 1 unit per video.</td></tr>
+          <tr><td class="k">Schedule (SQL)</td><td class="s">every 2 hours</td><td class="s">any cron</td><td>Freshness.</td><td>Hourly doubles searches to 96 a day at 4 per run.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>Internal document for the Hash Health team. Every YouTube parameter and quota figure on this page was read from Google's reference pages on 16 Sep 2026; every "we pass" and "we keep" was read from the code as deployed that day.</footer>
+</main>
+</body>
+</html>
