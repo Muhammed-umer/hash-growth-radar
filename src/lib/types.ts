@@ -1,9 +1,9 @@
 import { z } from "zod";
 
-export const PLATFORMS = ["reddit", "youtube"] as const;
+export const PLATFORMS = ["youtube"] as const;
 export type Platform = (typeof PLATFORMS)[number];
 
-export type SourceKind = "auto" | "manual";
+export type SourceKind = "auto";
 
 /**
  * filtered     dropped by the keyword filter or tagged irrelevant
@@ -98,7 +98,7 @@ export interface TagRow extends Classification {
 export interface RunRow {
   id: string;
   platform: Platform;
-  trigger: "cron" | "manual" | "intake";
+  trigger: "cron";
   started_at: string;
   finished_at: string | null;
   status: "running" | "ok" | "error" | "skipped";

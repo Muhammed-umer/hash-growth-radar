@@ -1,8 +1,6 @@
 import { RETENTION_DAYS } from "../config";
-import type { Platform } from "../types";
 
 export interface PrefilterInput {
-  platform: Platform;
   title: string | null;
   body: string | null;
   postedAt: string | null;
@@ -83,8 +81,8 @@ export function prefilter(input: PrefilterInput, rules: PrefilterRules): Prefilt
   const allowed = rules.allow.some((a) => containsTerm(lower, a));
   if (!allowed) return { pass: false, reason: "no_keyword" };
 
-  // YouTube comments are mostly praise and chatter; we only want questions.
-  if (input.platform === "youtube" && !looksLikeQuestion(text)) {
+  // Comments are mostly praise and chatter; we only want questions.
+  if (!looksLikeQuestion(text)) {
     return { pass: false, reason: "not_a_question" };
   }
 

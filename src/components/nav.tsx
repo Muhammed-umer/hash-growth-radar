@@ -3,8 +3,8 @@ import { NAV_PLATFORMS, PLATFORM_INFO } from "@/lib/config";
 import { countsFor, statusCounts } from "@/lib/queries";
 
 /**
- * One link per platform so each tool can be monitored on its own. Badges show
- * how many people are waiting to be looked at on that platform.
+ * Today, one link per platform (badge = people waiting to be looked at),
+ * and a plain "How it works" page. Nothing here changes any setting.
  */
 export async function Nav() {
   let badges: Record<string, number> = {};
@@ -29,12 +29,12 @@ export async function Nav() {
           {NAV_PLATFORMS.map((p) => (
             <NavLink key={p} href={`/platforms/${p}`} label={PLATFORM_INFO[p].label} badge={badges[p] ?? 0} />
           ))}
-          <NavLink href="/settings" label="Settings" />
+          <NavLink href="/how" label="How it works" />
         </nav>
       </div>
       {dbError && (
         <div className="bg-amber-50 px-6 py-2 text-xs text-amber-900">
-          Database not reachable: {dbError}. Check SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY and run the SQL migrations.
+          Database not reachable: {dbError}. Check SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY and run supabase/migrations/0001_schema.sql.
         </div>
       )}
     </header>

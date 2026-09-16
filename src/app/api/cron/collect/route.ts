@@ -1,14 +1,13 @@
 import { after, type NextRequest } from "next/server";
 import { isCronAuthorized, unauthorized } from "@/lib/cron-auth";
 import { collectPlatform } from "@/lib/pipeline/run";
-import { getSettings } from "@/lib/settings";
 import type { Platform } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300; // Vercel Hobby maximum with Fluid Compute
 
 /**
- * Runs every automatic collector, then tags what it can within the time budget.
+ * Runs the YouTube collector, then tags what it can within the time budget.
  *
  * Supabase Cron calls this on a schedule (supabase/migrations/0002_cron.sql).
  * Its HTTP client waits only a few seconds, so by default we answer "started"
@@ -21,9 +20,7 @@ export async function GET(request: NextRequest) {
   if (!isCronAuthorized(request)) return unauthorized();
 
   const work = async () => {
-    const settings = await getSettings();
     const platforms: Platform[] = ["youtube"];
-    if (settings.reddit_api_enabled) platforms.push("reddit");
     const perPlatform = Math.floor(270_000 / platforms.length);
     const results = [];
     for (const p of platforms) {

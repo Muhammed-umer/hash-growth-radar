@@ -1,17 +1,14 @@
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
-import { NAV_PLATFORMS, PLATFORM_INFO } from "@/lib/config";
+import { CONFIG, NAV_PLATFORMS, PLATFORM_INFO, RUNS_PER_DAY } from "@/lib/config";
 import { env, type EnvKey } from "@/lib/env";
 import { STATUS_LABEL, timeAgo } from "@/lib/format";
 import { countsFor, loadQueue, recentDropped, recentRuns, statusCounts } from "@/lib/queries";
-import { getSettings } from "@/lib/settings";
 import { ItemCard } from "@/components/item-card";
-import { PostForm } from "@/components/forms";
 import { RunTable } from "@/components/run-table";
 import { Section, Stat } from "@/components/stat";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 300; // the Reddit paste action tags inline and may take a couple of minutes
 
 type NavPlatform = (typeof NAV_PLATFORMS)[number];
 
@@ -25,8 +22,7 @@ export default async function PlatformPage({ params }: { params: Promise<{ platf
   if (!isNavPlatform(platform)) notFound();
   const info = PLATFORM_INFO[platform];
 
-  const [settings, counts, runs, queue, dropped] = await Promise.all([
-    getSettings(),
+  const [counts, runs, queue, dropped] = await Promise.all([
     statusCounts(),
     recentRuns(platform, 10),
     loadQueue({ platform, limit: 25 }),
@@ -35,17 +31,13 @@ export default async function PlatformPage({ params }: { params: Promise<{ platf
   const c = countsFor(counts, platform);
   const now = new Date();
   const lastRun = runs[0] ?? null;
-  const missingEnv = info.requiredEnv.filter((k) => !env(k as EnvKey));
-  const redditAuto = platform === "reddit" && settings.reddit_api_enabled && missingEnv.length === 0;
-  const isAuto = info.mode === "auto" || redditAuto;
+  const perRun = Math.min(CONFIG.youtube_max_searches_per_run, CONFIG.youtube_topics.length);
 
   return (
     <div>
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-semibold">{info.label}</h1>
-        <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${isAuto ? "bg-emerald-100 text-emerald-900" : "bg-amber-100 text-amber-900"}`}>
-          {isAuto ? "Automatic" : "Manual"}
-        </span>
+        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-900">Automatic, every 2 hours</span>
       </div>
       <p className="mt-1 max-w-3xl text-sm text-stone-600">{info.blurb}</p>
 
@@ -60,59 +52,36 @@ export default async function PlatformPage({ params }: { params: Promise<{ platf
         </div>
         <div className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
           <div className="rounded-lg border border-stone-200 bg-white p-3">
-            <div className="text-xs font-semibold uppercase text-stone-500">Last run{isAuto ? " (scheduled every 2 hours)" : ""}</div>
+            <div className="text-xs font-semibold uppercase text-stone-500">Last scheduled run</div>
             {lastRun ? (
               <p className="mt-1">
                 {timeAgo(lastRun.started_at, now)} · <b>{lastRun.status}</b> · fetched {lastRun.fetched}, new {lastRun.stored}, queued {lastRun.queued}, tagged {lastRun.tagged}
                 {lastRun.error && <span className="block text-red-800">{lastRun.error}</span>}
               </p>
             ) : (
-              <p className="mt-1 text-stone-500">Never run.</p>
+              <p className="mt-1 text-stone-500">Never run yet. The schedule fires at the next even hour (UTC).</p>
             )}
           </div>
           <div className="rounded-lg border border-stone-200 bg-white p-3">
             <div className="text-xs font-semibold uppercase text-stone-500">Configuration</div>
-            {info.requiredEnv.length === 0 ? (
-              <p className="mt-1 text-stone-600">Nothing to configure.</p>
-            ) : (
-              <ul className="mt-1 space-y-0.5">
-                {info.requiredEnv.map((k) => (
-                  <li key={k}>
-                    <span className={env(k as EnvKey) ? "text-emerald-700" : "text-red-700"}>{env(k as EnvKey) ? "✓" : "✗"}</span> <code className="text-xs">{k}</code>
-                  </li>
-                ))}
-                {platform === "reddit" && (
-                  <li>
-                    <span className={settings.reddit_api_enabled ? "text-emerald-700" : "text-stone-400"}>{settings.reddit_api_enabled ? "✓" : "○"}</span> Reddit API enabled in Settings
-                  </li>
-                )}
-              </ul>
-            )}
-            {platform === "youtube" && (
-              <p className="mt-2 text-xs text-stone-500">
-                Each run searches {Math.min(settings.youtube_max_searches_per_run, settings.youtube_topics.length)} of your {settings.youtube_topics.length} topics (they rotate), so 12 runs a day use about{" "}
-                {Math.min(settings.youtube_max_searches_per_run, settings.youtube_topics.length) * 12} of the 100 daily searches, and each run reads up to{" "}
-                {settings.youtube_max_searches_per_run * settings.youtube_videos_per_topic} videos&apos; comments (1 unit each, of 10,000 a day).
-              </p>
-            )}
+            <ul className="mt-1 space-y-0.5">
+              {info.requiredEnv.map((k) => (
+                <li key={k}>
+                  <span className={env(k as EnvKey) ? "text-emerald-700" : "text-red-700"}>{env(k as EnvKey) ? "✓" : "✗"}</span> <code className="text-xs">{k}</code>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-xs text-stone-500">
+              Each run searches {perRun} of the {CONFIG.youtube_topics.length} topics (they rotate), so {RUNS_PER_DAY} runs a day use about {perRun * RUNS_PER_DAY} of the 100 daily searches,
+              and each run reads up to {perRun * CONFIG.youtube_videos_per_topic} videos&apos; comments (1 unit each, of 10,000 a day).
+            </p>
           </div>
         </div>
       </Section>
 
-      {platform === "reddit" && (
-        <Section title={redditAuto ? "Paste a post by hand" : "Paste a post"}>
-          <div className="rounded-xl border border-stone-200 bg-white p-4">
-            <PostForm
-              platform={platform}
-              hint={`Open the communities and searches listed in Settings in your browser once or twice a day. Paste any promising post here and the tool tags and ranks it. Communities: ${settings.reddit_subreddits.map((s) => `r/${s}`).join(", ")}.`}
-            />
-          </div>
-        </Section>
-      )}
-
       <Section title={`People to look at (${queue.length})`}>
         {queue.length === 0 ? (
-          <p className="text-sm text-stone-500">Nothing to look at on {info.label}.</p>
+          <p className="text-sm text-stone-500">Nothing to look at on {info.label} right now.</p>
         ) : (
           <div className="space-y-4">
             {queue.map((e) => (

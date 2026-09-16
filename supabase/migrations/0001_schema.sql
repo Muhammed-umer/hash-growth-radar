@@ -1,4 +1,4 @@
--- Hash Growth Radar — the whole database schema, as it is today (16 Sep 2026).
+-- Hash Growth Radar — the whole database schema, as it is today (16 Sep 2026, YouTube only).
 -- Paste this file into Supabase → SQL Editor → Run. On a fresh project it
 -- builds everything; on an existing project it changes nothing (every
 -- statement is "if not exists" / "or replace"), so it is safe to run again.
@@ -14,11 +14,11 @@ create extension if not exists pgcrypto;
 -- ---------------------------------------------------------------------------
 create table if not exists items (
   id            uuid primary key default gen_random_uuid(),
-  platform      text not null check (platform in ('reddit', 'youtube')),
-  source_kind   text not null default 'auto' check (source_kind in ('auto', 'manual')),
-  external_id   text not null,                 -- YouTube comment id, Reddit post/comment id, or a url:/text: hash for pastes
+  platform      text not null check (platform in ('youtube')),
+  source_kind   text not null default 'auto' check (source_kind in ('auto')),
+  external_id   text not null,                 -- the YouTube comment id
   url           text,
-  community     text,                          -- "r/type2diabetes" or "YouTube · Channel Name"
+  community     text,                          -- "YouTube · Channel Name"
   title         text,
   body          text,
   posted_at     timestamptz,
@@ -64,7 +64,7 @@ create table if not exists tags (
 create table if not exists runs (
   id           uuid primary key default gen_random_uuid(),
   platform     text not null,
-  trigger      text not null default 'cron' check (trigger in ('cron', 'manual', 'intake')),
+  trigger      text not null default 'cron' check (trigger in ('cron')),
   started_at   timestamptz not null default now(),
   finished_at  timestamptz,
   status       text not null default 'running' check (status in ('running', 'ok', 'error', 'skipped')),
@@ -126,15 +126,6 @@ end
 $$;
 
 -- ---------------------------------------------------------------------------
--- settings: key/value overrides for the defaults in src/lib/config.ts
--- ---------------------------------------------------------------------------
-create table if not exists settings (
-  key        text primary key,
-  value      jsonb not null,
-  updated_at timestamptz not null default now()
-);
-
--- ---------------------------------------------------------------------------
 -- Aggregates used by the dashboard (avoid pulling every row to count it)
 -- ---------------------------------------------------------------------------
 create or replace function item_status_counts()
@@ -162,4 +153,8 @@ alter table items    enable row level security;
 alter table tags     enable row level security;
 alter table runs     enable row level security;
 alter table jobs     enable row level security;
-alter table settings enable row level security;
+
+-- Note for the project created before 16 Sep 2026: it also has a `settings`
+-- table and looser checks (platform 'reddit', source_kind 'manual', trigger
+-- 'manual'/'intake') from earlier versions. Nothing uses them; they are
+-- harmless. To tidy up:  drop table if exists settings;

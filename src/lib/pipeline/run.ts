@@ -1,10 +1,9 @@
 import "server-only";
 import { COLLECTORS, CollectorConfigError } from "../collectors";
-import type { SettingsShape } from "../config";
+import { config, type Config } from "../config";
 import { db, must } from "../db";
 import { AllKeysParkedError } from "../ai/keyring";
 import { claim, complete, defer, enqueueMany, fail, JOB_TYPES, releaseStale } from "../queue";
-import { getSettings } from "../settings";
 import type { ItemRow, JobRow, Platform, RawItem, RunRow } from "../types";
 import { classify } from "./classify";
 import { prefilter } from "./prefilter";
@@ -35,16 +34,16 @@ function chunk<T>(arr: T[], size: number): T[][] {
  * nothing can be stranded in "new". Duplicates are dropped by the unique
  * index (ON CONFLICT DO NOTHING), so only newly inserted rows come back.
  */
-export async function ingest(platform: Platform, raws: RawItem[], settings: SettingsShape): Promise<IngestResult> {
+export async function ingest(platform: Platform, raws: RawItem[], cfg: Config): Promise<IngestResult> {
   if (raws.length === 0) return { fetched: 0, stored: 0, duplicates: 0, filtered_out: 0, queued: 0, queuedIds: [] };
 
   const byId = new Map<string, RawItem>();
   for (const r of raws) if (!byId.has(r.externalId)) byId.set(r.externalId, r);
   const inBatchDupes = raws.length - byId.size;
 
-  const rules = { allow: settings.keywords_allow, block: settings.keywords_block };
+  const rules = { allow: cfg.keywords_allow, block: cfg.keywords_block };
   const rows = [...byId.values()].map((r) => {
-    const f = prefilter({ platform, title: r.title, body: r.body, postedAt: r.postedAt }, rules);
+    const f = prefilter({ title: r.title, body: r.body, postedAt: r.postedAt }, rules);
     return {
       platform,
       source_kind: r.sourceKind,
@@ -110,10 +109,10 @@ export async function collectPlatform(platform: Platform, trigger: RunRow["trigg
   const run = await startRun(platform, trigger);
   try {
     const collector = COLLECTORS[platform];
-    if (!collector) throw new CollectorConfigError("This platform has no automatic collector. Use the paste form.");
-    const settings = await getSettings();
-    const { items, notes } = await collector({ settings, now: new Date() });
-    const { queuedIds, ...counts } = await ingest(platform, items, settings);
+    if (!collector) throw new CollectorConfigError("This platform has no automatic collector.");
+    const cfg = config();
+    const { items, notes } = await collector({ config: cfg, now: new Date() });
+    const { queuedIds, ...counts } = await ingest(platform, items, cfg);
     const remaining = budgetMs - (Date.now() - started);
     const drained = await drainJobs(remaining);
     return finishRun(run.id, {
@@ -125,25 +124,6 @@ export async function collectPlatform(platform: Platform, trigger: RunRow["trigg
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     return finishRun(run.id, { status: e instanceof CollectorConfigError ? "skipped" : "error", error: message.slice(0, 2000) });
-  }
-}
-
-/** Manual paste for one platform, recorded as a run so the platform page shows it. */
-export async function intake(platform: Platform, raws: RawItem[], budgetMs = 120_000): Promise<RunRow> {
-  const run = await startRun(platform, "intake");
-  try {
-    const settings = await getSettings();
-    const { queuedIds, ...counts } = await ingest(platform, raws, settings);
-    const drained = await drainJobs(budgetMs);
-    return finishRun(run.id, {
-      status: "ok",
-      ...counts,
-      tagged: countTagged(queuedIds, drained.processedItemIds),
-      notes: { jobs_processed: drained.processed, jobs_failed: drained.failed },
-    });
-  } catch (e) {
-    const message = e instanceof Error ? e.message : String(e);
-    return finishRun(run.id, { status: "error", error: message.slice(0, 2000) });
   }
 }
 

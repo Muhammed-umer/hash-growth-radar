@@ -17,7 +17,7 @@ These people are Hash's ideal users. They are asking for exactly what Hash does.
 
 ## What the tool does
 
-1. **Finds** those conversations on YouTube (automatic from day one) and Reddit (by hand until Reddit approves API access, required since June 2026, takes 2 to 4 weeks; automatic after that).
+1. **Finds** those conversations in YouTube comments, automatically, every 2 hours.
 2. **Ranks** them by how well they match Hash, and keeps only the best 10 per day.
 3. **Shows** you each one: where they asked, what they asked, which medicine or condition, a fit score, and the link. Nothing else.
 
@@ -27,18 +27,17 @@ That is the whole job. It runs by itself on a schedule. You open the thread and 
 
 | Platform | What we look for | How |
 |---|---|---|
-| **YouTube comments** | Questions under diabetes diet, PCOS diet, thyroid diet, and calorie app review videos | Automatic, every 2 hours |
-| **Reddit** | Questions in condition communities (r/diabetes, r/type2diabetes, r/prediabetes, r/PCOS, r/Hypothyroidism, r/hypertension, r/ClotSurvivors, r/Cholesterol), diet communities (r/loseit, r/nutrition, r/1200isplenty, r/intermittentfasting), Indian communities (r/IndianFitness, r/india, r/IndianFood), and anyone asking for a calorie app. The list is editable in Settings | Paste by hand now; automatic once Reddit approves |
+| **YouTube comments** | Questions under videos found by nine search phrases: diabetes diet, type 2 diabetes what to eat, PCOS diet plan, thyroid diet, hypothyroidism diet, Indian weight loss diet, calorie tracking app review, Cal AI review, HealthifyMe review | Automatic, every 2 hours |
 
-Looked at and dropped on 16 Sep 2026: Hacker News (too few of Hash's people), App Store and Play Store (no free legal way to read other apps' reviews, and no way to contact a reviewer), Product Hunt (non-commercial API, tiny volume).
+Looked at and dropped on 16 Sep 2026: Reddit (API needs Reddit's approval, weeks and not guaranteed), Hacker News (too few of Hash's people), App Store and Play Store (no free legal way to read other apps' reviews, and no way to contact a reviewer), Product Hunt (non-commercial API, tiny volume).
 
 ## How we search
 
-- **Watch lists**: a list of communities, apps, and video topics, editable in Settings.
+- **Topics**: the nine YouTube search phrases above, kept in the code.
 - **Search phrases**: things like "metformin diet", "warfarin vitamin K", "levothyroxine food", "best calorie tracker", "MyFitnessPal alternative", "calorie app Indian food".
-- **Fresh only**: posts from the last 7 days, never the same post twice.
+- **Fresh only**: comments from the last 7 days, never the same comment twice.
 - **Noise filter first**: obvious off-topic items are dropped before anything else happens.
-- **Understanding, not keywords**: each remaining post is read by a small free AI model and tagged: what is being asked, which condition or medicine is involved, does it mention a competitor, and a fit score from 0 to 100.
+- **Understanding, not keywords**: each remaining comment is read by a small free AI model and tagged: what is being asked, which condition or medicine is involved, does it mention a competitor, and a fit score from 0 to 100.
 - **Top 10 only**: you see the highest-scoring items, nothing else.
 
 ## Schedule

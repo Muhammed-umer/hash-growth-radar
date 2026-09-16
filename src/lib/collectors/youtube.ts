@@ -56,7 +56,7 @@ export function rotateTopics(all: string[], perRun: number, now: Date): string[]
  * then one commentThreads.list call per video. Keeps only top-level comments
  * from the last RETENTION_DAYS. Authors are never read or stored.
  */
-export const collectYouTube: Collector = async ({ settings, now }) => {
+export const collectYouTube: Collector = async ({ config, now }) => {
   const key = env("YOUTUBE_API_KEY");
   if (!key) {
     throw new CollectorConfigError(
@@ -64,7 +64,7 @@ export const collectYouTube: Collector = async ({ settings, now }) => {
     );
   }
 
-  const topics = rotateTopics(settings.youtube_topics, settings.youtube_max_searches_per_run, now);
+  const topics = rotateTopics(config.youtube_topics, config.youtube_max_searches_per_run, now);
   const publishedAfter = new Date(now.getTime() - VIDEO_LOOKBACK_DAYS * 86_400_000).toISOString();
   const commentCutoff = now.getTime() - RETENTION_DAYS * 86_400_000;
 
@@ -82,7 +82,7 @@ export const collectYouTube: Collector = async ({ settings, now }) => {
     search.searchParams.set("type", "video");
     search.searchParams.set("order", "relevance");
     search.searchParams.set("publishedAfter", publishedAfter);
-    search.searchParams.set("maxResults", String(Math.min(50, Math.max(1, settings.youtube_videos_per_topic))));
+    search.searchParams.set("maxResults", String(Math.min(50, Math.max(1, config.youtube_videos_per_topic))));
     search.searchParams.set("relevanceLanguage", "en");
     search.searchParams.set("key", key);
 
@@ -110,7 +110,7 @@ export const collectYouTube: Collector = async ({ settings, now }) => {
       threads.searchParams.set("videoId", videoId);
       threads.searchParams.set("order", "time");
       threads.searchParams.set("textFormat", "plainText");
-      threads.searchParams.set("maxResults", String(Math.min(100, Math.max(1, settings.youtube_comments_per_video))));
+      threads.searchParams.set("maxResults", String(Math.min(100, Math.max(1, config.youtube_comments_per_video))));
       threads.searchParams.set("key", key);
 
       const cres = await fetch(threads, { cache: "no-store" });

@@ -1,13 +1,13 @@
 import type { Platform } from "./types";
 
 /**
- * Static facts about each platform. Only YouTube and Reddit exist now (Hacker
- * News, the app stores and Product Hunt were removed on 16 Sep 2026 by decision).
+ * Everything the collector and the filter need, in one place. There is no
+ * Settings page any more (removed 16 Sep 2026); change values here and deploy.
+ * The "How it works" page in the app reads this file to show the topics.
  */
 export interface PlatformInfo {
   key: Platform;
   label: string;
-  mode: "auto" | "manual";
   /** Short line shown on the platform page. */
   blurb: string;
   /** Env vars that must be present for automatic collection. */
@@ -15,25 +15,16 @@ export interface PlatformInfo {
 }
 
 export const PLATFORM_INFO: Record<Platform, PlatformInfo> = {
-  reddit: {
-    key: "reddit",
-    label: "Reddit",
-    mode: "manual",
-    blurb:
-      "By hand until Reddit approves API access (required since June 2026). Registering an app at reddit.com/prefs/apps gives two codes but no data; data only flows after a separate access request at support.reddithelp.com is approved. Paste post links here meanwhile. Switches to automatic when REDDIT_CLIENT_ID / REDDIT_CLIENT_SECRET are set and 'Reddit API enabled' is on in Settings.",
-    requiredEnv: ["REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET"],
-  },
   youtube: {
     key: "youtube",
     label: "YouTube",
-    mode: "auto",
     blurb:
-      "Automatic. Searches recent videos on the configured topics and keeps question-like comments. Free allowance: 100 searches/day plus 10,000 units/day.",
+      "Every 2 hours the schedule searches 4 of the topics, reads the newest comments under the top videos, keeps the questions, and tags them. Free allowance: 100 searches/day plus 10,000 units/day; we use about 48 and 240.",
     requiredEnv: ["YOUTUBE_API_KEY"],
   },
 };
 
-export const NAV_PLATFORMS: Platform[] = ["youtube", "reddit"];
+export const NAV_PLATFORMS: Platform[] = ["youtube"];
 
 /** Items older than this are never collected and are deleted by the cleanup cron. */
 export const RETENTION_DAYS = 7;
@@ -41,11 +32,16 @@ export const RETENTION_DAYS = 7;
 /** How many items the Today page shows. */
 export const TOP_N = 10;
 
-/**
- * Editable defaults. Anything here can be overridden from the Settings page
- * (stored in the `settings` table under the same key).
- */
-export const DEFAULT_SETTINGS = {
+/** How often the collect cron runs (supabase/migrations/0002_cron.sql: every 2 hours). */
+export const RUNS_PER_DAY = 12;
+
+export const CONFIG = {
+  /**
+   * YouTube search phrases. Each one is the `q` of one search.list call and
+   * finds the videos whose comments we read. Topics 1-6 find people asking
+   * about food with a medicine or condition; 7-9 find people choosing or
+   * complaining about a calorie app.
+   */
   youtube_topics: [
     "diabetes diet",
     "type 2 diabetes what to eat",
@@ -58,47 +54,18 @@ export const DEFAULT_SETTINGS = {
     "HealthifyMe review",
   ],
   /**
-   * Max search.list calls per collection run. The free allowance is 100/day and
-   * the cron runs 12 times a day, so 4 per run = 48/day. Topics rotate between
-   * runs, so every topic is still searched at least once a day.
+   * search.list calls per run. The free allowance is 100/day and the cron runs
+   * 12 times a day, so 4 per run = 48/day. Topics rotate between runs
+   * (rotateTopics in collectors/youtube.ts), so every topic comes up 5-6 times a day.
    */
   youtube_max_searches_per_run: 4,
+  /** Videos read per topic (maxResults of search.list, 0-50). */
   youtube_videos_per_topic: 5,
+  /** Newest top-level comments read per video (maxResults of commentThreads.list, 1-100). 1 unit regardless. */
   youtube_comments_per_video: 50,
 
-  // Verified to exist on 16 Sep 2026.
-  reddit_subreddits: [
-    "diabetes",
-    "type2diabetes",
-    "prediabetes",
-    "PCOS",
-    "Hypothyroidism",
-    "hypertension",
-    "ClotSurvivors",
-    "Cholesterol",
-    "loseit",
-    "nutrition",
-    "1200isplenty",
-    "intermittentfasting",
-    "IndianFitness",
-    "india",
-    "IndianFood",
-  ],
-  reddit_queries: [
-    "metformin diet",
-    "warfarin vitamin K",
-    "levothyroxine food",
-    "statin grapefruit",
-    "PCOS what to eat",
-    "best calorie tracker",
-    "MyFitnessPal alternative",
-    "calorie app Indian food",
-    "Cal AI review",
-  ],
-  reddit_api_enabled: false,
-
   /**
-   * Keyword prefilter. An item must contain at least one ALLOW term and no
+   * Keyword prefilter. A comment must contain at least one ALLOW term and no
    * BLOCK term before any AI call happens. Matched case-insensitively as whole
    * words (multi-word terms match as phrases).
    */
@@ -137,8 +104,18 @@ type Widen<T> = T extends readonly (infer U)[]
         ? boolean
         : T;
 
-export type SettingsShape = {
-  -readonly [K in keyof typeof DEFAULT_SETTINGS]: Widen<(typeof DEFAULT_SETTINGS)[K]>;
+export type Config = {
+  -readonly [K in keyof typeof CONFIG]: Widen<(typeof CONFIG)[K]>;
 };
 
-export const SETTING_KEYS = Object.keys(DEFAULT_SETTINGS) as Array<keyof SettingsShape>;
+/** The config as a plain mutable-typed object (the collector and filter take this). */
+export function config(): Config {
+  return {
+    youtube_topics: [...CONFIG.youtube_topics],
+    youtube_max_searches_per_run: CONFIG.youtube_max_searches_per_run,
+    youtube_videos_per_topic: CONFIG.youtube_videos_per_topic,
+    youtube_comments_per_video: CONFIG.youtube_comments_per_video,
+    keywords_allow: [...CONFIG.keywords_allow],
+    keywords_block: [...CONFIG.keywords_block],
+  };
+}

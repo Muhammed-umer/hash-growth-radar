@@ -1,6 +1,6 @@
 # Hash Growth Radar
 
-Internal tool for the Hash Health team. It finds people online who are asking the questions Hash answers (food with a medicine or condition, "which calorie app understands Indian food"), tags and ranks them, and shows you the best ones each day. You open the thread and approach the person yourself. The tool never writes, suggests, or posts a reply.
+Internal tool for the Hash Health team. Every 2 hours it reads new YouTube comments under videos about diabetes, PCOS, thyroid and calorie apps, keeps the ones where someone is asking the question Hash answers (food with a medicine or condition, "which calorie app understands Indian food"), tags and ranks them, and shows you the best ones. You open the comment and approach the person yourself. The tool never writes, suggests, or posts a reply.
 
 - What it is and why, in plain language: [docs/PRODUCT.md](docs/PRODUCT.md)
 - YouTube, exactly: the API, the allowance, every parameter we pass, what we keep, the AI form, the topics and their rotation: [docs/youtube.html](docs/youtube.html) (open in a browser)
@@ -12,14 +12,9 @@ Internal tool for the Hash Health team. It finds people online who are asking th
 collect  →  store (dedupe)  →  keyword filter  →  AI tags the question  →  rank  →  you look and decide
 ```
 
-| Platform | How items get in | Notes |
-|---|---|---|
-| YouTube | Automatic (`YOUTUBE_API_KEY`) | Free allowance 100 searches/day + 10,000 units/day. Defaults use 48 searches (4 per run, topics rotate) and a few hundred units |
-| Reddit | Paste by hand | Reddit requires API approval since June 2026 (see "Reddit access" below). The automatic collector is included and switches on once approved |
+YouTube is the only source (Reddit, Hacker News, the app stores and Product Hunt were considered and removed on 16 Sep 2026: approval needed, too few reachable people, or no legal automatic door). Free allowance 100 searches/day + 10,000 units/day; the defaults use 48 searches (4 per run, topics rotate) and a few hundred units.
 
-Hacker News, App Store, Play Store and Product Hunt were removed on 16 Sep 2026 by decision (too few reachable people, or no legal automatic door).
-
-Each platform has its own page in the navbar: status counts, last run, configuration check, run-now or paste form, its list of people, what was dropped and why, and the run history.
+Three pages: **Today** (the top 10), **YouTube** (status, last run, the people found, what was dropped and why, run history) and **How it works** (the topics, how comments are collected, how they are classified, a system check). There is no Settings page; topics and keyword lists live in `src/lib/config.ts`.
 
 **Privacy rule (enforced in code):** the tool tags the question, never the person. No username field exists anywhere. Items are deleted 7 days after collection.
 
@@ -37,11 +32,10 @@ Copy `.env.example` to `.env.local` and fill in:
 | `GEMINI_MODEL` | `gemini-3.5-flash-lite` (the older 2.5 flash-lite is closed to new users and returns 404) |
 | `YOUTUBE_API_KEY` | console.cloud.google.com → APIs & Services → Library → enable "YouTube Data API v3" → Credentials → Create credentials → API key |
 | `ANTHROPIC_API_KEY` (optional) | console.anthropic.com, then set `AI_PROVIDER=anthropic` |
-| `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET` (later) | Only after Reddit approves your access request |
 
 Free-tier note: Google may use free-tier Gemini prompts to improve its products. The prompts contain public post text only, never usernames. Move to a paid Gemini tier or to Claude if that matters to you.
 
-**Gemini key rotation.** Set `GEMINI_API_KEY_1` … `GEMINI_API_KEY_8` (plus or instead of `GEMINI_API_KEY`) and every AI call takes the next key in turn. When a key returns a rate limit it is parked for a minute, or an hour if the message says the daily quota is gone, and the next key is tried straight away. The Settings page shows how many keys are in the rotation. Only when every key is parked does the job fail, and the queue retries it later with its own backoff.
+**Gemini key rotation.** Set `GEMINI_API_KEY_1` … `GEMINI_API_KEY_8` (plus or instead of `GEMINI_API_KEY`) and every AI call takes the next key in turn. When a key returns a rate limit it is parked for a minute, or an hour if the message says the daily quota is gone, and the next key is tried straight away. The "How it works" page shows how many keys are in the rotation. Only when every key is parked does the job fail, and the queue retries it later with its own backoff.
 
 **API key security.** `YOUTUBE_API_KEY` and the Gemini keys are read on the server only and never reach the browser (no `NEXT_PUBLIC_` prefix, so Next.js cannot inline them). In Google Cloud, restrict the YouTube key under "API restrictions" to YouTube Data API v3, and leave "Application restrictions" as **None**: website and IP restrictions are for calls made from a browser or a fixed server address, and the host's outbound addresses are not fixed, so either would break collection.
 
@@ -61,14 +55,13 @@ npm run dev
 
 Open http://localhost:3000, then:
 
-- Settings: check that every required key shows "set" and the AI provider shows "ready".
+- How it works → System check: every required key shows ✓ and the AI provider shows "ready".
 - YouTube page → the list fills up as the schedule runs. To trigger one run by hand (locally or on the deployed app), call the cron route with your secret:
 
   ```bash
   curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/cron/collect?wait=1"
   ```
 
-- Reddit page → paste a post link and text.
 - Today page → the top 10 across platforms. Open a thread, approach the person yourself, then press "Approached" or "Skip".
 
 Locally there is no schedule (Supabase Cron cannot reach your laptop), but `npm run dev` reads the same Supabase database the deployed app writes to, so everything the cron collected is already there. Use the curl above only if you want an extra run right now.
@@ -103,26 +96,15 @@ select jobname, status, start_time, return_message from cron.job_run_details ord
 
 Free Supabase projects pause after a week with no API activity. Each cron call makes the app read and write the database, so a working schedule keeps the project awake on its own.
 
-### Reddit access
-
-Two separate steps, both done once by you, then a wait. Registering alone gives you codes but **no data**.
-
-| Step | Where | What you get | When |
-|---|---|---|---|
-| A. Register the app | `reddit.com/prefs/apps` → "create another app", type "script", redirect URL `http://localhost:8080` | Two codes (client id, secret). They return **no data** until step B is approved | Instant |
-| B. Ask for permission | `support.reddithelp.com/hc/en-us/requests/new` → developer / data access category, describe the tool honestly | Reddit's decision by email | Weeks (developers report 2 to 4, sometimes no reply) |
-
-Only after a yes: put the two codes in `.env.local` as `REDDIT_CLIENT_ID` / `REDDIT_CLIENT_SECRET`, tick "Reddit API enabled" in Settings, and the Reddit collector runs on its own. Until then, and if the answer is no, the Reddit page's paste form is how Reddit posts get in. It works today and needs no approval.
-
 ### Login
 
-There is no login yet, by decision. The dashboard is open to anyone who has the URL, so keep the deployed URL private: anyone who finds it can read the list and paste posts, which spends your Gemini allowance. When you want a password gate, implement it in `src/lib/auth.ts` (every page and action already calls `requireUser()`), for example a signed cookie checked against an `APP_PASSWORD` env var. The cron routes are already protected by `CRON_SECRET`.
+There is no login yet, by decision. The dashboard is open to anyone who has the URL, so keep the deployed URL private: anyone who finds it can read the list and press "Approached" or "Skip". When you want a password gate, implement it in `src/lib/auth.ts` (every page and action already calls `requireUser()`), for example a signed cookie checked against an `APP_PASSWORD` env var. The cron routes are already protected by `CRON_SECRET`.
 
 ## Scripts
 
 ```bash
 npm run dev        # local server
-npm test           # unit tests (prefilter, scoring, ids, AI schema, key rotation)
+npm test           # unit tests (prefilter, scoring, AI schema, key rotation, cron auth)
 npm run typecheck  # tsc --noEmit
 npm run lint
 npm run build
@@ -133,10 +115,10 @@ npm run build
 ```
 src/app/today                 top 10 across platforms
 src/app/platforms/[platform]  one page per platform: status, collect / paste, list, dropped, runs
-src/app/settings              env presence, AI health, watch lists, keyword filter
+src/app/how                   the topics, how comments are collected, how they are classified, system check
 src/app/api/cron/*            collect, process, cleanup (CRON_SECRET protected, called by Supabase Cron)
-src/app/actions.ts            server actions (approached, skip, run now, paste, settings)
-src/lib/collectors/           youtube, reddit (optional), manual paste
+src/app/actions.ts            server actions (approached, skip)
+src/lib/collectors/           youtube
 src/lib/pipeline/             prefilter, classify, score, run
 src/lib/ai/                   askJSON() with Gemini (default) or Anthropic behind one interface
 src/lib/queue.ts              small Postgres-backed job queue

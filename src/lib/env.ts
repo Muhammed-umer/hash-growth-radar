@@ -12,9 +12,6 @@ export const ENV_KEYS = [
   { key: "ANTHROPIC_API_KEY", purpose: "Optional: Claude for tagging", required: false },
   { key: "ANTHROPIC_MODEL", purpose: "Claude model id (default in code)", required: false },
   { key: "YOUTUBE_API_KEY", purpose: "YouTube Data API v3 key (Google Cloud console)", required: false },
-  { key: "REDDIT_CLIENT_ID", purpose: "Reddit app id (only after Reddit approves access)", required: false },
-  { key: "REDDIT_CLIENT_SECRET", purpose: "Reddit app secret (only after Reddit approves access)", required: false },
-  { key: "REDDIT_USER_AGENT", purpose: "Reddit requires a descriptive user agent", required: false },
 ] as const;
 
 export type EnvKey = (typeof ENV_KEYS)[number]["key"];

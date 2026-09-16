@@ -72,7 +72,7 @@
     <a href="#topics">7 · The topics</a>
     <a href="#rotation">8 · 4 topics per run</a>
     <a href="#repeat">9 · Repeats</a>
-    <a href="#settings">10 · Settings</a>
+    <a href="#settings">10 · The knobs</a>
   </nav>
 
   <!-- ================= 1 API ================= -->
@@ -101,7 +101,7 @@
     </div>
     <p class="note">Also from Google: <em>"All API requests, including invalid requests, incur at least a one-point quota cost."</em> So a broken call still costs.</p>
 
-    <h4>What one run and one day spend, with the default settings</h4>
+    <h4>What one run and one day spend, with the current values</h4>
     <div class="tbl">
       <table>
         <thead><tr><th class="k">Call</th><th class="s">Per run</th><th class="s">Runs per day</th><th class="s">Per day</th><th class="s">Allowance</th><th>Share</th></tr></thead>
@@ -139,7 +139,7 @@
           <tr><td class="k">type</td><td><code>video</code>, <code>channel</code> or <code>playlist</code>.</td><td class="s yes">yes</td><td><code>video</code>. We only want videos, because only videos have comment threads.</td></tr>
           <tr><td class="k">order</td><td>Six values: <code>relevance</code> (default), <code>date</code> newest first, <code>viewCount</code> most viewed, <code>rating</code> highest rated, <code>title</code> alphabetical, <code>videoCount</code> (channels only).</td><td class="s yes">yes</td><td><code>relevance</code>: YouTube's best match. Popular, on-topic videos with active comment sections.</td></tr>
           <tr><td class="k">publishedAfter</td><td>Only videos uploaded at or after this time.</td><td class="s yes">yes</td><td>90 days before now. Old videos have old comments; we keep only comments from the last 7 days anyway.</td></tr>
-          <tr><td class="k">maxResults</td><td>0 to 50. Default 5.</td><td class="s yes">yes</td><td><code>5</code> ("videos per topic" in Settings).</td></tr>
+          <tr><td class="k">maxResults</td><td>0 to 50. Default 5.</td><td class="s yes">yes</td><td><code>5</code> (<code>youtube_videos_per_topic</code> in the code).</td></tr>
           <tr><td class="k">relevanceLanguage</td><td>Prefer results in this language (ISO code). Results in other languages may still appear.</td><td class="s yes">yes</td><td><code>en</code>. Hinglish videos are usually titled in English, so they are not excluded.</td></tr>
           <tr><td class="k">key</td><td>The API key.</td><td class="s yes">yes</td><td>From the environment variable <code>YOUTUBE_API_KEY</code>. Never sent to the browser.</td></tr>
           <tr><td class="k">publishedBefore</td><td>Only videos uploaded before this time.</td><td class="s no">no</td><td>Not needed.</td></tr>
@@ -185,7 +185,7 @@
           <tr><td class="k">videoId</td><td>Exactly one of these three filters must be given: <code>videoId</code> (threads on one video), <code>id</code> (specific threads), <code>allThreadsRelatedToChannelId</code> (all threads on a channel).</td><td class="s yes">yes</td><td>The video id from step 3.</td></tr>
           <tr><td class="k">order</td><td>Two values only: <code>time</code> (default, newest first) and <code>relevance</code> (what YouTube shows as "Top comments").</td><td class="s yes">yes</td><td><code>time</code>. Newest first, so comments posted since the last run are always at the top.</td></tr>
           <tr><td class="k">textFormat</td><td><code>html</code> (default) or <code>plainText</code>.</td><td class="s yes">yes</td><td><code>plainText</code>, so the text needs no cleaning before the AI reads it.</td></tr>
-          <tr><td class="k">maxResults</td><td>1 to 100. Default 20.</td><td class="s yes">yes</td><td><code>50</code> ("comments per video" in Settings). Still 1 unit whatever the number.</td></tr>
+          <tr><td class="k">maxResults</td><td>1 to 100. Default 20.</td><td class="s yes">yes</td><td><code>50</code> (<code>youtube_comments_per_video</code> in the code). Still 1 unit whatever the number.</td></tr>
           <tr><td class="k">key</td><td>The API key.</td><td class="s yes">yes</td><td>Same key.</td></tr>
           <tr><td class="k">searchTerms</td><td>Only comments containing these words.</td><td class="s no">no</td><td>Not used. It would let YouTube pre-filter for words like "metformin"; we filter ourselves after fetching. Possible improvement, untested.</td></tr>
           <tr><td class="k">moderationStatus</td><td><code>published</code> (default), <code>heldForReview</code>, <code>likelySpam</code>. The last two need the channel owner's login.</td><td class="s no">no</td><td>Default: published comments only.</td></tr>
@@ -288,7 +288,7 @@
   <!-- ================= 7 TOPICS ================= -->
   <h2 id="topics">7 · The topics</h2>
   <div class="card">
-    <p>Nine search phrases. Each becomes the <code>q</code> of one <code>search.list</code> call. They are defaults in the code and editable on the Settings page.</p>
+    <p>Nine search phrases. Each becomes the <code>q</code> of one <code>search.list</code> call. They live in <code>src/lib/config.ts</code> and are shown on the app&apos;s "How it works" page.</p>
     <div class="tbl">
       <table>
         <thead><tr><th class="s">#</th><th class="k">Topic</th><th>Who comments under these videos</th></tr></thead>
@@ -358,24 +358,24 @@
     <h4 style="margin-top:14px">The 50-comment window</h4>
     <ul class="plain">
       <li><strong>Quiet video</strong> (fewer than 50 new comments since the last look, which is almost every video): the newest 50 contain all the new ones plus some known ones. Known ones are dropped, new ones pass. Nothing is missed.</li>
-      <li><strong>Busy video</strong> (more than 50 new comments in about 4 hours): comments beyond the 50th newest are not seen. This is the one real gap. "Comments per video" can be raised to 100 in Settings at no extra cost (still 1 unit per video).</li>
+      <li><strong>Busy video</strong> (more than 50 new comments in about 4 hours): comments beyond the 50th newest are not seen. This is the one real gap. <code>youtube_comments_per_video</code> can be raised to 100 in the code at no extra cost (still 1 unit per video).</li>
       <li><strong>Why not "comments since time X"?</strong> The comment endpoint has no such filter (section 4 lists every parameter it has). Newest-first plus the id check is the only way, and it needs no memory.</li>
     </ul>
     <p class="note">A brand-new video appears only once YouTube ranks it in the top 5 for the phrase. Switching <code>order</code> to <code>date</code> would show new uploads immediately at the cost of more low-quality videos. Not done; it is one word in the code.</p>
   </div>
 
   <!-- ================= 10 SETTINGS ================= -->
-  <h2 id="settings">10 · The settings, and what each one costs</h2>
+  <h2 id="settings">10 · The knobs, and what each one costs</h2>
   <div class="card">
-    <p>All on the Settings page except the schedule, which is one line of SQL. The rule to keep: <strong>topics per run × runs per day must stay under 100.</strong></p>
+    <p>All in <code>src/lib/config.ts</code> (change, deploy) except the schedule, which is one line of SQL. There is no Settings page. The rule to keep: <strong>topics per run × runs per day must stay under 100.</strong></p>
     <div class="tbl">
       <table>
         <thead><tr><th class="k">Setting</th><th class="s">Default</th><th class="s">Allowed</th><th>Effect</th><th>Cost of raising it</th></tr></thead>
         <tbody>
-          <tr><td class="k">YouTube topics</td><td class="s">9 phrases</td><td class="s">any list</td><td>Which videos are found. Adding Hindi phrases reaches Hindi channels.</td><td>None: still 4 searches per run. Each topic just comes around less often.</td></tr>
-          <tr><td class="k">Searches per run</td><td class="s num">4</td><td class="s">0 to 100</td><td>How many topics each run searches.</td><td>× 12 runs. 8 is the ceiling with the 2-hour schedule (96 of 100).</td></tr>
-          <tr><td class="k">Videos per topic</td><td class="s num">5</td><td class="s">1 to 50</td><td>Reaches smaller channels.</td><td>1 unit per extra video per run. 10 → about 480 units a day.</td></tr>
-          <tr><td class="k">Comments per video</td><td class="s num">50</td><td class="s">1 to 100</td><td>Safer on busy videos.</td><td>None. Still 1 unit per video.</td></tr>
+          <tr><td class="k">youtube_topics</td><td class="s">9 phrases</td><td class="s">any list</td><td>Which videos are found. Adding Hindi phrases reaches Hindi channels.</td><td>None: still 4 searches per run. Each topic just comes around less often.</td></tr>
+          <tr><td class="k">youtube_max_searches_per_run</td><td class="s num">4</td><td class="s">0 to 100</td><td>How many topics each run searches.</td><td>× 12 runs. 8 is the ceiling with the 2-hour schedule (96 of 100).</td></tr>
+          <tr><td class="k">youtube_videos_per_topic</td><td class="s num">5</td><td class="s">1 to 50</td><td>Reaches smaller channels.</td><td>1 unit per extra video per run. 10 → about 480 units a day.</td></tr>
+          <tr><td class="k">youtube_comments_per_video</td><td class="s num">50</td><td class="s">1 to 100</td><td>Safer on busy videos.</td><td>None. Still 1 unit per video.</td></tr>
           <tr><td class="k">Schedule (SQL)</td><td class="s">every 2 hours</td><td class="s">any cron</td><td>Freshness.</td><td>Hourly doubles searches to 96 a day at 4 per run.</td></tr>
         </tbody>
       </table>

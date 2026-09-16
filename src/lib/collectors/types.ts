@@ -1,8 +1,8 @@
-import type { SettingsShape } from "../config";
+import type { Config } from "../config";
 import type { RawItem } from "../types";
 
 export interface CollectorContext {
-  settings: SettingsShape;
+  config: Config;
   now: Date;
 }
 

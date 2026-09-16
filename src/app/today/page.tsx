@@ -44,8 +44,7 @@ export default async function TodayPage() {
       <Section title={`Top ${TOP_N}`}>
         {queue.length === 0 ? (
           <div className="rounded-xl border border-dashed border-stone-300 bg-white p-6 text-sm text-stone-600">
-            Nothing to show yet. Run a collection on the <Link href="/platforms/youtube" className="underline">YouTube</Link> page, or paste a post on the{" "}
-            <Link href="/platforms/reddit" className="underline">Reddit</Link> page.
+            Nothing to show yet. The schedule collects from YouTube every 2 hours; see the <Link href="/platforms/youtube" className="underline">YouTube</Link> page for the last run.
           </div>
         ) : (
           <div className="space-y-4">
