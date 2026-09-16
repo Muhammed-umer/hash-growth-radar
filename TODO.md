@@ -25,15 +25,15 @@ Scope (changed 16 Sep 2026 by the founder, YouTube only since the same evening):
 
 ## 3. Routes / actions
 - [x] `api/cron/collect`, `process` answer 202 and work in the background via `after()` (Supabase's HTTP call waits ~10 s); `?wait=1` runs inline. `cleanup` inline. All gated by CRON_SECRET
-- [x] Server actions: approached, skip (everything else removed: the cron is the only collector)
+- [x] Server action: skip only (Approached removed 16 Sep 2026; the cron is the only collector)
 - [x] No login for now (user's decision); `requireUser()` stub in `src/lib/auth.ts`
 
 ## 4. UI
 - [x] Navbar: Today · YouTube · How it works, with badges
-- [x] `/today` top 10 + counts (to look at, waiting for AI, failed, approached, skipped, not suitable)
+- [x] `/today` top 10 + counts (to look at, waiting for AI, failed, skipped, not suitable)
 - [x] `/platforms/youtube` status, config check, people list, dropped-with-reason, runs table
-- [x] `/how` topics, how comments are collected, how they are classified, system check (read-only)
-- [x] Card: platform, community, time, post, video title, tags, summary, score; buttons Open thread / Copy link / Approached / Skip. No draft, no reply text
+- [x] `/how` topics, how comments are collected, how they are classified, how fit and score work, system check (read-only)
+- [x] Card: platform, community, time, post, video title, tags, summary, score (fit is folded into it); buttons Open thread / Copy link / Skip. No draft, no reply text
 
 ## 5. Quality
 - [x] vitest: prefilter, scoring, AI schema, key rotation, cron auth

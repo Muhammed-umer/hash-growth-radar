@@ -42,13 +42,12 @@ export default async function PlatformPage({ params }: { params: Promise<{ platf
       <p className="mt-1 max-w-3xl text-sm text-stone-600">{info.blurb}</p>
 
       <Section title="Status">
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
           <Stat label="to look at" value={c.tagged} tone="good" />
           <Stat label="waiting for AI" value={c.queued} tone={c.queued ? "warn" : "muted"} />
           <Stat label="dropped by filter" value={c.filtered} tone="muted" />
           <Stat label="not suitable" value={c.do_not_reply} tone="muted" />
           <Stat label="skipped" value={c.skipped} tone="muted" />
-          <Stat label="approached" value={c.posted} />
         </div>
         <div className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
           <div className="rounded-lg border border-stone-200 bg-white p-3">

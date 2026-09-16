@@ -14,7 +14,7 @@ collect  →  store (dedupe)  →  keyword filter  →  AI tags the question  �
 
 YouTube is the only source (Reddit, Hacker News, the app stores and Product Hunt were considered and removed on 16 Sep 2026: approval needed, too few reachable people, or no legal automatic door). Free allowance 100 searches/day + 10,000 units/day; the defaults use 48 searches (4 per run, topics rotate) and a few hundred units.
 
-Three pages: **Today** (the top 10), **YouTube** (status, last run, the people found, what was dropped and why, run history) and **How it works** (the topics, how comments are collected, how they are classified, a system check). There is no Settings page; topics and keyword lists live in `src/lib/config.ts`.
+Three pages: **Today** (the top 10), **YouTube** (status, last run, the people found, what was dropped and why, run history) and **How it works** (the topics, how comments are collected, how they are classified, how the score is computed, a system check). There is no Settings page; topics and keyword lists live in `src/lib/config.ts`.
 
 **Privacy rule (enforced in code):** the tool tags the question, never the person. No username field exists anywhere. Items are deleted 7 days after collection.
 
@@ -62,7 +62,7 @@ Open http://localhost:3000, then:
   curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/cron/collect?wait=1"
   ```
 
-- Today page → the top 10 across platforms. Open a thread, approach the person yourself, then press "Approached" or "Skip".
+- Today page → the top 10. Open a comment, approach the person yourself if you want to, then press "Skip" to clear the card.
 
 Locally there is no schedule (Supabase Cron cannot reach your laptop), but `npm run dev` reads the same Supabase database the deployed app writes to, so everything the cron collected is already there. Use the curl above only if you want an extra run right now.
 
@@ -98,7 +98,7 @@ Free Supabase projects pause after a week with no API activity. Each cron call m
 
 ### Login
 
-There is no login yet, by decision. The dashboard is open to anyone who has the URL, so keep the deployed URL private: anyone who finds it can read the list and press "Approached" or "Skip". When you want a password gate, implement it in `src/lib/auth.ts` (every page and action already calls `requireUser()`), for example a signed cookie checked against an `APP_PASSWORD` env var. The cron routes are already protected by `CRON_SECRET`.
+There is no login yet, by decision. The dashboard is open to anyone who has the URL, so keep the deployed URL private: anyone who finds it can read the list and press "Skip". When you want a password gate, implement it in `src/lib/auth.ts` (every page and action already calls `requireUser()`), for example a signed cookie checked against an `APP_PASSWORD` env var. The cron routes are already protected by `CRON_SECRET`.
 
 ## Scripts
 
@@ -117,7 +117,7 @@ src/app/today                 top 10 across platforms
 src/app/platforms/[platform]  one page per platform: status, collect / paste, list, dropped, runs
 src/app/how                   the topics, how comments are collected, how they are classified, system check
 src/app/api/cron/*            collect, process, cleanup (CRON_SECRET protected, called by Supabase Cron)
-src/app/actions.ts            server actions (approached, skip)
+src/app/actions.ts            server action (skip)
 src/lib/collectors/           youtube
 src/lib/pipeline/             prefilter, classify, score, run
 src/lib/ai/                   askJSON() with Gemini (default) or Anthropic behind one interface
@@ -128,6 +128,6 @@ tests/                        vitest unit tests
 
 ## Rules the code enforces
 
-- The tool never writes, suggests, or posts a reply. Pressing "Approached" only removes the card; what you said is never stored.
+- The tool never writes, suggests, or posts a reply. "Skip" only hides the card; what you did is never stored.
 - Items the AI flags as dosage, diagnosis, emergency, eating disorder or mental health are marked "not suitable" and never enter the list.
 - No username is stored anywhere. Items are deleted after 7 days.

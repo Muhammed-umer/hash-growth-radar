@@ -11,7 +11,7 @@ export type SourceKind = "auto";
  * tagged       on the list, for you to look at
  * do_not_reply not suitable to approach (dosage, emergency, ...)
  * skipped      you passed on it
- * posted       you approached this person (name kept for the database)
+ * posted       unused since 16 Sep 2026 (kept so old rows stay valid)
  */
 export type ItemStatus = "filtered" | "queued" | "tagged" | "do_not_reply" | "skipped" | "posted";
 

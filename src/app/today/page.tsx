@@ -12,7 +12,7 @@ export default async function TodayPage() {
   await requireUser();
   const [queue, counts, jobs] = await Promise.all([loadQueue({ limit: TOP_N }), statusCounts(), jobCounts()]);
   const now = new Date();
-  const sum = (key: "tagged" | "do_not_reply" | "posted" | "skipped") => NAV_PLATFORMS.reduce((a, p) => a + countsFor(counts, p)[key], 0);
+  const sum = (key: "tagged" | "do_not_reply" | "skipped") => NAV_PLATFORMS.reduce((a, p) => a + countsFor(counts, p)[key], 0);
 
   return (
     <div>
@@ -21,11 +21,10 @@ export default async function TodayPage() {
         <p className="text-sm text-stone-600">The {TOP_N} people most worth approaching, across every platform. Open the thread and decide yourself. Refreshed every 2 hours by the schedule.</p>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
         <Stat label="to look at" value={sum("tagged")} tone="good" />
         <Stat label="waiting for AI" value={jobs.pending + jobs.running} tone={jobs.pending ? "warn" : "muted"} />
         <Stat label="AI jobs failed" value={jobs.failed} tone={jobs.failed ? "bad" : "muted"} />
-        <Stat label="approached" value={sum("posted")} />
         <Stat label="skipped" value={sum("skipped")} tone="muted" />
         <Stat label="not suitable" value={sum("do_not_reply")} tone="muted" />
       </div>
@@ -35,7 +34,7 @@ export default async function TodayPage() {
           const c = countsFor(counts, p);
           return (
             <Link key={p} href={`/platforms/${p}`} className="rounded-full border border-stone-200 bg-white px-3 py-1 hover:bg-stone-100">
-              {PLATFORM_INFO[p].label}: <b>{c.tagged}</b> to look at · {c.posted} approached
+              {PLATFORM_INFO[p].label}: <b>{c.tagged}</b> to look at · {c.skipped} skipped
             </Link>
           );
         })}

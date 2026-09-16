@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { markApproached, skipItem } from "@/app/actions";
+import { skipItem } from "@/app/actions";
 import { PLATFORM_INFO } from "@/lib/config";
 import { cx, INTENT_LABEL } from "@/lib/format";
 import type { ItemRow, TagRow } from "@/lib/types";
@@ -14,8 +14,9 @@ export interface ItemCardProps {
 }
 
 /**
- * One person worth approaching: where they asked, what they asked, and the
- * AI's tags. No reply is suggested; you open the thread and decide yourself.
+ * One person worth approaching: where they asked, what they asked, the AI's
+ * tags, and the score the list is sorted by. No reply is suggested; you open
+ * the thread and decide yourself, then Skip the card when you are done with it.
  */
 export function ItemCard({ item, tag, postedLabel, showPlatform }: ItemCardProps) {
   const [copied, setCopied] = useState(false);
@@ -54,7 +55,6 @@ export function ItemCard({ item, tag, postedLabel, showPlatform }: ItemCardProps
         <div className="mt-3 rounded-lg bg-stone-50 p-3 text-xs">
           <div className="flex flex-wrap gap-1.5">
             <Chip tone="dark">{INTENT_LABEL[tag.intent] ?? tag.intent}</Chip>
-            <Chip>fit {tag.fit_score}</Chip>
             {tag.medicines.map((m) => (
               <Chip key={`m-${m}`} tone="blue">
                 {m}
@@ -86,16 +86,9 @@ export function ItemCard({ item, tag, postedLabel, showPlatform }: ItemCardProps
         )}
         <button
           disabled={pending}
-          onClick={() => start(() => markApproached(item.id))}
-          className="rounded-md border border-emerald-600 px-3 py-1.5 text-emerald-800 disabled:opacity-50"
-          title="You reached out to this person. Removes the card from the list."
-        >
-          Approached
-        </button>
-        <button
-          disabled={pending}
           onClick={() => start(() => skipItem(item.id))}
           className="ml-auto rounded-md px-3 py-1.5 text-stone-500 hover:bg-stone-100"
+          title="Hide this card, whether you approached the person or not."
         >
           Skip
         </button>

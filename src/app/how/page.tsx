@@ -89,7 +89,21 @@ export default async function HowPage() {
             </tbody>
           </table>
           <p className="mt-3 text-stone-700">
-            Anyone asking for a dosage or a diagnosis, describing an emergency, or talking about eating disorders or mental health is marked <b>not suitable</b> and never shown. Everything else gets a score (fit, plus a bonus for the group, minus a little per day of age) and the top {TOP_N} appear on Today.
+            Anyone asking for a dosage or a diagnosis, describing an emergency, or talking about eating disorders or mental health is marked <b>not suitable</b> and never shown.
+          </p>
+        </div>
+      </Section>
+
+      <Section title="4 · The score on each card">
+        <div className="rounded-xl border border-stone-200 bg-white p-4 text-sm text-stone-700">
+          <p>
+            <b>Fit</b> is the AI&apos;s own judgement, 0 to 100, of how directly a food tracker that understands medicines and conditions answers that exact comment: food with a named medicine or condition 80 to 100, a direct request for a calorie app 70 to 90, a complaint that an app fails on Indian food or ignores medication 60 to 85, a general diet question 20 to 50.
+          </p>
+          <p className="mt-2">
+            <b>Score</b>, the number on the card, is plain arithmetic on top of fit: fit, plus a bonus for the group (medicine and food 15, asking for an app 10, competitor complaint 5, general nutrition 0), plus 0, 3 or 6 for urgency, minus 2 for every day the comment has been sitting there, capped at 14. The list is sorted by score and Today shows the top {TOP_N}.
+          </p>
+          <p className="mt-2">
+            <b>Skip</b> is the only button that changes anything: it hides a card once you have looked at it, whether you approached the person or not. Nothing about what you did is stored.
           </p>
         </div>
       </Section>

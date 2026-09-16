@@ -42,7 +42,7 @@ export const STATUS_LABEL: Record<string, string> = {
   tagged: "To look at",
   do_not_reply: "Not suitable",
   skipped: "Skipped",
-  posted: "Approached",
+  posted: "Approached (old)",
 };
 
 export function cx(...parts: Array<string | false | null | undefined>): string {

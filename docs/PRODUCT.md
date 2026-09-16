@@ -48,7 +48,7 @@ Once deployed, the database's own scheduler (Supabase Cron) wakes the app: colle
 
 1. Open **Today**. Ten cards, each with the original post, its tags, and an "Open thread" button.
 2. Read. Open the thread. Approach the person if you want to, your way.
-3. Press **Approached** or **Skip** so the card leaves the list.
+3. Press **Skip** so the card leaves the list, whether you approached the person or not.
 
 ## Rules we never break
 
