@@ -16,7 +16,7 @@ export function RunTable({ runs }: { runs: RunRow[] }) {
         <thead className="bg-stone-50 text-left uppercase tracking-wide text-stone-500">
           <tr>
             <th className="px-3 py-2">Started (IST)</th>
-            <th className="px-3 py-2">Trigger</th>
+            <th className="px-3 py-2">Job</th>
             <th className="px-3 py-2">Status</th>
             <th className="px-3 py-2 text-right">Fetched</th>
             <th className="px-3 py-2 text-right">New</th>
@@ -32,7 +32,7 @@ export function RunTable({ runs }: { runs: RunRow[] }) {
           {runs.map((r) => (
             <tr key={r.id} className="border-t border-stone-100 align-top">
               <td className="whitespace-nowrap px-3 py-2">{fmtDateTime(r.started_at)}</td>
-              <td className="px-3 py-2">{r.trigger}</td>
+              <td className="px-3 py-2">{r.job}</td>
               <td className="px-3 py-2">
                 <span className={`rounded-full px-2 py-0.5 ${tone[r.status]}`}>{r.status}</span>
               </td>

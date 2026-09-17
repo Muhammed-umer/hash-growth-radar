@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hash Growth Radar · Covering every video</title>
+<style>
+  :root {
+    --bg: #f7f7f5; --card: #ffffff; --ink: #1c1c1a; --muted: #6b6b66;
+    --line: #cfcfc9; --line-soft: #e4e4df;
+    --accent: #1f7a5c; --accent-soft: #e6f3ee;
+    --warn-soft: #fdf1e6; --warn: #b45f1a;
+    --blue-soft: #e8f0fb; --blue: #2b5fa8;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; padding: 32px 24px 64px; }
+  main { max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 2rem; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .tagline { color: var(--muted); margin: 0 0 20px; font-size: 1.05rem; }
+  h2 { font-size: 1.15rem; margin: 44px 0 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); padding-bottom: 6px; border-bottom: 2px solid var(--accent-soft); }
+  h3 { font-size: 1.05rem; margin: 22px 0 8px; }
+  h4 { font-size: 0.8rem; margin: 18px 0 8px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+  p { margin: 0 0 12px; } p:last-child { margin-bottom: 0; }
+  nav { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  nav a { text-decoration: none; color: var(--accent); background: var(--accent-soft); padding: 5px 12px; border-radius: 999px; font-size: 0.88rem; }
+  .card { background: var(--card); border: 1px solid var(--line-soft); border-radius: 12px; padding: 22px 24px; margin-bottom: 12px; }
+  code { background: #fff; border: 1px solid var(--line-soft); border-radius: 5px; padding: 1px 6px; font-size: 0.9em; }
+  pre { background: #1c1c1a; color: #eaeae5; border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 0.85rem; line-height: 1.5; margin: 10px 0 0; }
+  pre code { background: none; border: none; padding: 0; color: inherit; font-size: inherit; }
+  .tbl { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.93rem; background: var(--card); border: 1px solid var(--line); }
+  th, td { text-align: left; padding: 9px 12px; border: 1px solid var(--line); vertical-align: top; }
+  th { background: #f0f0ec; font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  tbody tr:nth-child(even) td { background: #fafaf8; }
+  td.k, th.k { width: 20%; font-weight: 600; white-space: nowrap; }
+  td.s, th.s { width: 13%; white-space: nowrap; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  ul.plain { padding-left: 20px; margin: 0; } ul.plain li { margin-bottom: 6px; } ul.plain li:last-child { margin-bottom: 0; }
+  ol.steps { padding-left: 0; list-style: none; counter-reset: s; margin: 0; }
+  ol.steps li { counter-increment: s; position: relative; padding-left: 40px; margin-bottom: 10px; }
+  ol.steps li:last-child { margin-bottom: 0; }
+  ol.steps li::before { content: counter(s); position: absolute; left: 0; top: 1px; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 600; display: grid; place-items: center; font-size: 0.8rem; }
+  ol.steps strong { display: block; }
+  .facts { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); margin-top: 10px; }
+  .fact { background: var(--bg); border-radius: 8px; padding: 10px 12px; font-size: 0.9rem; }
+  .fact b { display: block; color: var(--ink); font-size: 1.1rem; }
+  .fact span { color: var(--muted); }
+  .callout { background: var(--warn-soft); border-radius: 10px; padding: 14px 16px; margin-top: 10px; }
+  .callout b { color: var(--warn); }
+  .good { background: var(--accent-soft); border-radius: 10px; padding: 14px 16px; margin-top: 10px; }
+  .blue { background: var(--blue-soft); border-radius: 10px; padding: 14px 16px; margin-top: 10px; }
+  .note { color: var(--muted); font-size: 0.92rem; margin-top: 10px; }
+  .src { font-size: 0.82rem; color: var(--muted); margin-top: 8px; }
+  footer { margin-top: 40px; color: var(--muted); font-size: 0.85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Covering every video under a topic</h1>
+  <p class="tagline">What YouTube's free API gives us, what it does not, and the scheduled jobs that together find every reachable video under our 6 topics and every new comment under those videos. Every API fact below was read from Google's reference pages on 17 September 2026. Built on 17 September 2026: the jobs below are the routes under <code>src/app/api/cron/</code>, the logic is in <code>src/lib/youtube/</code>, the tables in <code>supabase/migrations/0003_watchlist.sql</code>, the schedule in <code>0002_cron.sql</code>. Job 5 (push notifications) is not built; job 4 catches every upload within a day.</p>
+
+  <nav>
+    <a href="#allowance">1 · The allowance</a>
+    <a href="#calls">2 · The calls</a>
+    <a href="#limits">3 · What YouTube cannot do</a>
+    <a href="#idea">4 · The idea</a>
+    <a href="#store">5 · What we remember</a>
+    <a href="#crons">6 · The jobs</a>
+    <a href="#day">7 · A day in numbers</a>
+    <a href="#edge">8 · When things go wrong</a>
+    <a href="#proof">9 · How we know</a>
+  </nav>
+
+  <!-- ================= 1 ALLOWANCE ================= -->
+  <h2 id="allowance">1 · The allowance: two separate pots</h2>
+  <div class="card">
+    <p>Google's words: <em>"Projects that enable the YouTube Data API have a default quota allocation of 100 search.list calls, 100 videos.insert calls, and 10,000 units per day combined for all other endpoints."</em> And: <em>"The search.list and videos.insert methods have their own quota buckets. Each of these methods has a default daily limit of 100 per day."</em></p>
+    <div class="facts">
+      <div class="fact"><b>100 searches</b><span>per day. One page of <code>search.list</code> = 1 search. Never touches the units.</span></div>
+      <div class="fact"><b>10,000 units</b><span>per day for everything else. Every call we use costs 1 unit.</span></div>
+      <div class="fact"><b>Midnight Pacific</b><span>both pots reset. 12:30 PM IST in US summer, 1:30 PM IST in US winter.</span></div>
+    </div>
+    <div class="good"><b>What this means for the design.</b> Searching is scarce (100 a day). Reading is cheap (10,000 a day). So the plan uses searches only to <em>discover</em> videos and does all the repeated work, checking and reading, with 1-unit calls.</div>
+    <p class="src">Source: developers.google.com/youtube/v3/getting-started and /determine_quota_cost, read 17 Sep 2026.</p>
+  </div>
+
+  <!-- ================= 2 CALLS ================= -->
+  <h2 id="calls">2 · The calls we will use, exactly</h2>
+  <div class="card">
+    <div class="tbl">
+      <table>
+        <thead><tr><th class="k">Call</th><th class="s">Cost</th><th class="s">Per page</th><th>What it gives us, and the parameters that matter</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="k">search.list</td>
+            <td class="s">1 search</td>
+            <td class="s num">0 to 50<br><small>default 5</small></td>
+            <td>Videos matching a phrase (<code>q</code>). Each result carries the video id, title, channel id and publish time. Parameters we use: <code>type=video</code>; <code>order</code> = <code>date</code>, <code>relevance</code> (default) or <code>viewCount</code> (also <code>rating</code>, <code>title</code>, <code>videoCount</code>); <code>publishedAfter</code> / <code>publishedBefore</code> (RFC 3339 time); <code>channelId</code> to search inside one channel; <code>relevanceLanguage</code> (ISO 639-1); <code>regionCode</code>; <code>videoDuration</code> = <code>short</code> (under 4 min), <code>medium</code> (4 to 20), <code>long</code> (over 20); <code>pageToken</code> for the next page. The answer includes <code>nextPageToken</code> when more pages exist.</td>
+          </tr>
+          <tr>
+            <td class="k">channels.list</td>
+            <td class="s">1 unit</td>
+            <td class="s num">many ids<br><small>comma list</small></td>
+            <td>For a channel id, <code>contentDetails.relatedPlaylists.uploads</code> = <em>"The ID of the playlist that contains the channel's uploaded videos."</em> That playlist is the channel's complete upload history.</td>
+          </tr>
+          <tr>
+            <td class="k">playlistItems.list</td>
+            <td class="s">1 unit</td>
+            <td class="s num">0 to 50<br><small>default 5</small></td>
+            <td>The videos in a playlist (<code>playlistId</code>), newest upload first for an uploads playlist, with <code>pageToken</code> for more. This is how we list every video a channel has ever published without a single search.</td>
+          </tr>
+          <tr>
+            <td class="k">videos.list</td>
+            <td class="s">1 unit</td>
+            <td class="s num">up to 50 ids<br><small>one call</small></td>
+            <td>For a comma list of video ids: <code>statistics.commentCount</code> (<em>"The number of comments for the video"</em>), <code>statistics.viewCount</code>, <code>contentDetails.duration</code> (ISO 8601, e.g. <code>PT4M13S</code>), <code>snippet.liveBroadcastContent</code> (<code>none</code> unless live or upcoming), <code>snippet.channelId</code>, <code>snippet.publishedAt</code>. One unit tells us whether 50 videos got new comments.</td>
+          </tr>
+          <tr>
+            <td class="k">commentThreads.list</td>
+            <td class="s">1 unit</td>
+            <td class="s num">1 to 100<br><small>default 20</small></td>
+            <td>Top-level comments of a video (<code>videoId</code>), <code>order=time</code> (newest first, the default) or <code>relevance</code>, <code>textFormat=plainText</code>, <code>pageToken</code>. Adding <code>part=replies</code> returns a small set of replies per thread in the same call. Each comment has its id, text and <code>publishedAt</code>.</td>
+          </tr>
+          <tr>
+            <td class="k">comments.list</td>
+            <td class="s">1 unit</td>
+            <td class="s num">up to 100</td>
+            <td><code>parentId=</code> a top-level comment id returns all of its replies. Used only when a thread already scored well and looks like it has more replies than the free set.</td>
+          </tr>
+          <tr>
+            <td class="k">Push notifications</td>
+            <td class="s">free</td>
+            <td class="s">—</td>
+            <td>Google's hub (<code>pubsubhubbub.appspot.com/subscribe</code>) sends an HTTP notification to a public URL of ours whenever a subscribed channel <em>"uploads a video"</em> or updates a title or description. Topic URL: <code>https://www.youtube.com/feeds/videos.xml?channel_id=CHANNEL_ID</code>. The notification names the video id and channel id. No quota.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Error answers we must handle: <code>quotaExceeded</code> (a pot is empty for the day), <code>commentsDisabled</code> (the video has comments off), <code>videoNotFound</code> (removed or private). A malformed request still costs its call.</p>
+    <p class="src">Sources: developers.google.com/youtube/v3/docs/search/list, /channels, /playlistItems/list, /videos, /commentThreads/list, /comments, /guides/push_notifications, read 17 Sep 2026.</p>
+  </div>
+
+  <!-- ================= 3 LIMITS ================= -->
+  <h2 id="limits">3 · What YouTube cannot do for us</h2>
+  <div class="card">
+    <ol class="steps">
+      <li><strong>There is no "list every video about X".</strong> Search returns a ranked selection, not a catalogue. Google says of the total: <em>"The value is an approximation and may not represent an exact value."</em> Nobody, including Google's own page, can tell us the true number of videos for a phrase.</li>
+      <li><strong>One query runs dry at roughly 500 results.</strong> After about 10 pages of 50, <code>nextPageToken</code> stops coming, whatever the true count. This limit is not written on Google's page; it is consistently reported by developers and is what we must design around.</li>
+      <li><strong>The same query gives a different set on different days.</strong> Ranking moves. A video seen today may not be in tomorrow's result. So a video must be remembered the moment it is seen.</li>
+      <li><strong>There is no "comments since last time" filter.</strong> Comments come newest first; we have to remember the newest one we saw and stop when we reach it.</li>
+      <li><strong>The 100 searches are the only scarce thing.</strong> Everything else in section 2 costs 1 unit out of 10,000.</li>
+    </ol>
+    <div class="callout"><b>So "every video" has to mean:</b> every video that any door of the API can reach, found by walking through all of those doors, remembered permanently, and with a measured miss rate rather than an assumption. Section 9 shows the measurement.</div>
+  </div>
+
+  <!-- ================= 4 IDEA ================= -->
+  <h2 id="idea">4 · The idea in one picture</h2>
+  <div class="card">
+    <p>Four doors into the same table of videos. Search opens the first three; channels open the fourth. Every video that comes through any door is stored once, by its video id. Reading comments happens from the table, never from a search result, so position in a search result is irrelevant: video number 480 is treated exactly like video number 1.</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th class="k">Door</th><th>What it finds</th><th class="s">Costs</th><th class="s">When</th></tr></thead>
+        <tbody>
+          <tr><td class="k">A · Month sweep</td><td>Everything a phrase can return for each month of the year, one month at a time, so the 500 cap applies per month instead of per phrase. Run in two orders (most viewed, newest) because each order surfaces videos the other hides.</td><td class="s">searches</td><td class="s">once, over the first days</td></tr>
+          <tr><td class="k">B · New since last look</td><td>Videos uploaded after the last time we searched this phrase, newest first, all pages. Almost never returns a repeat.</td><td class="s">searches</td><td class="s">4 times a day</td></tr>
+          <tr><td class="k">C · Relevance net</td><td>One plain relevance search per phrase, no date filter. Catches an older video that became popular late.</td><td class="s">searches</td><td class="s">once a day</td></tr>
+          <tr><td class="k">D · Channel uploads</td><td>The complete upload history of every channel that gave us an on-topic video, then every new upload from those channels. No search needed.</td><td class="s">units</td><td class="s">daily, plus free push</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Door D is what makes coverage grow beyond what search shows. A channel that made one "thyroid diet" video usually made ten more with titles search did not match. Their comments are the same audience.</p>
+  </div>
+
+  <!-- ================= 5 STORE ================= -->
+  <h2 id="store">5 · What we remember</h2>
+  <div class="card">
+    <div class="tbl">
+      <table>
+        <thead><tr><th class="k">Table</th><th>One row per</th><th>Fields that drive the jobs</th></tr></thead>
+        <tbody>
+          <tr><td class="k">topics</td><td>search phrase (6 today)</td><td>language for ranking · last "new since" search time · month-sweep position (which month and order is next, or done)</td></tr>
+          <tr><td class="k">videos</td><td>video id (one table, a status column)</td><td>channel id · publish time · is it a Short (from duration) · which phrases found it · last known comment count · when the count was last checked · newest comment time we have seen · resume token for a half-read video · next check time · status: <code>active</code>, <code>comments_disabled</code>, <code>gone</code>, <code>retired</code> · how many comments it has given us that we kept</td></tr>
+          <tr><td class="k">channels</td><td>channel id (the video's creator, a public account)</td><td>uploads playlist id · followed yes/no · last time its uploads were listed · has its full history been walked · count of on-topic videos · last on-topic upload date</td></tr>
+          <tr><td class="k">quota_ledger</td><td>quota day (Pacific)</td><td>searches used · units used. Every call adds to it <em>before</em> it is made. Jobs stop at 95 searches or 9,000 units and resume after the reset.</td></tr>
+          <tr><td class="k">items</td><td>comment (as today)</td><td>gains the video id and a "last seen" time, refreshed whenever YouTube returns the same comment again</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Nothing about a commenter is stored: no name, no channel id. The commenter's channel id is compared in memory with the video's channel id to drop the creator's own comments, then discarded.</p>
+  </div>
+
+  <!-- ================= 6 CRONS ================= -->
+  <h2 id="crons">6 · The jobs, one by one</h2>
+
+  <div class="card">
+    <h3>Job 1 · Month sweep (temporary: runs until every phrase and month is done)</h3>
+    <p><b>Every 2 hours, starting after the 1 PM IST reset.</b> The one-time deep pass through the year for each of the 6 phrases.</p>
+    <ol class="steps">
+      <li><strong>Pick the next unfinished phrase-month-order.</strong> The cursor lives in <code>topics</code>: for "thyroid diet", January 2026, most viewed; then January, newest; then February, most viewed; and so on to the current month.</li>
+      <li><strong>Search it, all pages.</strong> <code>q=thyroid diet</code>, <code>type=video</code>, <code>publishedAfter=2026-01-01T00:00:00Z</code>, <code>publishedBefore=2026-02-01T00:00:00Z</code>, <code>order=viewCount</code>, <code>maxResults=50</code>, <code>relevanceLanguage</code> from the phrase. Keep sending <code>pageToken</code> until no <code>nextPageToken</code> comes back. Each page is 1 search.</li>
+      <li><strong>Store every video and every channel.</strong> New video id: insert with the phrase and the door "sweep". Known video id: add the phrase to its list, nothing else. New channel id: insert as a follow candidate.</li>
+      <li><strong>Mark the cursor done, move to the next.</strong> Stop the run when the ledger reaches 88 searches for the day (12 are kept for jobs 2 and 3). Resume on the next run.</li>
+      <li><strong>Switch off.</strong> When every phrase has every month in both orders marked done, the job marks itself finished and does nothing on later runs.</li>
+    </ol>
+    <div class="blue"><b>Size.</b> 6 phrases × 9 months × 2 orders = 108 phrase-month-orders. Worst case each hits the 500 cap and costs 10 searches: 1,080 searches, about 12 days at 88 a day. In practice most months of a niche phrase return under 100 videos and cost 1 or 2 searches, so expect the sweep to finish in a few days. When a phrase-month <em>does</em> hit the cap, the job splits that month into halves (1st to 15th, 16th to end) and sweeps each half, so the cap is defeated again.</div>
+  </div>
+
+  <div class="card">
+    <h3>Job 2 · New videos (permanent)</h3>
+    <p><b>Every 6 hours.</b> Keeps the table current from the search side.</p>
+    <ol class="steps">
+      <li><strong>For each phrase:</strong> <code>order=date</code>, <code>publishedAfter=</code> the phrase's last "new since" time minus 1 hour of overlap (publish times can lag), <code>maxResults=50</code>. Page while <code>nextPageToken</code> exists.</li>
+      <li><strong>Store</strong> as in job 1, door "new". Then set the phrase's last "new since" time to now.</li>
+      <li><strong>Cost:</strong> usually 1 search per phrase per run because only a handful of videos appear in 6 hours. 6 phrases × 4 runs = 24 searches a day at most.</li>
+    </ol>
+    <p class="note">The first time this job runs it uses "30 days ago" as the starting point so nothing is lost while job 1 is still working.</p>
+  </div>
+
+  <div class="card">
+    <h3>Job 3 · Relevance net (permanent)</h3>
+    <p><b>Once a day, inside the first run of job 2.</b> For each phrase one plain search: <code>order=relevance</code>, no date filter, one page of 50. 6 searches a day. Stores as door "relevance". Its purpose is the older video that search suddenly ranks high because it went viral this week.</p>
+  </div>
+
+  <div class="card">
+    <h3>Job 4 · Channel uploads (permanent)</h3>
+    <p><b>Once a day.</b> Turns every on-topic channel into a source that costs units, not searches.</p>
+    <ol class="steps">
+      <li><strong>Resolve new channels.</strong> Channels without an uploads playlist id: one <code>channels.list</code> call with up to 50 ids, <code>part=contentDetails</code>. Store the uploads playlist id. Mark <code>followed</code> if the channel has at least 1 on-topic video (a video that a phrase found).</li>
+      <li><strong>Walk the full history once.</strong> A followed channel whose history is not yet walked: <code>playlistItems.list</code> on its uploads playlist, 50 per page, page until the end. Every video goes into the table with door "channel", no phrase. This is bounded by units: at most 2,000 units a day for history walks, the rest waits for tomorrow.</li>
+      <li><strong>Then every day, only the top.</strong> For a walked channel: one page of its uploads, newest first; stop at the first video id we already have. New uploads go into the table. Usually 1 unit per channel per day.</li>
+      <li><strong>Unfollow quietly.</strong> A channel with no new on-topic video in 120 days stops being listed daily (its videos stay). It is re-followed the moment a phrase finds a new video of it.</li>
+    </ol>
+    <div class="blue"><b>Why this is the main engine after week one.</b> Search can only show what it ranks. A channel's uploads playlist shows everything it has, every time. Once the 300 to 500 channels behind our 6 phrases are followed, nearly every new relevant video on YouTube arrives here within a day, for roughly 300 to 500 units, and the searches in jobs 2 and 3 become the safety net rather than the source.</div>
+  </div>
+
+  <div class="card">
+    <h3>Job 5 · Push receiver (permanent, not a cron: an endpoint plus a daily renewal)</h3>
+    <p>For followed channels we also subscribe to Google's free push feed. A public URL of ours answers the hub's verification and then receives a small XML notice with the video id whenever the channel uploads. The video goes straight into the table, marked for its first comment read a few hours later. Subscriptions expire, so a <b>daily renewal cron</b> re-subscribes channels whose lease ends within 3 days (the lease length is not stated on Google's page; developers report up to 10 days, so 3 days of margin is safe). If a push is missed, job 4 catches the upload the next day; push only makes it faster.</p>
+  </div>
+
+  <div class="card">
+    <h3>Job 6 · Comment reader (permanent)</h3>
+    <p><b>Every 2 hours.</b> Reads new comments from the table of videos. Never looks at a search result.</p>
+    <ol class="steps">
+      <li><strong>Ask which videos changed.</strong> Every <code>active</code> video whose next check time has passed: <code>videos.list</code> with 50 ids per call, <code>part=statistics,contentDetails,snippet</code>. Compare <code>commentCount</code> with the stored one. Also refresh duration (Short or not), live status, and mark <code>gone</code> if an id is missing from the answer. 3,000 videos = 60 units.</li>
+      <li><strong>Decide which to read.</strong> Read a video when its count changed (up or down), or it was published in the last 7 days (counts lag on fresh videos, so read regardless), or it has not been read for 7 days. Shorts: only weekly.</li>
+      <li><strong>Read to the cursor.</strong> <code>commentThreads.list</code>, <code>videoId</code>, <code>order=time</code>, <code>part=snippet,replies</code>, <code>textFormat=plainText</code>, <code>maxResults=100</code>. Page newest first until a comment older than the stored "newest comment seen" appears, then stop. Store the new "newest comment seen". A quiet video costs 1 unit and returns nothing new. Comments dated before 1 January 2026 are ignored.</li>
+      <li><strong>Big videos are read in slices.</strong> At most 10 pages per video per run; a first read of an old video may take up to 30 pages, spread over runs with a resume token, most viewed videos first so the cap lands where it matters least.</li>
+      <li><strong>Set the next check time.</strong> 2 hours if the video is under 7 days old or its count moved this run; 24 hours if it has been quiet for a week; 7 days if quiet for 60 days. After 180 days with no change and no kept comment, status <code>retired</code>: never checked again unless a phrase or channel finds it afresh.</li>
+      <li><strong>Hand over.</strong> Kept comments go through the existing keyword filter, the AI form, scoring and the Today list, unchanged.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h3>Job 7 · Cleanup (permanent)</h3>
+    <p><b>Once a day.</b> Deletes stored comments not seen for 30 days (Google's developer policy allows public data to be kept for at most 30 days unless refreshed; the reader refreshes "last seen" every time the same comment comes back). Video and channel rows are refreshed by job 6 and job 4, so they stay within the 30 days on their own. Retired videos with no kept comments are dropped after 30 days too.</p>
+  </div>
+
+  <div class="card">
+    <h3>Job 8 · Coverage check (permanent)</h3>
+    <p><b>Once a week.</b> Picks 20 followed channels at random, lists their uploads playlist in full, and counts videos that are on the channel but not in our table. That count is the <b>miss rate</b>, shown on the YouTube page. It is the only honest number for "did we cover everything", and it should read zero for followed channels.</p>
+  </div>
+
+  <!-- ================= 7 DAY ================= -->
+  <h2 id="day">7 · A day in numbers</h2>
+  <div class="card">
+    <div class="tbl">
+      <table>
+        <thead><tr><th class="k">Call</th><th class="s">Pot</th><th class="s num">Sweep days</th><th class="s num">After</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td class="k">Job 1 month sweep</td><td class="s">searches</td><td class="s num">≤ 70</td><td class="s num">0</td><td>Stops itself when done</td></tr>
+          <tr><td class="k">Job 2 new videos</td><td class="s">searches</td><td class="s num">≤ 24</td><td class="s num">≤ 24</td><td>6 phrases × 4 runs, usually 1 page each</td></tr>
+          <tr><td class="k">Job 3 relevance net</td><td class="s">searches</td><td class="s num">6</td><td class="s num">6</td><td></td></tr>
+          <tr><td class="k"><b>Searches total</b></td><td class="s"><b>100</b></td><td class="s num"><b>≤ 100</b></td><td class="s num"><b>≤ 30</b></td><td>Ledger halts at 95</td></tr>
+          <tr><td class="k">Job 4 channels.list + history walks</td><td class="s">units</td><td class="s num">≤ 2,100</td><td class="s num">≤ 100</td><td>History walked once per channel</td></tr>
+          <tr><td class="k">Job 4 daily upload check, 500 channels</td><td class="s">units</td><td class="s num">500</td><td class="s num">500</td><td>1 page each</td></tr>
+          <tr><td class="k">Job 6 count checks, 5,000 videos × 12 runs</td><td class="s">units</td><td class="s num">1,200</td><td class="s num">1,200</td><td>Falls as videos move to 24 h / 7 d checks</td></tr>
+          <tr><td class="k">Job 6 comment reads</td><td class="s">units</td><td class="s num">≤ 4,000</td><td class="s num">≈ 750</td><td>First reads are the expensive part</td></tr>
+          <tr><td class="k">Job 8 coverage check (weekly ÷ 7)</td><td class="s">units</td><td class="s num">≈ 10</td><td class="s num">≈ 10</td><td></td></tr>
+          <tr><td class="k"><b>Units total</b></td><td class="s"><b>10,000</b></td><td class="s num"><b>≤ 7,800</b></td><td class="s num"><b>≈ 2,600</b></td><td>Ledger halts at 9,000</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">These are ceilings, not predictions. The ledger will replace them with measured numbers after the first week, and the YouTube page will show both pots used today.</p>
+  </div>
+
+  <!-- ================= 8 EDGE ================= -->
+  <h2 id="edge">8 · When things go wrong</h2>
+  <div class="card">
+    <div class="tbl">
+      <table>
+        <thead><tr><th class="k">Situation</th><th>What would go wrong</th><th>How it is handled</th></tr></thead>
+        <tbody>
+          <tr><td class="k">A phrase-month hits the 500 cap</td><td>Videos beyond page 10 never seen</td><td>Job 1 splits that month into two halves and sweeps each; a half that also caps is split into weeks.</td></tr>
+          <tr><td class="k">Search results drift</td><td>A video seen once is lost</td><td>Stored on first sight; search is never the index.</td></tr>
+          <tr><td class="k">Same video under 3 phrases</td><td>Read 3 times</td><td>Video id is the key; the phrases are a list on one row.</td></tr>
+          <tr><td class="k">Video found by a channel, matched by no phrase</td><td>Off-topic noise</td><td>Kept in the table, comments read, but the keyword filter on each comment decides what reaches the AI, exactly as today.</td></tr>
+          <tr><td class="k">Brand-new upload with 0 comments</td><td>Read once, then forgotten</td><td>Under 7 days old is read every run regardless of count.</td></tr>
+          <tr><td class="k">Comment count lags</td><td>Change detection misses a comment</td><td>Fresh videos read every run; every video read at least weekly regardless.</td></tr>
+          <tr><td class="k">Comments disabled / video removed / private</td><td>Errors every run</td><td><code>commentsDisabled</code> → status <code>comments_disabled</code>; <code>videoNotFound</code> or missing from <code>videos.list</code> → <code>gone</code>. Never called again.</td></tr>
+          <tr><td class="k">Live stream or premiere</td><td>Live chat is not comments</td><td><code>liveBroadcastContent</code> ≠ <code>none</code> → skip until it becomes a normal video.</td></tr>
+          <tr><td class="k">Shorts</td><td>Many comments, low value, quota drain</td><td>Duration under 60 s → weekly reads only.</td></tr>
+          <tr><td class="k">A video with 20,000 comments</td><td>One read eats the day</td><td>10 pages per run, 30 pages for a first read, resume token.</td></tr>
+          <tr><td class="k">Question asked as a reply</td><td>Missed</td><td><code>part=replies</code> brings the first replies free; <code>comments.list</code> fetches the rest only for threads that scored well.</td></tr>
+          <tr><td class="k">Push notification missed</td><td>Upload not seen</td><td>Job 4 lists the channel the next day.</td></tr>
+          <tr><td class="k">Push lease expires</td><td>Silence</td><td>Daily renewal for leases ending within 3 days.</td></tr>
+          <tr><td class="k">A pot runs out mid-run</td><td>Half-read videos, errors</td><td>Ledger stops at 95 / 9,000 before the call; a <code>quotaExceeded</code> answer ends the run cleanly; state is per video and per phrase, so the next run continues where it stopped.</td></tr>
+          <tr><td class="k">Reset at 12:30 or 1:30 PM IST</td><td>Sweep starves the reader</td><td>Job 1 starts after 1 PM IST and keeps 12 searches for jobs 2 and 3; units are shared but the reader runs first in each 2-hour slot.</td></tr>
+          <tr><td class="k">Two runs overlap</td><td>Same video read twice</td><td>A run lock with an expiry; an overlapping fire waits.</td></tr>
+          <tr><td class="k">Host time limit per request</td><td>Job cut off</td><td>Every job does a bounded number of calls and re-queues itself.</td></tr>
+          <tr><td class="k">Creator's own comments and pinned comments</td><td>Noise, and a name we must not keep</td><td>Commenter channel id compared with video channel id in memory, then discarded.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ================= 9 PROOF ================= -->
+  <h2 id="proof">9 · How we know it works</h2>
+  <div class="card">
+    <ul class="plain">
+      <li><b>Miss rate on followed channels</b> (job 8): should be 0. Anything above 0 is a bug in job 4.</li>
+      <li><b>Manual spot check</b> once a week: open YouTube, search one phrase with "newest first", take the first 30 videos, check each id is in the table.</li>
+      <li><b>Both pots on the YouTube page</b>, live from the ledger, plus the Google Cloud console quota graph: searches ≤ 100, units ≤ 10,000 every day.</li>
+      <li><b>Sweep progress</b> on the YouTube page: phrase-months done out of 108, videos found per door.</li>
+      <li><b>Per-video yield</b>: comments kept ÷ comments read. Shows which channels and phrases actually hold Hash's audience, which is the input for the next round of phrases.</li>
+    </ul>
+    <div class="callout"><b>The honest ceiling.</b> YouTube never publishes the full list of videos for a phrase. This plan walks every door the API has, remembers everything it sees, follows every channel it meets, and measures its own misses. That is the most "every video" the free API allows, and it is far past the 5-videos-per-search the tool does today.</div>
+  </div>
+
+  <footer>Internal document for the Hash Health team. API facts read from Google's YouTube Data API reference on 17 September 2026. The ~500-result cap and the push lease length are developer-reported, not on Google's pages, and are marked as such above. Sections 4 to 9 were built on 17 September 2026 (all jobs except job 5, push notifications).</footer>
+</main>
+</body>
+</html>

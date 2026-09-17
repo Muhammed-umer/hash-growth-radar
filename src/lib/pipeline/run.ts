@@ -1,6 +1,6 @@
 import "server-only";
 import { COLLECTORS, CollectorConfigError } from "../collectors";
-import { config, type Config } from "../config";
+import { config, YT, type Config } from "../config";
 import { db, must } from "../db";
 import { AllKeysParkedError } from "../ai/keyring";
 import { claim, complete, defer, enqueueMany, fail, JOB_TYPES, releaseStale } from "../queue";
@@ -42,8 +42,10 @@ export async function ingest(platform: Platform, raws: RawItem[], cfg: Config): 
   const inBatchDupes = raws.length - byId.size;
 
   const rules = { allow: cfg.keywords_allow, block: cfg.keywords_block };
+  const nowIso = new Date().toISOString();
   const rows = [...byId.values()].map((r) => {
     const f = prefilter({ title: r.title, body: r.body, postedAt: r.postedAt }, rules);
+    const videoId = r.meta?.video_id;
     return {
       platform,
       source_kind: r.sourceKind,
@@ -54,6 +56,8 @@ export async function ingest(platform: Platform, raws: RawItem[], cfg: Config): 
       body: r.body,
       posted_at: r.postedAt,
       meta: r.meta ?? {},
+      video_id: typeof videoId === "string" ? videoId : null,
+      last_seen_at: nowIso,
       status: f.pass ? "queued" : "filtered",
       filter_reason: f.pass ? null : f.reason,
     };
@@ -67,6 +71,16 @@ export async function ingest(platform: Platform, raws: RawItem[], cfg: Config): 
       .select("id, status");
     if (res.error) throw new Error(`store items: ${res.error.message}`);
     inserted.push(...((res.data ?? []) as typeof inserted));
+    // YouTube returned these comments again: the 30-day clock restarts for the
+    // ones we already had (the upsert above ignored them).
+    if ((res.data?.length ?? 0) < part.length) {
+      const seen = await db()
+        .from("items")
+        .update({ last_seen_at: nowIso })
+        .eq("platform", platform)
+        .in("external_id", part.map((r) => r.external_id));
+      if (seen.error) throw new Error(`refresh last_seen_at: ${seen.error.message}`);
+    }
   }
 
   const queuedIds = inserted.filter((i) => i.status === "queued").map((i) => i.id);
@@ -82,8 +96,8 @@ export async function ingest(platform: Platform, raws: RawItem[], cfg: Config): 
   };
 }
 
-async function startRun(platform: Platform, trigger: RunRow["trigger"]): Promise<RunRow> {
-  return must(await db().from("runs").insert({ platform, trigger }).select("*").single(), "start run") as RunRow;
+async function startRun(platform: Platform, trigger: RunRow["trigger"], job = "collect"): Promise<RunRow> {
+  return must(await db().from("runs").insert({ platform, trigger, job }).select("*").single(), "start run") as RunRow;
 }
 
 async function finishRun(id: string, patch: Partial<RunRow>): Promise<RunRow> {
@@ -111,8 +125,10 @@ export async function collectPlatform(platform: Platform, trigger: RunRow["trigg
     const collector = COLLECTORS[platform];
     if (!collector) throw new CollectorConfigError("This platform has no automatic collector.");
     const cfg = config();
-    const { items, notes } = await collector({ config: cfg, now: new Date() });
+    const { items, notes, commit } = await collector({ config: cfg, now: new Date() });
     const { queuedIds, ...counts } = await ingest(platform, items, cfg);
+    // Only now that the comments are stored may the collector move its cursors.
+    if (commit) await commit();
     const remaining = budgetMs - (Date.now() - started);
     const drained = await drainJobs(remaining);
     return finishRun(run.id, {
@@ -121,6 +137,22 @@ export async function collectPlatform(platform: Platform, trigger: RunRow["trigg
       tagged: countTagged(queuedIds, drained.processedItemIds),
       notes: { ...notes, jobs_processed: drained.processed, jobs_failed: drained.failed },
     });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    return finishRun(run.id, { status: e instanceof CollectorConfigError ? "skipped" : "error", error: message.slice(0, 2000) });
+  }
+}
+
+/**
+ * Any other scheduled job (sweep, discover, channels, coverage, cleanup),
+ * recorded as a run so the YouTube page shows it. `work` returns the notes to
+ * store; a CollectorConfigError (missing key) records "skipped", anything else "error".
+ */
+export async function runJob(job: string, work: () => Promise<Record<string, unknown>>): Promise<RunRow> {
+  const run = await startRun("youtube", "cron", job);
+  try {
+    const notes = await work();
+    return finishRun(run.id, { status: "ok", notes });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     return finishRun(run.id, { status: e instanceof CollectorConfigError ? "skipped" : "error", error: message.slice(0, 2000) });
@@ -233,14 +265,57 @@ export async function drainJobs(budgetMs: number): Promise<{ processed: number; 
   return { processed, failed, processedItemIds };
 }
 
-/** Delete items past the retention window (tags cascade, old runs and finished jobs are cleaned). */
-export async function cleanup(retentionDays: number): Promise<{ items: number; runs: number; jobs: number }> {
-  const cutoff = new Date(Date.now() - retentionDays * 86_400_000).toISOString();
-  const items = await db().from("items").delete().lt("collected_at", cutoff).select("id");
+/**
+ * Job 7 · Cleanup. Items YouTube has not returned for `retentionDays` are
+ * deleted (tags cascade); so are non-active videos and unfollowed channels not
+ * seen for that long (a watched video is refreshed by every count check).
+ * Channels with no on-topic upload for YT.unfollow_after_days stop being
+ * listed daily. Old runs and finished jobs go too.
+ */
+export async function cleanup(retentionDays: number): Promise<Record<string, number>> {
+  const now = Date.now();
+  const cutoff = new Date(now - retentionDays * 86_400_000).toISOString();
+  const items = await db().from("items").delete().lt("last_seen_at", cutoff).select("id");
   if (items.error) throw new Error(`cleanup items: ${items.error.message}`);
-  const runs = await db().from("runs").delete().lt("started_at", new Date(Date.now() - 60 * 86_400_000).toISOString()).select("id");
+  const runs = await db().from("runs").delete().lt("started_at", new Date(now - 60 * 86_400_000).toISOString()).select("id");
   if (runs.error) throw new Error(`cleanup runs: ${runs.error.message}`);
   const jobs = await db().from("jobs").delete().in("status", ["done", "failed"]).lt("updated_at", cutoff).select("id");
   if (jobs.error) throw new Error(`cleanup jobs: ${jobs.error.message}`);
-  return { items: items.data?.length ?? 0, runs: runs.data?.length ?? 0, jobs: jobs.data?.length ?? 0 };
+
+  const unfollowBefore = new Date(now - YT.unfollow_after_days * 86_400_000).toISOString();
+  const unfollowed = await db()
+    .from("channels")
+    .update({ followed: false })
+    .eq("followed", true)
+    .lt("first_seen_at", unfollowBefore)
+    .or(`last_on_topic_at.is.null,last_on_topic_at.lt.${unfollowBefore}`)
+    .select("channel_id");
+  if (unfollowed.error) throw new Error(`cleanup unfollow: ${unfollowed.error.message}`);
+  // Removed or private videos are deleted. Retired and comments-off videos keep
+  // their id (so channel checks and the coverage check do not count them as
+  // missing and add them back), but their YouTube data is cleared at 30 days.
+  const videos = await db().from("videos").delete().lt("last_seen_at", cutoff).eq("status", "gone").select("video_id");
+  if (videos.error) throw new Error(`cleanup videos: ${videos.error.message}`);
+  const stripped = await db()
+    .from("videos")
+    .update({ title: null, channel_title: null, comment_count: null, duration_seconds: null })
+    .lt("last_seen_at", cutoff)
+    .in("status", ["retired", "comments_disabled"])
+    .not("title", "is", null)
+    .select("video_id");
+  if (stripped.error) throw new Error(`cleanup strip videos: ${stripped.error.message}`);
+  const channels = await db().from("channels").delete().lt("last_seen_at", cutoff).eq("followed", false).select("channel_id");
+  if (channels.error) throw new Error(`cleanup channels: ${channels.error.message}`);
+  const yieldRes = await db().rpc("refresh_video_yield");
+  if (yieldRes.error) throw new Error(`refresh_video_yield: ${yieldRes.error.message}`);
+
+  return {
+    items: items.data?.length ?? 0,
+    runs: runs.data?.length ?? 0,
+    jobs: jobs.data?.length ?? 0,
+    videos: videos.data?.length ?? 0,
+    videos_cleared: stripped.data?.length ?? 0,
+    channels: channels.data?.length ?? 0,
+    unfollowed: unfollowed.data?.length ?? 0,
+  };
 }

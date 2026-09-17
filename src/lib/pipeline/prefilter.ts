@@ -1,4 +1,4 @@
-import { RETENTION_DAYS } from "../config";
+import { YT } from "../config";
 
 export interface PrefilterInput {
   title: string | null;
@@ -57,20 +57,21 @@ export function looksLikeQuestion(text: string): boolean {
 
 /**
  * Cheap, deterministic filter that runs before any AI call. It keeps AI cost
- * tiny and never decides anything subtle: it only drops items that are too
- * old, too short, clearly off-topic, or clearly noise.
+ * tiny and never decides anything subtle: it only drops items that are before
+ * the floor date, too short, clearly off-topic, or clearly noise.
  */
 export function prefilter(input: PrefilterInput, rules: PrefilterRules): PrefilterResult {
-  const now = input.now ?? new Date();
   const text = `${input.title ?? ""}\n${input.body ?? ""}`.trim();
 
   if (text.length < 15) return { pass: false, reason: "too_short" };
 
+  // Nothing from before the floor date (YT.comment_floor). Comments are read
+  // from the watch list, so an old video's whole thread comes through here;
+  // the floor keeps the year we decided to cover and nothing before it.
   if (input.postedAt) {
     const posted = new Date(input.postedAt);
-    if (!Number.isNaN(posted.getTime())) {
-      const ageDays = (now.getTime() - posted.getTime()) / 86_400_000;
-      if (ageDays > RETENTION_DAYS) return { pass: false, reason: "too_old" };
+    if (!Number.isNaN(posted.getTime()) && posted.getTime() < Date.parse(YT.comment_floor)) {
+      return { pass: false, reason: "too_old" };
     }
   }
 

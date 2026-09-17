@@ -1,46 +1,27 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
-import { NAV_PLATFORMS, PLATFORM_INFO, TOP_N } from "@/lib/config";
+import { TOP_N } from "@/lib/config";
 import { timeAgo } from "@/lib/format";
-import { countsFor, jobCounts, loadQueue, statusCounts } from "@/lib/queries";
+import { loadQueue, parseQueueSort } from "@/lib/queries";
 import { ItemCard } from "@/components/item-card";
-import { Section, Stat } from "@/components/stat";
+import { SortToggle } from "@/components/sort-toggle";
 
 export const dynamic = "force-dynamic";
 
-export default async function TodayPage() {
+export default async function TodayPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   await requireUser();
-  const [queue, counts, jobs] = await Promise.all([loadQueue({ limit: TOP_N }), statusCounts(), jobCounts()]);
+  const sort = parseQueueSort((await searchParams).sort);
+  const queue = await loadQueue({ limit: TOP_N, sort });
   const now = new Date();
-  const sum = (key: "tagged" | "do_not_reply" | "skipped") => NAV_PLATFORMS.reduce((a, p) => a + countsFor(counts, p)[key], 0);
 
   return (
     <div>
-      <div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Today</h1>
-        <p className="text-sm text-stone-600">The {TOP_N} people most worth approaching, across every platform. Open the thread and decide yourself. Refreshed every 2 hours by the schedule.</p>
+        <SortToggle value={sort} basePath="/today" />
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-        <Stat label="to look at" value={sum("tagged")} tone="good" />
-        <Stat label="waiting for AI" value={jobs.pending + jobs.running} tone={jobs.pending ? "warn" : "muted"} />
-        <Stat label="AI jobs failed" value={jobs.failed} tone={jobs.failed ? "bad" : "muted"} />
-        <Stat label="skipped" value={sum("skipped")} tone="muted" />
-        <Stat label="not suitable" value={sum("do_not_reply")} tone="muted" />
-      </div>
-
-      <div className="mt-3 flex flex-wrap gap-2 text-xs">
-        {NAV_PLATFORMS.map((p) => {
-          const c = countsFor(counts, p);
-          return (
-            <Link key={p} href={`/platforms/${p}`} className="rounded-full border border-stone-200 bg-white px-3 py-1 hover:bg-stone-100">
-              {PLATFORM_INFO[p].label}: <b>{c.tagged}</b> to look at · {c.skipped} skipped
-            </Link>
-          );
-        })}
-      </div>
-
-      <Section title={`Top ${TOP_N}`}>
+      <div className="mt-6">
         {queue.length === 0 ? (
           <div className="rounded-xl border border-dashed border-stone-300 bg-white p-6 text-sm text-stone-600">
             Nothing to show yet. The schedule collects from YouTube every 2 hours; see the <Link href="/platforms/youtube" className="underline">YouTube</Link> page for the last run.
@@ -52,7 +33,7 @@ export default async function TodayPage() {
             ))}
           </div>
         )}
-      </Section>
+      </div>
     </div>
   );
 }

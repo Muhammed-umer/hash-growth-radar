@@ -19,28 +19,99 @@ export const PLATFORM_INFO: Record<Platform, PlatformInfo> = {
     key: "youtube",
     label: "YouTube",
     blurb:
-      "Every 2 hours the schedule searches 4 of the topics, reads the newest comments under the top videos, keeps the questions, and tags them. Free allowance: 100 searches/day plus 10,000 units/day; we use about 48 and 240.",
+      "Every video about the topics is remembered in a watch list: a one-time month-by-month sweep of the year, newest-first searches four times a day, one relevance search a day, and the upload lists of every channel that made an on-topic video. Every 2 hours the comment counts of the watched videos are checked (50 videos per unit) and only the videos that changed are read, newest comment first, up to the last one already seen. Free allowance: 100 searches/day plus 10,000 units/day, counted in a ledger before every call.",
     requiredEnv: ["YOUTUBE_API_KEY"],
   },
 };
 
 export const NAV_PLATFORMS: Platform[] = ["youtube"];
 
-/** Items older than this are never collected and are deleted by the cleanup cron. */
-export const RETENTION_DAYS = 7;
+/**
+ * Stored comments are deleted this many days after YouTube LAST returned them
+ * (items.last_seen_at). YouTube's Developer Policy III.E.4.d allows public API
+ * data to be kept for at most 30 days unless refreshed; the reader refreshes it.
+ * Changed from 7 days on 17 Sep 2026.
+ */
+export const RETENTION_DAYS = 30;
 
 /** How many items the Today page shows. */
 export const TOP_N = 10;
 
-/** How often the collect cron runs (supabase/migrations/0002_cron.sql: every 2 hours). */
-export const RUNS_PER_DAY = 12;
+/**
+ * Every knob of the YouTube watch list (docs/coverage-plan.html). Times in
+ * hours or days, page limits in pages of the call named.
+ */
+export const YT = {
+  /** Comments posted before this instant are never stored (prefilter "too_old"). */
+  comment_floor: "2026-01-01T00:00:00Z",
+  /** The month sweep walks back to this date. */
+  sweep_floor: "2026-01-01T00:00:00Z",
+  /**
+   * The sweep stops once the day's searches reach this total, so the discover
+   * job keeps its ~30 a day (6 phrases x 4 runs + 6 relevance) under the cap of 95.
+   */
+  sweep_search_cap: 64,
+  /** Pages of 50 per window before we assume the ~500 cap and split the window. */
+  sweep_pages_per_window: 10,
+  /** Smallest window the sweep will split down to. */
+  sweep_min_window_hours: 24,
+  /** Pages per topic for the "newest since last look" search; anything deeper is handed to the sweep. */
+  discover_pages_per_topic: 5,
+  /** Hours between relevance searches of one topic. */
+  relevance_every_hours: 20,
+  /** First "newest since" search looks back this many days. */
+  discover_first_lookback_days: 30,
+  /** Overlap subtracted from the watermark (publish times can lag). */
+  discover_overlap_hours: 1,
+  /** Hours between two upload-list checks of a followed channel. */
+  channel_sweep_hours: 20,
+  /** Pages (of 50 uploads) a first history walk may read per channel. */
+  channel_history_max_pages: 40,
+  /** Units the channels job may spend on history walks per run. */
+  channel_walk_units_per_run: 2000,
+  /** Channels the daily upload check may list per run. */
+  channels_per_run: 600,
+  /** Videos whose comment count is checked per reader run (50 per unit). Supabase returns at most 1,000 rows per query. */
+  checks_per_run: 1000,
+  /**
+   * The reader stops once the day's units reach this total, so the channels
+   * and coverage jobs always keep at least 2,000 of the 9,000.
+   */
+  reader_unit_cap: 7000,
+  /** Wall-clock budget per job run, inside the route's 300 s limit. */
+  reader_time_budget_ms: 150_000,
+  job_time_budget_ms: 240_000,
+  /** Videos whose comments are read per reader run. */
+  reads_per_run: 300,
+  /** commentThreads pages per reader run in total. */
+  pages_per_run: 1500,
+  /** commentThreads pages per video per run. */
+  pages_per_video_per_run: 10,
+  /** Pages a first read of an old video may take across runs. */
+  first_read_max_pages: 30,
+  /** Videos younger than this are read every run regardless of the count. */
+  fresh_days: 7,
+  /** Every active video is read at least this often. */
+  reread_days: 7,
+  /** After this long without a count change a video is checked weekly. */
+  quiet_days: 60,
+  /** After this long without any change a video is retired. */
+  retire_after_days: 180,
+  /** A channel with no on-topic upload for this long stops being listed daily. */
+  unfollow_after_days: 120,
+  /** Channels compared with their real upload list by the weekly coverage check. */
+  coverage_sample: 20,
+  /** Stop before Google does. */
+  ledger_caps: { searches: 95, units: 9000 },
+} as const;
 
 export const CONFIG = {
   /**
-   * YouTube search phrases. Each one is the `q` of one search.list call and
-   * finds the videos whose comments we read. Topics 1-6 find people asking
-   * about food with a medicine or condition; 7-9 find people choosing or
-   * complaining about a calorie app.
+   * YouTube search phrases. Each one is the `q` of the sweep, "newest since"
+   * and relevance searches (src/lib/youtube). All six find people asking
+   * about food with a medicine or condition. The three calorie-app phrases
+   * were removed on 17 Sep 2026 by the founder's decision. The app seeds the
+   * `topics` table from this list on every discover run.
    */
   youtube_topics: [
     "diabetes diet",
@@ -49,20 +120,7 @@ export const CONFIG = {
     "thyroid diet",
     "hypothyroidism diet",
     "Indian weight loss diet",
-    "calorie tracking app review",
-    "Cal AI review",
-    "HealthifyMe review",
   ],
-  /**
-   * search.list calls per run. The free allowance is 100/day and the cron runs
-   * 12 times a day, so 4 per run = 48/day. Topics rotate between runs
-   * (rotateTopics in collectors/youtube.ts), so every topic comes up 5-6 times a day.
-   */
-  youtube_max_searches_per_run: 4,
-  /** Videos read per topic (maxResults of search.list, 0-50). */
-  youtube_videos_per_topic: 5,
-  /** Newest top-level comments read per video (maxResults of commentThreads.list, 1-100). 1 unit regardless. */
-  youtube_comments_per_video: 50,
 
   /**
    * Keyword prefilter. A comment must contain at least one ALLOW term and no
@@ -112,9 +170,6 @@ export type Config = {
 export function config(): Config {
   return {
     youtube_topics: [...CONFIG.youtube_topics],
-    youtube_max_searches_per_run: CONFIG.youtube_max_searches_per_run,
-    youtube_videos_per_topic: CONFIG.youtube_videos_per_topic,
-    youtube_comments_per_video: CONFIG.youtube_comments_per_video,
     keywords_allow: [...CONFIG.keywords_allow],
     keywords_block: [...CONFIG.keywords_block],
   };

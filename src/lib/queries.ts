@@ -17,14 +17,23 @@ const EMPTY_COUNTS: Record<ItemStatus, number> = {
   posted: 0,
 };
 
-export async function loadQueue(opts: { platform?: Platform; statuses?: ItemStatus[]; limit?: number } = {}): Promise<QueueEntry[]> {
+/** score: highest score first. latest: newest comment first (by when it was posted on YouTube). */
+export type QueueSort = "score" | "latest";
+
+export function parseQueueSort(v: string | string[] | undefined): QueueSort {
+  return v === "latest" ? "latest" : "score";
+}
+
+export async function loadQueue(opts: { platform?: Platform; statuses?: ItemStatus[]; limit?: number; sort?: QueueSort } = {}): Promise<QueueEntry[]> {
   let q = db()
     .from("items")
     .select("*")
-    .in("status", opts.statuses ?? ["tagged"])
-    .order("score", { ascending: false, nullsFirst: false })
-    .order("collected_at", { ascending: false })
-    .limit(opts.limit ?? TOP_N);
+    .in("status", opts.statuses ?? ["tagged"]);
+  q =
+    opts.sort === "latest"
+      ? q.order("posted_at", { ascending: false, nullsFirst: false }).order("collected_at", { ascending: false })
+      : q.order("score", { ascending: false, nullsFirst: false }).order("collected_at", { ascending: false });
+  q = q.limit(opts.limit ?? TOP_N);
   // One platform, or every platform shown in the navbar.
   q = opts.platform ? q.eq("platform", opts.platform) : q.in("platform", NAV_PLATFORMS);
   const res = await q;

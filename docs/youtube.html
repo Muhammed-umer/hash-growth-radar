@@ -61,6 +61,7 @@
 <main>
   <h1>YouTube, exactly</h1>
   <p class="tagline">What we got from Google, what it allows, what we send, what comes back, what we keep, and what the AI does with it. Every parameter below is taken from Google's reference pages and from the code as deployed on 16 Sep 2026.</p>
+  <div class="callout"><b>Superseded on 17 September 2026.</b> Sections 3, 7, 8 and 9 describe the first version (4 topics per run, the top 5 videos by relevance, the newest 50 comments). That version was replaced by the watch list: every video is remembered, found through a month sweep, newest-first searches and channel upload lists, and comments are read only from videos whose comment count changed. The current design, its jobs and its budget are in <a href="coverage-plan.html">coverage-plan.html</a>. Sections 1, 2, 4, 5 and 6 (the API, the allowance, what we keep, the AI form) still hold; retention is now 30 days after last seen, not 7 days after collection.</div>
 
   <nav>
     <a href="#api">1 · The API we have</a>
@@ -288,7 +289,7 @@
   <!-- ================= 7 TOPICS ================= -->
   <h2 id="topics">7 · The topics</h2>
   <div class="card">
-    <p>Nine search phrases. Each becomes the <code>q</code> of one <code>search.list</code> call. They live in <code>src/lib/config.ts</code> and are shown on the app&apos;s "How it works" page.</p>
+    <p>Six search phrases. Each becomes the <code>q</code> of one <code>search.list</code> call. They live in <code>src/lib/config.ts</code> and are shown on the app&apos;s "How it works" page.</p>
     <div class="tbl">
       <table>
         <thead><tr><th class="s">#</th><th class="k">Topic</th><th>Who comments under these videos</th></tr></thead>
@@ -299,24 +300,21 @@
           <tr><td class="s num">4</td><td class="k">thyroid diet</td><td>Thyroid patients, often on levothyroxine</td></tr>
           <tr><td class="s num">5</td><td class="k">hypothyroidism diet</td><td>Same audience, the medical wording</td></tr>
           <tr><td class="s num">6</td><td class="k">Indian weight loss diet</td><td>Indian food questions: roti, rice, dal</td></tr>
-          <tr><td class="s num">7</td><td class="k">calorie tracking app review</td><td>People choosing an app</td></tr>
-          <tr><td class="s num">8</td><td class="k">Cal AI review</td><td>People using or judging that competitor</td></tr>
-          <tr><td class="s num">9</td><td class="k">HealthifyMe review</td><td>Same, for the Indian competitor</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="note">Topics 1 to 6 find people asking about food with a medicine or condition. Topics 7 to 9 find people choosing or complaining about a calorie app. The topics choose the <em>videos</em>; the keyword filter in section 5 is applied to each <em>comment</em> separately.</p>
+    <p class="note">All six topics find people asking about food with a medicine or condition. Three calorie-app phrases (calorie tracking app review, Cal AI review, HealthifyMe review) were removed on 17 September 2026. The topics choose the <em>videos</em>; the keyword filter in section 5 is applied to each <em>comment</em> separately.</p>
   </div>
 
   <!-- ================= 8 ROTATION ================= -->
   <h2 id="rotation">8 · Why 4 topics per run, and which 4</h2>
   <div class="card">
-    <p>The timer runs 12 times a day. Searching all 9 topics every run would be 108 searches, over the 100 allowed. So each run searches 4, and consecutive runs continue through the list.</p>
+    <p>The timer runs 12 times a day. Searching all 6 topics every run would be 72 searches, most of the 100 allowed. So each run searches 4, and consecutive runs continue through the list.</p>
     <h4>The rule</h4>
     <ol class="steps">
       <li><strong>Count 2-hour blocks since 1 January 1970</strong> (the zero point every computer clock uses). This "window number" goes up by one every 2 hours.</li>
       <li><strong>Multiply by 4</strong> (topics per run).</li>
-      <li><strong>Divide by 9</strong> (number of topics) and keep the remainder. That is the position in the list where this run starts.</li>
+      <li><strong>Divide by 6</strong> (number of topics) and keep the remainder. That is the position in the list where this run starts.</li>
       <li><strong>Take 4 topics from there</strong>, wrapping to the top of the list at the end.</li>
     </ol>
     <h4 style="margin-top:16px">One day, run by run</h4>
@@ -325,21 +323,21 @@
         <thead><tr><th class="s">Run</th><th>Topics searched</th></tr></thead>
         <tbody>
           <tr><td class="s num">1</td><td>diabetes diet · type 2 diabetes what to eat · PCOS diet plan · thyroid diet</td></tr>
-          <tr><td class="s num">2</td><td>hypothyroidism diet · Indian weight loss diet · calorie tracking app review · Cal AI review</td></tr>
-          <tr><td class="s num">3</td><td>HealthifyMe review · diabetes diet · type 2 diabetes what to eat · PCOS diet plan</td></tr>
-          <tr><td class="s num">4</td><td>thyroid diet · hypothyroidism diet · Indian weight loss diet · calorie tracking app review</td></tr>
-          <tr><td class="s num">5</td><td>Cal AI review · HealthifyMe review · diabetes diet · type 2 diabetes what to eat</td></tr>
+          <tr><td class="s num">2</td><td>hypothyroidism diet · Indian weight loss diet · diabetes diet · type 2 diabetes what to eat</td></tr>
+          <tr><td class="s num">3</td><td>PCOS diet plan · thyroid diet · hypothyroidism diet · Indian weight loss diet</td></tr>
+          <tr><td class="s num">4</td><td>diabetes diet · type 2 diabetes what to eat · PCOS diet plan · thyroid diet</td></tr>
+          <tr><td class="s num">5</td><td>hypothyroidism diet · Indian weight loss diet · diabetes diet · type 2 diabetes what to eat</td></tr>
           <tr><td class="s num">6</td><td>PCOS diet plan · thyroid diet · hypothyroidism diet · Indian weight loss diet</td></tr>
-          <tr><td class="s num">7</td><td>calorie tracking app review · Cal AI review · HealthifyMe review · diabetes diet</td></tr>
-          <tr><td class="s num">8</td><td>type 2 diabetes what to eat · PCOS diet plan · thyroid diet · hypothyroidism diet</td></tr>
-          <tr><td class="s num">9</td><td>Indian weight loss diet · calorie tracking app review · Cal AI review · HealthifyMe review</td></tr>
+          <tr><td class="s num">7</td><td>diabetes diet · type 2 diabetes what to eat · PCOS diet plan · thyroid diet</td></tr>
+          <tr><td class="s num">8</td><td>hypothyroidism diet · Indian weight loss diet · diabetes diet · type 2 diabetes what to eat</td></tr>
+          <tr><td class="s num">9</td><td>PCOS diet plan · thyroid diet · hypothyroidism diet · Indian weight loss diet</td></tr>
           <tr><td class="s num">10</td><td>diabetes diet · type 2 diabetes what to eat · PCOS diet plan · thyroid diet</td></tr>
-          <tr><td class="s num">11</td><td>hypothyroidism diet · Indian weight loss diet · calorie tracking app review · Cal AI review</td></tr>
-          <tr><td class="s num">12</td><td>HealthifyMe review · diabetes diet · type 2 diabetes what to eat · PCOS diet plan</td></tr>
+          <tr><td class="s num">11</td><td>hypothyroidism diet · Indian weight loss diet · diabetes diet · type 2 diabetes what to eat</td></tr>
+          <tr><td class="s num">12</td><td>PCOS diet plan · thyroid diet · hypothyroidism diet · Indian weight loss diet</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="note">Every topic is searched 5 or 6 times a day, roughly every 4 hours, for 48 searches in total. Which run is "run 1" shifts with the date, but the pattern is always this. Because the start comes from the clock and not from memory, a missed run does not break the sequence; the next run simply takes its own slice.</p>
+    <p class="note">Every topic is searched 8 times a day, every 3 hours on average, for 48 searches in total. With 6 topics and 4 per run the pattern repeats every 3 runs. Which run is "run 1" shifts with the date, but the pattern is always this. Because the start comes from the clock and not from memory, a missed run does not break the sequence; the next run simply takes its own slice.</p>
     <p class="src">Code: <code>rotateTopics()</code> in <code>src/lib/collectors/youtube.ts</code>.</p>
   </div>
 
@@ -372,7 +370,7 @@
       <table>
         <thead><tr><th class="k">Setting</th><th class="s">Default</th><th class="s">Allowed</th><th>Effect</th><th>Cost of raising it</th></tr></thead>
         <tbody>
-          <tr><td class="k">youtube_topics</td><td class="s">9 phrases</td><td class="s">any list</td><td>Which videos are found. Adding Hindi phrases reaches Hindi channels.</td><td>None: still 4 searches per run. Each topic just comes around less often.</td></tr>
+          <tr><td class="k">youtube_topics</td><td class="s">6 phrases</td><td class="s">any list</td><td>Which videos are found. Adding Hindi phrases reaches Hindi channels.</td><td>None: still 4 searches per run. Each topic just comes around less often.</td></tr>
           <tr><td class="k">youtube_max_searches_per_run</td><td class="s num">4</td><td class="s">0 to 100</td><td>How many topics each run searches.</td><td>× 12 runs. 8 is the ceiling with the 2-hour schedule (96 of 100).</td></tr>
           <tr><td class="k">youtube_videos_per_topic</td><td class="s num">5</td><td class="s">1 to 50</td><td>Reaches smaller channels.</td><td>1 unit per extra video per run. 10 → about 480 units a day.</td></tr>
           <tr><td class="k">youtube_comments_per_video</td><td class="s num">50</td><td class="s">1 to 100</td><td>Safer on busy videos.</td><td>None. Still 1 unit per video.</td></tr>

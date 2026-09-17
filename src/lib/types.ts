@@ -39,6 +39,9 @@ export interface ItemRow {
   body: string | null;
   posted_at: string | null;
   collected_at: string;
+  /** Last time YouTube returned this comment; the 30-day rule counts from here. */
+  last_seen_at: string;
+  video_id: string | null;
   status: ItemStatus;
   filter_reason: string | null;
   score: number | null;
@@ -98,6 +101,8 @@ export interface TagRow extends Classification {
 export interface RunRow {
   id: string;
   platform: Platform;
+  /** collect | sweep | discover | channels | coverage | cleanup */
+  job: string;
   trigger: "cron";
   started_at: string;
   finished_at: string | null;
@@ -122,4 +127,76 @@ export interface JobRow {
   run_after: string;
   locked_at: string | null;
   last_error: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// The YouTube watch list (supabase/migrations/0003_watchlist.sql)
+// ---------------------------------------------------------------------------
+
+export interface TopicRow {
+  phrase: string;
+  language: string;
+  active: boolean;
+  last_new_search_at: string | null;
+  last_relevance_search_at: string | null;
+  sweep_seeded_at: string | null;
+}
+
+export type VideoStatus = "active" | "comments_disabled" | "gone" | "retired";
+export type FoundVia = "sweep" | "search_new" | "search_relevance" | "channel" | "coverage";
+
+export interface VideoRow {
+  video_id: string;
+  channel_id: string | null;
+  channel_title: string | null;
+  title: string | null;
+  published_at: string | null;
+  duration_seconds: number | null;
+  is_short: boolean;
+  is_live: boolean;
+  topics: string[];
+  found_via: FoundVia | null;
+  comment_count: number | null;
+  count_checked_at: string | null;
+  last_change_at: string | null;
+  last_read_at: string | null;
+  newest_comment_at: string | null;
+  pending_newest_at: string | null;
+  read_resume_token: string | null;
+  read_pages_total: number;
+  next_check_at: string;
+  status: VideoStatus;
+  kept_items: number;
+  first_seen_at: string;
+  last_seen_at: string;
+}
+
+export interface ChannelRow {
+  channel_id: string;
+  title: string | null;
+  uploads_playlist_id: string | null;
+  followed: boolean;
+  history_walked: boolean;
+  /** playlistItems page token of an unfinished history walk. */
+  walk_page_token: string | null;
+  walk_pages: number;
+  last_swept_at: string | null;
+  on_topic_videos: number;
+  last_on_topic_at: string | null;
+  first_seen_at: string;
+  last_seen_at: string;
+}
+
+export type SweepOrder = "viewCount" | "date";
+
+export interface SweepUnitRow {
+  id: number;
+  phrase: string;
+  published_after: string;
+  published_before: string;
+  order_by: SweepOrder;
+  status: "pending" | "in_progress" | "done";
+  page_token: string | null;
+  pages_done: number;
+  videos_found: number;
 }

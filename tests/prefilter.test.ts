@@ -28,12 +28,20 @@ describe("prefilter", () => {
     expect(r).toEqual({ pass: true });
   });
 
-  it("drops items older than 7 days", () => {
+  it("drops comments posted before the floor date (1 Jan 2026)", () => {
     const r = prefilter(
-      { title: "metformin and rice?", body: "long enough text here", postedAt: "2026-09-01T10:00:00Z", now },
+      { title: "metformin and rice?", body: "long enough text here", postedAt: "2025-12-31T23:59:59Z", now },
       rules,
     );
     expect(r).toEqual({ pass: false, reason: "too_old" });
+  });
+
+  it("keeps an old comment from this year (the watch list reads whole threads)", () => {
+    const r = prefilter(
+      { title: "metformin and rice?", body: "long enough text here", postedAt: "2026-01-02T10:00:00Z", now },
+      rules,
+    );
+    expect(r).toEqual({ pass: true });
   });
 
   it("drops items with no relevant keyword", () => {
