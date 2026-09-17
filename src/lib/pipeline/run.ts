@@ -4,7 +4,7 @@ import { config, YT, type Config } from "../config";
 import { db, must } from "../db";
 import { AllKeysParkedError } from "../ai/keyring";
 import { claim, complete, defer, enqueueMany, fail, JOB_TYPES, releaseStale } from "../queue";
-import type { ItemRow, JobRow, Platform, RawItem, RunRow } from "../types";
+import type { ItemRow, JobRow, Platform, RawItem, RunRow, TagRow } from "../types";
 import { classify } from "./classify";
 import { prefilter } from "./prefilter";
 import { score } from "./score";
@@ -231,6 +231,46 @@ export async function requeueOrphans(): Promise<number> {
   return missing.length;
 }
 
+/** How far back rescoring looks: the decay is capped at 14 points (7 days), so older scores are already final. */
+const RESCORE_WINDOW_DAYS = 9;
+
+/**
+ * The score includes a freshness penalty (2 points per full day since the
+ * comment was posted, at most 14). A score saved at tagging time would freeze
+ * that penalty, so a week-old comment would keep its day-one score. This
+ * recomputes the score of every listed comment posted in the last 9 days with
+ * the same score() function and saves only the ones that changed. Runs before
+ * every drain (hourly), so the Score order is never more than an hour stale.
+ */
+export async function rescoreTagged(now = new Date()): Promise<number> {
+  const since = new Date(now.getTime() - RESCORE_WINDOW_DAYS * 86_400_000).toISOString();
+  const items = await db()
+    .from("items")
+    .select("id, posted_at, score")
+    .eq("status", "tagged")
+    .gte("posted_at", since)
+    .limit(1000);
+  if (items.error) throw new Error(`rescore items: ${items.error.message}`);
+  const rows = (items.data ?? []) as Array<Pick<ItemRow, "id" | "posted_at" | "score">>;
+  if (rows.length === 0) return 0;
+
+  const tags = await db().from("tags").select("*").in("item_id", rows.map((r) => r.id));
+  if (tags.error) throw new Error(`rescore tags: ${tags.error.message}`);
+  const tagBy = new Map((tags.data as TagRow[]).map((t) => [t.item_id, t]));
+
+  let changed = 0;
+  for (const r of rows) {
+    const t = tagBy.get(r.id);
+    if (!t) continue;
+    const s = score({ classification: t, postedAt: r.posted_at, now });
+    if (r.score !== null && Math.abs(Number(r.score) - s) < 0.005) continue;
+    const up = await db().from("items").update({ score: s }).eq("id", r.id).eq("status", "tagged");
+    if (up.error) throw new Error(`rescore update: ${up.error.message}`);
+    changed++;
+  }
+  return changed;
+}
+
 /**
  * Work through pending classify jobs one at a time until the queue is empty
  * or there is no longer room for one more job before the deadline. Claiming
@@ -243,6 +283,7 @@ export async function drainJobs(budgetMs: number): Promise<{ processed: number; 
   let failed = 0;
   await releaseStale();
   await requeueOrphans();
+  await rescoreTagged();
   while (Date.now() + JOB_MARGIN_MS < deadline) {
     const [job] = await claim(1, [JOB_TYPES.classify]);
     if (!job) break;

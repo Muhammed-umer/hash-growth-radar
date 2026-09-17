@@ -5,7 +5,8 @@
 --
 -- Matches src/lib/types.ts. Privacy rule (README.md): we tag the
 -- QUESTION, never the PERSON. There is deliberately no author / username
--- column anywhere in this schema, and the cleanup cron deletes items after 7 days.
+-- column anywhere in this schema, and the cleanup cron deletes items 30 days after
+-- YouTube last returned them (items.last_seen_at, added in 0003_watchlist.sql).
 
 create extension if not exists pgcrypto;
 

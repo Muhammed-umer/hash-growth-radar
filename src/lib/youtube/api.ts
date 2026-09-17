@@ -215,7 +215,7 @@ export function createYouTubeClient(opts: {
       if (ids.length === 0) return [];
       const data = await call(
         "videos",
-        { part: "snippet,statistics,contentDetails", id: ids.slice(0, 50).join(","), maxResults: "50" },
+        { part: "snippet,statistics,contentDetails", id: ids.slice(0, 50).join(",") }, // maxResults is not supported with id
         "units",
       );
       const out: VideoDetails[] = [];
@@ -238,7 +238,7 @@ export function createYouTubeClient(opts: {
 
     async channelsList(ids) {
       if (ids.length === 0) return [];
-      const data = await call("channels", { part: "snippet,contentDetails", id: ids.slice(0, 50).join(","), maxResults: "50" }, "units");
+      const data = await call("channels", { part: "snippet,contentDetails", id: ids.slice(0, 50).join(",") }, "units");
       const out: ChannelDetails[] = [];
       for (const it of data.items ?? []) {
         if (!it.id) continue;

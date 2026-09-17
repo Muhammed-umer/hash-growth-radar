@@ -102,7 +102,7 @@ export default async function HowPage() {
               <Row g="medicine_food_question" ex="Can I keep eating rice on metformin?" what="On the list, top priority" />
               <Row g="app_recommendation" ex="Which app understands Indian food?" what="On the list" />
               <Row g="competitor_complaint" ex="Cal AI keeps calling my dal pasta" what="On the list" />
-              <Row g="nutrition_question" ex="Is oats good for weight loss?" what="On the list only when the fit is high" />
+              <Row g="nutrition_question" ex="Is oats good for weight loss?" what="On the list, usually low (fit 20 to 50, no bonus)" />
               <Row g="irrelevant" ex="Great video sir" what="Dropped" />
             </tbody>
           </table>
@@ -118,7 +118,7 @@ export default async function HowPage() {
             <b>Fit</b> is the AI&apos;s own judgement, 0 to 100, of how directly a food tracker that understands medicines and conditions answers that exact comment: food with a named medicine or condition 80 to 100, a direct request for a calorie app 70 to 90, a complaint that an app fails on Indian food or ignores medication 60 to 85, a general diet question 20 to 50.
           </p>
           <p className="mt-2">
-            <b>Score</b>, the number on the card, is plain arithmetic on top of fit: fit, plus a bonus for the group (medicine and food 15, asking for an app 10, competitor complaint 5, general nutrition 0), plus 0, 3 or 6 for urgency, minus 2 for every day the comment has been sitting there, capped at 14. The list is sorted by score and Today shows the top {TOP_N}.
+            <b>Score</b>, the number on the card, is plain arithmetic on top of fit: fit, plus a bonus for the group (medicine and food 15, asking for an app 10, competitor complaint 5, general nutrition 0), plus 0, 3 or 6 for urgency, minus 2 for every full day since the comment was posted, at most 14 (so the penalty stops growing after 7 days). The penalty is recalculated every hour, so the order stays current. Today shows the top {TOP_N}, by score or by newest comment, whichever you pick.
           </p>
           <p className="mt-2">
             <b>Skip</b> is the only button that changes anything: it hides a card once you have looked at it, whether you approached the person or not. Nothing about what you did is stored.

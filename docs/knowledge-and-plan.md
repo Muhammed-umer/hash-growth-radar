@@ -2,7 +2,7 @@
 
 Part 1 is everything we know for certain, with where each fact came from and when it was checked. Part 2 is the plan built on those facts: how the radar will cover every video on Hash's topics, every new upload, every new comment, and the year back to 1 January 2026. Written 17 September 2026.
 
-**Status, later on 17 September 2026:** the core of Part 2 is built for the 6 phrases, as described in `docs/coverage-plan.html`: the `videos`, `channels`, `topics`, `sweep_units` and `quota_ledger` tables, the month sweep (newest month first, two orders, page position saved after every page), newest-since and relevance searches, channel following through upload playlists, change-detection comment reading with a cursor, the 30-day purge, and the weekly coverage check. Not built: push notifications, the expanded phrase list (section 5), the Tamil and Hindi keyword work (section 11), and the text hash for duplicate questions.
+**Status, later on 17 September 2026:** the core of Part 2 is built for the 6 phrases, as described in `docs/coverage-plan.html`: the `videos`, `channels`, `topics`, `sweep_units` and `quota_ledger` tables, the month sweep (newest month first, two orders, page position saved after every page), newest-since and relevance searches, channel following through upload playlists, change-detection comment reading with a cursor, the 30-day purge, and the weekly coverage check. Not built: push notifications, the expanded phrase list (section 5), the Tamil and Hindi keyword work (section 11), the text hash for duplicate questions, a run lock, fetching extra replies with `comments.list`, reads scheduled at fixed times after an upload, a month filter on the YouTube page, and a pillar column on topics. Where Part 2 differs from `docs/coverage-plan.html`, the coverage plan is what was built.
 
 **Part 1 · Knowledge**
 1. [Hash Health, as the website describes it](#1--hash-health-as-the-website-describes-it)
@@ -42,11 +42,11 @@ Hash Health is a wellness app: you photograph your plate, it logs the meal in se
 
 **Medicines and medicine groups the site names:** Warfarin · Statins · Levothyroxine · Doxycycline · MAOIs · Thyroid medicines · Blood pressure medicines · Metformin · Ciprofloxacin · Lithium · Ibuprofen
 
-**Foods in the site's interaction examples:** Grapefruit · Filter coffee · Cabbage · Milk · Aged cheese · Bran · Banana · Alcohol · Spinach · Curd · Cranberry juice · Soy
+**Foods in the site's interaction examples:** Grapefruit · Filter coffee · Coffee · Cabbage · Milk · Aged cheese · Bran · Banana · Alcohol · Spinach · Curd · Cranberry juice · Soy
 
-**Who it is for, in the site's words:** Medication users · People managing chronic conditions · People with wellness goals · People with busy lifestyles · Nutritionists (Hash Coach)
+**Who it is for, in the site's words:** Medication users · Wellness goals · Chronic conditions · Busy lives. Nutritionists are served by Hash Coach (hashhealth.io/providers).
 
-The meal examples are Indian (chapathi, paneer bhurji, thali). The medical disclaimer says the app is not a medical device, gives general wellness information only, must not be used in an emergency, and that users must not change medicines without a doctor. The radar's "not suitable" rule (dosage, diagnosis, emergency) follows the same line.
+The meal examples are Indian: chicken biryani and roti, dal and sabzi on the home page; chapathi with paneer bhurji and a thali on /providers. The medical disclaimer says the app is not a medical device, gives general wellness information only, must not be used in an emergency, and that users must not change medicines without a doctor. The radar's "not suitable" rule (dosage, diagnosis, emergency) follows the same line.
 
 *Source: hashhealth.io, hashhealth.io/providers, hashhealth.io/medical-disclaimer, read 17 Sep 2026.*
 
@@ -56,11 +56,11 @@ The same person can be a Hash user or a user of any app below. Their names matte
 
 | Group | Apps and tools | Why it matters to the radar |
 |---|---|---|
-| Medicine + food checkers (closest to Hash's unique feature) | saviMon (meal photo + medicine, supplement and allergen interactions), MediFoodCheck (scan meal, label or barcode, green/yellow/red against your medicines), MediMeal Safe, Pillo Safety Checker (medication reminder with drug-food checks). Web only: DrugBank food interaction checker, WebMD, Drugs.com, Medscape. Samsung Health now shows food warnings inside its medication tracker. | Small, new, mostly US-facing. Their review videos are rare; their names as search phrases will return little today but should be watched. |
+| Medicine + food checkers (closest to Hash's unique feature) | saviMon (meal photo + medicine, supplement and allergen interactions), MediFoodCheck (scan meal, label or barcode, green/yellow/red against your medicines), MediMeal Safe, Pillo Safety Checker (medication reminder with drug-food checks). Web only: DrugBank food interaction checker, WebMD, Drugs.com, Medscape. Samsung Health has shown food warnings in its medication tracker since 2023 (US data from Elsevier). | Small, new, mostly US-facing. Our guess (unverified): their review videos are rare, so their names as search phrases would return little today, but they should be watched. |
 | Calorie and photo logging, global | MyFitnessPal, Cal AI, Lose It!, Yazio, MyNetDiary, Fooducate, Nutrola. | Big comment sections under review videos. Complaints about Indian food and about medicines being ignored are Hash's opening. |
-| Calorie and photo logging, India | HealthifyMe (the default in India, human coaches, Indian food database), FitTrack AI, CalFix (Hindi and Bengali interface), NutriScan, FitGenZ, Fitelo. | Same audience as Hash. Their channels and the "best calorie app India" review videos are the richest source of app-recommendation questions. |
-| Condition programs, India | Fitterfly (diabetes, PCOS, thyroid programs, 100+ videos), BeatO (diabetes, glucometer, GLP-1 support), sugar.fit (diabetes reversal). | Their viewers are exactly the "chronic condition" audience. Comments there are moderated by the company, so expect questions rather than complaints. |
-| GLP-1 (Ozempic, Mounjaro) meal apps | Dose AI and others. | Not on Hash's site, but "what to eat on Ozempic" is the largest 2026 medicine-and-food question on YouTube. Worth a topic. |
+| Calorie and photo logging, India | HealthifyMe (widely used in India, human coaches, Indian food database), FitTrack AI, CalFix (Hindi and Bengali interface), NutriScan, FitGenZ, Fitelo. | Same audience as Hash. Their channels and the "best calorie app India" review videos are the richest source of app-recommendation questions. |
+| Condition programs, India | Fitterfly (diabetes, PCOS, thyroid programs; 100+ videos inside its paid programs, plus a YouTube channel, Fitterfly Wellness & DTx), BeatO (diabetes, glucometer, GLP-1 support), sugar.fit (diabetes reversal). | Their viewers are exactly the "chronic condition" audience. Our guess (unverified): company channels may moderate comments, so expect questions rather than complaints. |
+| GLP-1 (Ozempic, Mounjaro) meal apps | Dose AI and others. | Not on Hash's site. Our impression (unverified, not measured) is that "what to eat on Ozempic" is one of the biggest medicine-and-food questions on YouTube in 2026. Worth a topic. |
 
 *Sources: web search 17 Sep 2026 (Google Play listings for saviMon and MediMeal Safe; medifoodcheck.com; pillo.care; fittrackai.in, calfix.app, nutriscan.app, nutrola.app, fitgenz.live comparison posts; fitterfly.com, beatoapp.com; cbinsights.com BeatO vs sugar.fit). Comparison posts written by competitors were used only for the list of names, not for any claim about quality or price.*
 
@@ -70,38 +70,40 @@ The same person can be a Hash user or a user of any app below. Their names matte
 
 | Fact | Detail | Source |
 |---|---|---|
-| Search is not a complete index | A search query stops paging at roughly 500 results, whatever the true number of matching videos. Results are ranked for relevance, not completeness, and the same query returns a different set on different days. The only way past the 500 cap is to split the query into date windows with `publishedAfter` and `publishedBefore`. | Community reports (youtube/api-samples issue 500, truelogic.org, outlierkit.com); arXiv 2506.04422 on drift. The 500 cap is not in Google's own page. |
-| Search costs | 1 search from the 100-a-day bucket per page, whatever `maxResults` (0 to 50). Extra filters available: `channelId`, `order=date`, `videoDuration` (short = under 4 minutes), `regionCode`, `relevanceLanguage`, `eventType`. | developers.google.com/youtube/v3/docs/search/list |
-| A channel's uploads are cheap to list | `playlistItems.list` on the channel's uploads playlist: 1 unit per page of up to 50 videos. Does not touch the search bucket. The uploads playlist id comes from `channels.list` (1 unit, several channel ids in one call). | …/docs/playlistItems/list, …/docs/channels/list |
-| Video statistics are cheap | `videos.list`: 1 unit per call, up to 50 video ids in one call, returns view count and comment count. | …/docs/videos/list |
-| New uploads can be pushed to us for free | Google's WebSub hub sends an HTTP notification to a public URL of ours whenever a channel uploads a video or changes a title or description. Topic: `https://www.youtube.com/feeds/videos.xml?channel_id=CHANNEL_ID`. No quota. A subscription lasts at most 10 days and must be renewed. | …/guides/push_notifications (mechanism); the 10-day lease is from the PubSubHubbub community, not Google's page |
-| Replies | `commentThreads.list` with `part=replies` returns up to 5 replies per thread at no extra cost; `comments.list?parentId=` (1 unit) returns the rest. A reply's link is `watch?v=VIDEO&lc=PARENT.REPLY`. | …/docs/commentThreads, …/docs/comments/list |
-| Errors we will meet | `commentsDisabled` (403) when a video has comments off; `videoNotFound` (404) when a video is gone or private; `quotaExceeded` (403) when the day's allowance is used. Invalid requests still cost at least 1. | …/docs/commentThreads/list, …/getting-started |
-| The quota day | Resets at midnight Pacific time: 12:30 PM in India during US summer time, 1:30 PM during US winter time. | …/getting-started |
-| How long we may keep data | Developer Policies III.E.4.d: public API data may be stored for no more than 30 calendar days, then must be deleted or refreshed. | developers.google.com/youtube/terms/developer-policies |
-| More quota | Free, through the "YouTube API Services - Audit and Quota Extension Form". Needs a privacy policy, terms, the use case and expected volume. Takes weeks. Using several Google Cloud projects for one app to multiply quota counts as circumvention. | …/guides/quota_and_compliance_audits |
+| Search is not a complete index | A search query stops paging at roughly 500 results, whatever the true number of matching videos. Results are ranked for relevance, not completeness, and the same query returns a different set on different days. The only way past the 500 cap is to split the query into date windows with `publishedAfter` and `publishedBefore`. | Google's search.list page states a 500-video cap only for searches inside one channel (`channelId` with `type=video`); for keyword searches the ~500 cap is community-reported (youtube/api-samples issue 500, truelogic.org, outlierkit.com; not re-checked). arXiv 2506.04422 documents the drift. |
+| Search costs | 1 search from the 100-a-day bucket per page, whatever `maxResults` (0 to 50). Extra filters available: `channelId`, `order=date`, `videoDuration` (short = under 4 minutes), `regionCode`, `relevanceLanguage`, `eventType`. The code uses `order`, `publishedAfter`/`publishedBefore` and `relevanceLanguage`. | developers.google.com/youtube/v3/docs/search/list |
+| A channel's uploads are cheap to list | `playlistItems.list` on the channel's uploads playlist: 1 unit per page of up to 50 videos. Does not touch the search bucket. The uploads playlist id comes from `channels.list` (1 unit, a comma-separated list of channel ids; the code sends up to 50). | …/docs/playlistItems/list, …/docs/channels/list |
+| Video statistics are cheap | `videos.list`: 1 unit per call, a comma-separated list of video ids (Google gives no limit; the code sends up to 50), returns view count and comment count. Google says `maxResults` is not supported together with `id`. | …/docs/videos/list |
+| New uploads can be pushed to us for free | Google's WebSub hub sends an HTTP notification to a public URL of ours whenever a channel uploads a video or changes a title or description. Topic: `https://www.youtube.com/feeds/videos.xml?channel_id=CHANNEL_ID`. Google's page does not mention a quota cost. A subscription lasts at most 10 days and must be renewed. | …/guides/push_notifications (mechanism); the 10-day lease is from the PubSubHubbub community, not Google's page |
+| Replies | `commentThreads.list` with `part=replies` returns, in Google's words, "a limited number of replies" per thread at no extra cost (developers report up to 5); `comments.list?parentId=` (1 unit) returns the rest. A reply's id from the API already has the form `PARENT.REPLY` (checked live), and `watch?v=VIDEO&lc=PARENT.REPLY` is the link form YouTube's own site uses; it is not in Google's docs. | …/docs/commentThreads, …/docs/comments/list |
+| Errors we will meet | `commentsDisabled` (403) when a video has comments off; `videoNotFound` (404) when a video is gone or private; `quotaExceeded` (403) when the day's allowance is used. Invalid requests still cost at least 1. | …/docs/commentThreads/list, the API's core errors page, …/getting-started ("invalid requests incur at least a one-point quota cost") |
+| The quota day | Resets at midnight Pacific time: 12:30 PM in India during US summer time, 1:30 PM during US winter time. | …/determine_quota_cost |
+| How long we may keep data | Developer Policies III.E.4.d: data fetched without a user's login ("Non-Authorized Data") may be stored temporarily, in limited amounts, for no longer than 30 calendar days, then must be deleted or refreshed. | developers.google.com/youtube/terms/developer-policies |
+| More quota | Through the "YouTube API Services - Audit and Quota Extension Form", after a compliance audit. Developer Policies III.D.1.c allow exactly one API project per API client, so multiplying projects to get more quota is not allowed. | …/guides/quota_and_compliance_audits, …/terms/developer-policies |
 
-## 4 · What the radar does today, and the two gaps
+## 4 · What the radar did until 17 September 2026, and the two gaps
 
-Every 2 hours: search 4 of 6 phrases, take the top 5 videos by relevance from the last 90 days, read the newest 50 comments of each, drop repeats, keyword-filter, send the rest to the AI, score, show the top 10. Items are deleted after 7 days.
+Until 17 September 2026, every 2 hours: search 4 of the phrases, take the top 5 videos by relevance from the last 90 days, read the newest 50 comments of each, drop repeats, keyword-filter, send the rest to the AI, score, show the top 10. Items were deleted after 7 days. Both gaps below are what the watch list (`docs/coverage-plan.html`) was built to close.
 
 **The 6 phrases:** diabetes diet · type 2 diabetes what to eat · PCOS diet plan · thyroid diet · hypothyroidism diet · Indian weight loss diet. (Three calorie-app phrases, "calorie tracking app review", "Cal AI review" and "HealthifyMe review", were removed on 17 September 2026 by the founder's decision.)
 
-> **Gap 1: the wrong width.** Only the 5 most relevant videos per phrase are ever read, and only if they are under 90 days old. A new upload that never reaches the top 5 is never seen. A 2022 "metformin diet" video that still gets questions every week is never seen. And only 3 of the 6 phrases touch a medicine or condition that Hash's own site names: hypertension, anemia, osteoporosis, heart health, warfarin, statins, levothyroxine and metformin are not searched at all.
+> **Gap 1: the wrong width.** Only the 5 most relevant videos per phrase are ever read, and only if they are under 90 days old. A new upload that never reaches the top 5 is never seen. A 2022 "metformin diet" video that still gets questions every week is never seen. And while 5 of the 6 phrases name a condition on Hash's site (diabetes, PCOS, thyroid), none names a medicine: hypertension, anemia, osteoporosis, heart health, warfarin, statins, levothyroxine and metformin are not searched at all.
 
 > **Gap 2: no history.** Collection started on 16 Sep 2026. People have been asking these questions all year.
 
-*Source: `src/lib/config.ts`, `src/lib/collectors/youtube.ts`, as deployed 17 Sep 2026.*
+*Source: `src/lib/config.ts` and `src/lib/collectors/youtube.ts` as they were on 17 Sep 2026, before the watch list.*
 
 ---
 
 # Part 2 · The plan
 
+> **Read this first.** Part 2 is the proposal as written on 17 September 2026. Its core was built the same day, with different numbers in places (schedules, caps, how the sweep pages). Where Part 2 differs from `docs/coverage-plan.html`, the coverage plan describes what exists in code.
+
 Built on Part 1. Everything fits the free allowance (100 searches and 10,000 units a day), by the founder's decision.
 
 ## 5 · Topic map: one phrase list per pillar of the site
 
-Topics move from a code constant to a `topics` table (phrase, pillar, language, active, last searched, backfill position). Around 60 English phrases, plus Tamil and Hindi forms. Examples per pillar:
+Topics move from a code constant to a `topics` table (phrase, pillar, language, active, last searched, backfill position). Around 90 phrases in total, including Tamil and Hindi forms. (Planned. Built: topics are seeded from `src/lib/config.ts`; there is no pillar column, and the sweep position lives in `sweep_units`.) Examples per pillar:
 
 | Pillar | Example phrases |
 |---|---|
@@ -133,7 +135,7 @@ Coverage is measured, not assumed: a check compares a followed channel's real up
 2. **Read only what moved.** A video's comments are read when its count changed (up or down; deletions lower it), when the video is under 7 days old (counts lag, so fresh videos are read every run regardless), or when it has not been read for 7 days. Shorts are read weekly only.
 3. **Read to the cursor, not to a fixed 50.** Every video keeps "newest comment time seen". A read pages newest-first (`order=time`, 100 per page) until it meets that time, so a busy video never loses comments to a window. A quiet video costs 1 unit and returns nothing new.
 4. **First read of an old video pages to 1 January 2026.** With a cap (30 pages = 3,000 comments) and a resume token, so a huge video is spread over several runs.
-5. **Replies come free.** `part=snippet,replies` on the same call returns up to 5 replies per thread, so a question asked as a reply is seen. The remaining replies are fetched only when the thread already scored well.
+5. **Replies come free.** `part=snippet,replies` on the same call returns a limited set of replies per thread, so a question asked as a reply is often seen. Planned, not built: fetching the remaining replies for threads that scored well.
 6. **Everything after that is unchanged:** keyword filter, AI form, score, Today list.
 
 | Estimate | Meaning |
@@ -152,10 +154,10 @@ The numbers are estimates from the call costs in section 3; the ledger in sectio
 | Tag the question, never the person | Unchanged. No commenter name or channel id is stored. The commenter's channel id is compared in memory with the video's channel, so the creator's own and pinned comments are dropped, then discarded. |
 | Nothing from before 1 January 2026 | A floor date in the keyword filter replaces today's "older than 7 days" drop. |
 | Same question under many videos | A hash of the normalised text; the second copy is marked a duplicate. |
-| Never exceed the allowance | A `quota_ledger` row per quota day. Every YouTube call adds its cost before it is made; jobs stop at 90% and resume after the reset; a `quotaExceeded` reply ends the run cleanly. |
-| Never run twice at once | A run lock: a running row with an expiry, so an overlapping cron fire waits. |
+| Never exceed the allowance | A `quota_ledger` row per quota day. Every YouTube call adds its cost before it is made; jobs stop at 95 searches / 9,000 units and resume after the reset; a `quotaExceeded` reply ends the run cleanly. |
+| Never run twice at once | Planned: a run lock. Not built; overlaps are harmless because everything is stored by id and cursors move only after comments are saved. |
 
-**New tables:** `videos` · `channels` · `topics` · `quota_ledger` · `items` gains `last_seen_at`, `text_hash`, `video_id`
+**New tables (built):** `videos` · `channels` · `topics` · `sweep_units` · `quota_ledger` · `items` gains `last_seen_at` and `video_id` (`text_hash` not built)
 
 ## 9 · Schedule and the daily budget
 
@@ -168,7 +170,7 @@ The numbers are estimates from the call costs in section 3; the ledger in sectio
 | process | hourly at :30 | Unchanged: leftover AI jobs. |
 | cleanup | daily | 30-day last-seen purge; unfollows channels with no on-topic video in 120 days. |
 
-Plus one non-cron route, `/api/youtube/push`, that answers Google's subscription check and receives upload notifications. A notified video is scheduled for reads at +6 hours, +1 day, +3 days and +7 days, because comments arrive after the upload, not with it.
+Plus one non-cron route, `/api/youtube/push`, that answers Google's subscription check and receives upload notifications. A notified video is scheduled for reads at +6 hours, +1 day, +3 days and +7 days, because comments arrive after the upload, not with it. (Not built. Built schedule: collect every 2 h, sweep every 2 h, discover every 6 h, channels daily 08:30 UTC, process hourly, cleanup daily, coverage Mondays 09:00 UTC.)
 
 **Where the free allowance goes, per day**
 
@@ -192,7 +194,7 @@ Plus one non-cron route, `/api/youtube/push`, that answers Google's subscription
 | Search results drift day to day | A video seen once is lost | Once seen, a video is on the watch list for good; its channel is followed. Search is never the index. |
 | Same video under several phrases | Read twice, counted twice | Video id is the primary key; the phrases that found it are stored as a list. |
 | Old evergreen video still getting questions | Today's 90-day filter throws it away | Relevance searches carry no date filter; reads are driven by comment-count change, not by video age. |
-| Brand-new upload with no comments yet | Read once at 0 comments, then forgotten | Scheduled reads at +6 h, +1 d, +3 d, +7 d; under 7 days old is read every run. |
+| Brand-new upload with no comments yet | Read once at 0 comments, then forgotten | Under 7 days old is read every run (built); scheduled reads at +6 h, +1 d, +3 d, +7 d were planned, not built. |
 | Shorts | Many comments, low quality, quota drain | Flagged by duration; kept, read weekly only (founder's decision). |
 | Live streams and premieres | Live chat is not comments | `liveBroadcastContent` says live or upcoming; skip until it is a normal video. |
 | Push notification missed or late | Upload not seen | The daily uploads sweep catches it; push only makes it faster. |
@@ -217,14 +219,14 @@ Plus one non-cron route, `/api/youtube/push`, that answers Google's subscription
 
 | Situation | What would go wrong | Handling |
 |---|---|---|
-| Allowance runs out mid-run | Half-read videos, errors | Ledger stops jobs at 90%; a `quotaExceeded` reply ends the run cleanly; everything resumes after the reset. |
+| Allowance runs out mid-run | Half-read videos, errors | Ledger stops jobs at 95 searches / 9,000 units; a `quotaExceeded` reply ends the run cleanly; everything resumes after the reset. |
 | Reset is at 12:30 PM IST | Backfill starts at the wrong hour and starves the readers | Backfill scheduled from 1 PM IST; readers keep their share. |
 | Broken request | Still costs 1 | Parameters validated in code before the call. |
-| Two cron fires overlap | Same video read twice | Run lock with expiry. |
-| Host's time limit per call | Job cut off | Each job does a bounded number of calls and re-queues itself. |
+| Two cron fires overlap | Same video read twice | Planned: run lock (not built). Built: repeats are ignored by id; schedules are staggered. |
+| Host's time limit per call | Job cut off | Built: each job stops at a time budget (150 to 240 s), saves its position, and the next scheduled run continues. |
 | Free database pauses after a week idle | Everything stops | Cron traffic keeps it awake, as today. |
 | More items reach the AI | Free AI keys exhausted | Strict keyword filter stays; keys rotate; when all are parked the queue waits without spending attempts (already built). |
-| January comments look stale | Old questions crowd Today | Age penalty in the score keeps them below fresh ones; a month filter on the YouTube page lets you look at them on purpose. |
+| January comments look stale | Old questions crowd Today | The age penalty is at most 14 points, so an old comment with a high fit can still rank above a fresh one. "Latest" order on Today shows newest first; a month filter was planned, not built. |
 | Dosage, diagnosis, emergency | Must never be approached | Unchanged "not suitable" rule, matching Hash's own disclaimer. |
 | Competitor channels moderate their comments | Fewer complaints there | Still read; expect questions rather than complaints; independent review videos are the complaint source. |
 
@@ -233,7 +235,7 @@ Plus one non-cron route, `/api/youtube/push`, that answers Google's subscription
 | Decision | Consequence |
 |---|---|
 | No quota extension for now | Everything above fits 100 searches and 10,000 units a day. The extension becomes necessary only past roughly 20,000 watched videos or 1,000 followed channels. |
-| Languages: English, Tamil, Hindi, Tanglish, Hinglish | Topic map gets Tamil and Hindi phrases in native script and romanised forms. The keyword filter learns the words people actually type ("sugar" for diabetes, "sakkarai noi", "madhumeh", "thyroid ki goli", "BP ki dawai"). The question check accepts Tamil and Hindi question words (என்ன, எப்படி, क्या, कैसे) and their romanised forms ("enna", "epdi", "kya", "kaise"), not only "?" and English words. Search ranking language is set per phrase. The AI's language field is shown as a chip on the card. |
+| Languages: English, Tamil, Hindi, Tanglish, Hinglish | Topic map gets Tamil and Hindi phrases in native script and romanised forms. The keyword filter learns the words people actually type ("sugar" for diabetes, "sakkarai noi", "madhumeh", "thyroid ki goli", "BP ki dawai"). The question check accepts Tamil and Hindi question words (என்ன, எப்படி, क्या, कैसे) and their romanised forms ("enna", "epdi", "kya", "kaise"), not only "?" and English words. Search ranking language is set per phrase. The AI's language field is shown as a chip on the card (built for non-English, but the AI's options are only en, hinglish and other, so Tamil shows as "other"). |
 | Shorts included, lower priority | Read weekly instead of on every count change. |
 
 This supersedes the earlier "300 most-viewed videos per topic" choice: the backfill now takes the first page of 50 most-viewed videos per phrase per month, up to 450 per phrase for the year.
@@ -241,7 +243,7 @@ This supersedes the earlier "300 most-viewed videos per topic" choice: the backf
 ## 12 · Build order, when approved
 
 1. **Measure first.** Quota ledger, the `topics` table seeded from section 5, and the coverage check. No behaviour change yet; the YouTube page shows units used today.
-2. **Watch list.** `videos`, `channels`, `last_seen_at`, the change-detection reader with cursor paging, the 30-day purge, the run lock, the multilingual keyword filter.
+2. **Watch list.** `videos`, `channels`, `last_seen_at`, the change-detection reader with cursor paging, the 30-day purge, the run lock (not built), the multilingual keyword filter (not built).
 3. **Channel following.** Uploads sweep, the push route, lease renewal.
 4. **Backfill.** Month windows, self-unscheduling, the month filter on the YouTube page.
 5. **Pages and docs.** YouTube page watch-list box (videos, channels, units today, backfill progress, coverage miss rate), How-it-works rewrite, `docs/youtube.html` sections 3, 8, 9 and 10.
@@ -257,13 +259,13 @@ This supersedes the earlier "300 most-viewed videos per topic" choice: the backf
 
 ## 13 · Not decided yet
 
-- **When to start building.** Nothing in Part 2 exists in code.
+- **When to start building.** Decided: the core of Part 2 was built on 17 Sep 2026 (see the status note at the top).
 - **The exact phrase list.** Section 5 shows examples; the full list, especially the Tamil and Hindi forms, needs your review before it is seeded.
-- **Which channels to follow first.** Automatic (any channel with one on-topic video) or a hand-picked seed list to start.
+- **Which channels to follow first.** Built as automatic: any channel behind a phrase-found video is followed.
 - **Should Today mix January comments with this week's**, or show old ones only on the YouTube page.
 - **Replies beyond the first 5**: fetch for threads scoring 60 or more, or never.
 - **Region bias**: whether to pass `regionCode=IN` on English phrases.
 
 ---
 
-*Internal document for the Hash Health team. Part 1 was read from hashhealth.io, Google's YouTube reference pages and the sources named in each section on 17 Sep 2026. Part 2 is a proposal and describes nothing that exists in the code yet. The two calls the radar makes today are documented in `docs/youtube.html`.*
+*Internal document for the Hash Health team. Part 1 was read from hashhealth.io, Google's YouTube reference pages and the sources named in each section on 17 Sep 2026. Part 2 is the proposal; its core was built on 17 Sep 2026, and `docs/coverage-plan.html` describes what exists in code.*

@@ -21,6 +21,22 @@ export interface ItemCardProps {
 export function ItemCard({ item, tag, postedLabel, showPlatform }: ItemCardProps) {
   const [copied, setCopied] = useState(false);
   const [pending, start] = useTransition();
+  const [leaving, setLeaving] = useState(false);
+  const [skipError, setSkipError] = useState<string | null>(null);
+
+  function skip() {
+    setSkipError(null);
+    setLeaving(true);
+    start(async () => {
+      try {
+        await skipItem(item.id);
+      } catch (e) {
+        // Put the card back and say why.
+        setLeaving(false);
+        setSkipError(e instanceof Error ? e.message : "Could not skip. Try again.");
+      }
+    });
+  }
 
   const info = PLATFORM_INFO[item.platform];
   const videoTitle = typeof item.meta?.video_title === "string" ? item.meta.video_title : null;
@@ -37,7 +53,15 @@ export function ItemCard({ item, tag, postedLabel, showPlatform }: ItemCardProps
   }
 
   return (
-    <article className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
+    <div
+      className={cx(
+        "grid transition-[grid-template-rows,opacity,transform] duration-300 ease-out motion-reduce:transition-none",
+        leaving ? "pointer-events-none grid-rows-[0fr] scale-[0.98] opacity-0" : "grid-rows-[1fr] opacity-100",
+      )}
+      aria-hidden={leaving}
+    >
+    <div className="min-h-0 overflow-hidden">
+    <article className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
       <div className="flex flex-wrap items-center gap-2 text-xs text-stone-600">
         {showPlatform && <span className="rounded-full bg-stone-900 px-2 py-0.5 text-white">{info.label}</span>}
         {item.community && <span className="rounded-full bg-stone-100 px-2 py-0.5">{item.community}</span>}
@@ -75,25 +99,38 @@ export function ItemCard({ item, tag, postedLabel, showPlatform }: ItemCardProps
 
       <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
         {item.url && (
-          <a href={item.url} target="_blank" rel="noreferrer" className="rounded-md bg-stone-900 px-3 py-1.5 text-white">
+          <a
+            href={item.url}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-md bg-stone-900 px-3 py-1.5 text-white transition-colors hover:bg-stone-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+          >
             Open thread
           </a>
         )}
         {item.url && (
-          <button onClick={copyLink} className="rounded-md border border-stone-300 px-3 py-1.5">
+          <button
+            type="button"
+            onClick={copyLink}
+            className="rounded-md border border-stone-300 px-3 py-1.5 transition-colors hover:bg-stone-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+          >
             {copied ? "Copied" : "Copy link"}
           </button>
         )}
+        {skipError && <span className="text-xs text-red-700">{skipError}</span>}
         <button
-          disabled={pending}
-          onClick={() => start(() => skipItem(item.id))}
-          className="ml-auto rounded-md px-3 py-1.5 text-stone-500 hover:bg-stone-100"
+          type="button"
+          disabled={pending || leaving}
+          onClick={skip}
+          className="ml-auto rounded-md px-3 py-1.5 text-stone-500 transition-colors hover:bg-stone-100 hover:text-stone-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:opacity-50"
           title="Hide this card, whether you approached the person or not."
         >
           Skip
         </button>
       </div>
     </article>
+    </div>
+    </div>
   );
 }
 

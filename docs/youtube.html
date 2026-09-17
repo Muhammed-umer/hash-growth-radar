@@ -61,7 +61,7 @@
 <main>
   <h1>YouTube, exactly</h1>
   <p class="tagline">What we got from Google, what it allows, what we send, what comes back, what we keep, and what the AI does with it. Every parameter below is taken from Google's reference pages and from the code as deployed on 16 Sep 2026.</p>
-  <div class="callout"><b>Superseded on 17 September 2026.</b> Sections 3, 7, 8 and 9 describe the first version (4 topics per run, the top 5 videos by relevance, the newest 50 comments). That version was replaced by the watch list: every video is remembered, found through a month sweep, newest-first searches and channel upload lists, and comments are read only from videos whose comment count changed. The current design, its jobs and its budget are in <a href="coverage-plan.html">coverage-plan.html</a>. Sections 1, 2, 4, 5 and 6 (the API, the allowance, what we keep, the AI form) still hold; retention is now 30 days after last seen, not 7 days after collection.</div>
+  <div class="callout"><b>Superseded on 17 September 2026.</b> Sections 3, 7, 8 and 9 describe the first version (4 topics per run, the top 5 videos by relevance, the newest 50 comments). That version was replaced by the watch list: every video is remembered, found through a month sweep, newest-first searches and channel upload lists, and comments are read only from videos whose comment count changed. The current design, its jobs and its budget are in <a href="coverage-plan.html">coverage-plan.html</a>. What still holds: Google's quota facts at the top of section 2, and section 6 (the AI form and how the score is built; the score's age penalty is now recalculated every hour). Section 7's six phrases are unchanged, but they are no longer searched one call per run. Sections 1, 2 (the spend table), 3, 4, 5, 8, 9 and 10 describe the first version and are kept as history, each marked "first version". Today the tool uses five kinds of request (search, videos, channels, playlist items, comment threads), reads replies and many pages per video, keeps comments from 1 January 2026, and deletes stored comments 30 days after YouTube last returned them.</div>
 
   <nav>
     <a href="#api">1 · The API we have</a>
@@ -77,7 +77,7 @@
   </nav>
 
   <!-- ================= 1 API ================= -->
-  <h2 id="api">1 · The API we have</h2>
+  <h2 id="api">1 · The API we have <small style="text-transform:none;letter-spacing:0;color:var(--warn)">(first version)</small></h2>
   <div class="card">
     <p><strong>YouTube Data API v3</strong>, Google's official interface to public YouTube data. We use it with an <strong>API key</strong> created in the Google Cloud console under a project named Hash Growth Radar, restricted to this one API. An API key allows <em>reading public data only</em>. Anything that acts as a user (posting a comment, liking, subscribing, reading private data) needs a different kind of login that we do not have and do not want.</p>
     <h4>What the API can read with a key</h4>
@@ -97,12 +97,12 @@
     <div class="facts">
       <div class="fact"><b>100 searches</b><span>per day. One <code>search.list</code> call = 1 search, its own bucket</span></div>
       <div class="fact"><b>10,000 units</b><span>per day for everything else. One <code>commentThreads.list</code> call = 1 unit</span></div>
-      <div class="fact"><b>₹0</b><span>free, no card. Over the limit, calls are refused with "quotaExceeded", never billed</span></div>
-      <div class="fact"><b>More on request</b><span>Google has a "Quota extension request form" if we ever need it</span></div>
+      <div class="fact"><b>Free allowance</b><span>Over the limit, calls are refused with "quotaExceeded" until the reset</span></div>
+      <div class="fact"><b>More on request</b><span>Through the "YouTube API Services - Audit and Quota Extension Form", after a compliance audit</span></div>
     </div>
     <p class="note">Also from Google: <em>"All API requests, including invalid requests, incur at least a one-point quota cost."</em> So a broken call still costs.</p>
 
-    <h4>What one run and one day spend, with the current values</h4>
+    <h4>What one run and one day spent, in the first version</h4>
     <div class="tbl">
       <table>
         <thead><tr><th class="k">Call</th><th class="s">Per run</th><th class="s">Runs per day</th><th class="s">Per day</th><th class="s">Allowance</th><th>Share</th></tr></thead>
@@ -117,7 +117,7 @@
   </div>
 
   <!-- ================= 3 SEARCH ================= -->
-  <h2 id="search">3 · Finding videos: <code>search.list</code></h2>
+  <h2 id="search">3 · Finding videos: <code>search.list</code> <small style="text-transform:none;letter-spacing:0;color:var(--warn)">(first version)</small></h2>
   <div class="card">
     <p>One call per topic. This is the request the tool sends, then the full list of what Google <em>accepts</em> and which ones we actually pass.</p>
     <pre><code>GET https://www.googleapis.com/youtube/v3/search
@@ -166,7 +166,7 @@
   </div>
 
   <!-- ================= 4 COMMENTS ================= -->
-  <h2 id="comments">4 · Reading comments: <code>commentThreads.list</code></h2>
+  <h2 id="comments">4 · Reading comments: <code>commentThreads.list</code> <small style="text-transform:none;letter-spacing:0;color:var(--warn)">(first version)</small></h2>
   <div class="card">
     <p>One call per video found in step 3. A "comment thread" is a top-level comment plus its replies; we read the top-level comment only.</p>
     <pre><code>GET https://www.googleapis.com/youtube/v3/commentThreads
@@ -214,13 +214,13 @@
   </div>
 
   <!-- ================= 5 STORE ================= -->
-  <h2 id="store">5 · How a comment is stored</h2>
+  <h2 id="store">5 · How a comment is stored <small style="text-transform:none;letter-spacing:0;color:var(--warn)">(first version)</small></h2>
   <div class="card">
     <p>Each kept comment becomes one row in the <code>items</code> table of the Supabase database. Before the row is written, three checks run in this order:</p>
     <ol class="steps">
-      <li><strong>Posted within the last 7 days?</strong> If not, dropped without storing. Nothing older than a week ever enters the database.</li>
+      <li><strong>Posted within the last 7 days?</strong> If not, it was stored with status <code>filtered</code> and reason <code>too_old</code>, and never sent to the AI. (Today the rule is "posted before 1 January 2026".)</li>
       <li><strong>Seen before?</strong> The table has a uniqueness rule on (platform, external id). The external id is the YouTube comment id, so a comment fetched in an earlier run is silently ignored. Nothing is counted or tagged twice.</li>
-      <li><strong>Keyword filter.</strong> Plain code, no AI: the text must be at least 15 characters, must contain at least one word from the allow list (medicines like <code>metformin</code>, conditions like <code>PCOS</code>, tracking words like <code>calorie</code> or <code>app</code>, phrases like <code>what to eat</code>), must contain no word from the block list (<code>giveaway</code>, <code>crypto</code>, <code>hiring</code>, <code>meme</code> …), and must look like a question (a <code>?</code> or a phrase like "can I", "should I", "which app"). Whole words only, so <code>app</code> does not match <code>apple</code>.</li>
+      <li><strong>Keyword filter.</strong> Plain code, no AI: the text must be at least 15 characters, must contain at least one word from the allow list (medicines like <code>metformin</code>, conditions like <code>PCOS</code>, tracking words like <code>calorie</code> or <code>diet app</code>, phrases like <code>what to eat</code>), must contain no word from the block list (<code>giveaway</code>, <code>crypto</code>, <code>hiring</code>, <code>meme</code> …), and must look like a question (a <code>?</code> or a phrase like "can I", "should I", "which app"). Whole words only, so <code>rice</code> does not match <code>price</code>.</li>
     </ol>
     <h4 style="margin-top:16px">The row</h4>
     <div class="tbl">
@@ -251,7 +251,7 @@
     <div class="callout">
       <p><b>The keyword filter cannot understand a sentence.</b> "Is roti okay with my sugar tablets?" contains no medicine name and no condition name, yet it is a perfect match. "Metformin is the worst, switched to keto, feeling great" contains a medicine name and is useless. Telling those apart needs reading, and that is the one job the AI has.</p>
     </div>
-    <p style="margin-top:12px">For each <code>queued</code> item, one request goes to Google's Gemini (model <code>gemini-3.5-flash-lite</code>, free tier; four keys rotated so the per-minute limit is never hit). The request contains fixed instructions, the comment text (platform, channel, text; no username, no link), and a strict schema for the answer. The model must return this form and nothing else:</p>
+    <p style="margin-top:12px">For each <code>queued</code> item, one request goes to Google's Gemini (model <code>gemini-3.5-flash-lite</code> by default, or whatever <code>GEMINI_MODEL</code> names; free tier; several keys rotated so the per-minute limit is rarely hit). The request contains fixed instructions, the comment text (platform, channel, text; no username, no link), and a strict schema for the answer. The model must return this form and nothing else:</p>
     <div class="tbl">
       <table>
         <thead><tr><th class="k">Field</th><th>What the AI fills in</th></tr></thead>
@@ -263,7 +263,7 @@
           <tr><td class="k">fit_score</td><td>0 to 100: how directly a medicine- and condition-aware food tracker answers this exact text.</td></tr>
           <tr><td class="k">urgency</td><td>low, medium, high.</td></tr>
           <tr><td class="k">language</td><td>en, hinglish, other.</td></tr>
-          <tr><td class="k">do_not_reply + reason</td><td>true when this is not someone to approach: asks for a dosage or a diagnosis, describes an emergency, or is about eating disorders or mental health.</td></tr>
+          <tr><td class="k">do_not_reply + reason</td><td>true when this is not someone to approach: asks for a dosage or a diagnosis, describes an emergency, or is about eating disorders, self-harm or mental health.</td></tr>
           <tr><td class="k">summary</td><td>One plain sentence saying what is asked, with no name in it.</td></tr>
         </tbody>
       </table>
@@ -282,14 +282,14 @@
         </tbody>
       </table>
     </div>
-    <p class="note" style="margin-top:12px"><strong>After the answer comes back</strong>, plain code takes over again: the answer is checked against the schema (an out-of-range score or an unknown group is rejected and asked once more); the row in <code>tags</code> is written; <em>do_not_reply</em> makes the item <code>not suitable</code>, <em>irrelevant</em> makes it <code>filtered</code>, anything else makes it <code>tagged</code> (on the list) with score = fit score + the group bonus above + urgency (0, 3 or 6) − 2 per day of age, capped at −14. The Today page shows the 10 highest scores.</p>
+    <p class="note" style="margin-top:12px"><strong>After the answer comes back</strong>, plain code takes over again: the answer is checked against the schema (an out-of-range score or an unknown group is rejected and asked once more); the row in <code>tags</code> is written; <em>do_not_reply</em> makes the item <code>not suitable</code>, <em>irrelevant</em> makes it <code>filtered</code>, anything else makes it <code>tagged</code> (on the list) with score = fit score + the group bonus above + urgency (0, 3 or 6) − 2 per full day since the comment was posted, capped at −14. The age part is recalculated every hour. The Today page shows the top 10, by score (the default) or newest first.</p>
     <p class="src">Code: <code>src/lib/ai/prompts.ts</code>, <code>src/lib/types.ts</code>, <code>src/lib/pipeline/score.ts</code>, <code>src/lib/pipeline/run.ts</code>.</p>
   </div>
 
   <!-- ================= 7 TOPICS ================= -->
   <h2 id="topics">7 · The topics</h2>
   <div class="card">
-    <p>Six search phrases. Each becomes the <code>q</code> of one <code>search.list</code> call. They live in <code>src/lib/config.ts</code> and are shown on the app&apos;s "How it works" page.</p>
+    <p>Six search phrases. Each is the <code>q</code> of the month sweep, the newest-since searches and the daily relevance search (<code>docs/coverage-plan.html</code>).</p><p class="note">The rotation below (section 8) is the first version.</p><p> They live in <code>src/lib/config.ts</code> and are shown on the app&apos;s "How it works" page.</p>
     <div class="tbl">
       <table>
         <thead><tr><th class="s">#</th><th class="k">Topic</th><th>Who comments under these videos</th></tr></thead>
@@ -307,7 +307,7 @@
   </div>
 
   <!-- ================= 8 ROTATION ================= -->
-  <h2 id="rotation">8 · Why 4 topics per run, and which 4</h2>
+  <h2 id="rotation">8 · Why 4 topics per run, and which 4 <small style="text-transform:none;letter-spacing:0;color:var(--warn)">(first version)</small></h2>
   <div class="card">
     <p>The timer runs 12 times a day. Searching all 6 topics every run would be 72 searches, most of the 100 allowed. So each run searches 4, and consecutive runs continue through the list.</p>
     <h4>The rule</h4>
@@ -342,7 +342,7 @@
   </div>
 
   <!-- ================= 9 REPEAT ================= -->
-  <h2 id="repeat">9 · The same 5 videos and the same 50 comments, again</h2>
+  <h2 id="repeat">9 · The same 5 videos and the same 50 comments, again <small style="text-transform:none;letter-spacing:0;color:var(--warn)">(first version)</small></h2>
   <div class="card">
     <div class="callout">
       <p><b>Within 4 hours the top 5 videos for a topic rarely change. So most runs return the same 5 videos, and most of their 50 newest comments were already seen.</b> This is expected. What we want from a video is not the video, it is the comments that arrived since we last looked, and a popular diet video keeps receiving question comments for weeks.</p>
@@ -363,7 +363,7 @@
   </div>
 
   <!-- ================= 10 SETTINGS ================= -->
-  <h2 id="settings">10 · The knobs, and what each one costs</h2>
+  <h2 id="settings">10 · The knobs, and what each one costs <small style="text-transform:none;letter-spacing:0;color:var(--warn)">(first version)</small></h2>
   <div class="card">
     <p>All in <code>src/lib/config.ts</code> (change, deploy) except the schedule, which is one line of SQL. There is no Settings page. The rule to keep: <strong>topics per run × runs per day must stay under 100.</strong></p>
     <div class="tbl">
