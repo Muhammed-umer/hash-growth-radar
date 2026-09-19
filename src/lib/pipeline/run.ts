@@ -6,6 +6,7 @@ import { AllKeysParkedError } from "../ai/keyring";
 import { claim, complete, defer, enqueueMany, fail, JOB_TYPES, releaseStale } from "../queue";
 import type { ItemRow, JobRow, Platform, RawItem, RunRow, TagRow } from "../types";
 import { classify } from "./classify";
+import { applyIntentGuards } from "./guards";
 import { prefilter } from "./prefilter";
 import { score } from "./score";
 
@@ -168,11 +169,14 @@ async function processClassifyJob(job: JobRow): Promise<string | null> {
   const item = res.data as ItemRow | null;
   if (!item || item.status !== "queued") return null; // deleted or already handled: idempotent
 
-  const { classification, model } = await classify(item);
+  const { classification: answered, model } = await classify(item);
+  // Rule check on the AI's answer (e.g. "which is better, sugar or jaggery?"
+  // tagged as an app comparison). `raw` keeps what the model actually said.
+  const classification = applyIntentGuards(answered, itemText(item));
 
   const tagRes = await db()
     .from("tags")
-    .upsert({ item_id: item.id, ...classification, model, raw: classification }, { onConflict: "item_id" });
+    .upsert({ item_id: item.id, ...classification, model, raw: answered }, { onConflict: "item_id" });
   if (tagRes.error) throw new Error(`save tags: ${tagRes.error.message}`);
 
   let status: ItemRow["status"] = "tagged";
@@ -229,6 +233,50 @@ export async function requeueOrphans(): Promise<number> {
   }
   await enqueueMany(JOB_TYPES.classify, missing.map((item_id) => ({ item_id })));
   return missing.length;
+}
+
+function itemText(item: Pick<ItemRow, "title" | "body">): string {
+  return `${item.title ?? ""}
+${item.body ?? ""}`;
+}
+
+/**
+ * One-off repair (route /api/cron/retag): re-applies the intent guards to
+ * every listed comment currently tagged as an app request or an app complaint
+ * and re-scores the ones the guard changes. Idempotent.
+ */
+export async function retagGuarded(now = new Date()): Promise<{ checked: number; changed: number }> {
+  const tags = await db().from("tags").select("*").in("intent", ["app_recommendation", "competitor_complaint"]).limit(5000);
+  if (tags.error) throw new Error(`retag tags: ${tags.error.message}`);
+  const rows = (tags.data ?? []) as TagRow[];
+  if (rows.length === 0) return { checked: 0, changed: 0 };
+
+  const items = await db().from("items").select("id, title, body, posted_at, status").in("id", rows.map((t) => t.item_id)).eq("status", "tagged");
+  if (items.error) throw new Error(`retag items: ${items.error.message}`);
+  const itemBy = new Map((items.data as Array<Pick<ItemRow, "id" | "title" | "body" | "posted_at" | "status">>).map((i) => [i.id, i]));
+
+  let checked = 0;
+  let changed = 0;
+  for (const t of rows) {
+    const item = itemBy.get(t.item_id);
+    if (!item) continue;
+    checked++;
+    const fixed = applyIntentGuards(t, itemText(item));
+    if (fixed === t) continue;
+    const upTag = await db()
+      .from("tags")
+      .update({ intent: fixed.intent, competitor: fixed.competitor, fit_score: fixed.fit_score })
+      .eq("item_id", t.item_id);
+    if (upTag.error) throw new Error(`retag update tag: ${upTag.error.message}`);
+    const upItem = await db()
+      .from("items")
+      .update({ score: score({ classification: fixed, postedAt: item.posted_at, now }) })
+      .eq("id", t.item_id)
+      .eq("status", "tagged");
+    if (upItem.error) throw new Error(`retag update item: ${upItem.error.message}`);
+    changed++;
+  }
+  return { checked, changed };
 }
 
 /** How far back rescoring looks: the decay is capped at 14 points (7 days), so older scores are already final. */

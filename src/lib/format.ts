@@ -32,7 +32,7 @@ export const INTENT_LABEL: Record<string, string> = {
   medicine_food_question: "Medicine + food question",
   app_recommendation: "Asking for an app",
   nutrition_question: "Nutrition question",
-  competitor_complaint: "Competitor complaint",
+  competitor_complaint: "Complaint about an app",
   irrelevant: "Irrelevant",
 };
 

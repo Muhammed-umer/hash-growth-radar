@@ -89,7 +89,7 @@ export function ItemCard({ item, tag, postedLabel, showPlatform }: ItemCardProps
                 {c}
               </Chip>
             ))}
-            {tag.competitor && <Chip tone="amber">vs {tag.competitor}</Chip>}
+            {tag.competitor && <Chip tone="amber">about {tag.competitor}</Chip>}
             {tag.language !== "en" && <Chip>{tag.language}</Chip>}
             {tag.urgency !== "low" && <Chip tone="amber">{tag.urgency} urgency</Chip>}
           </div>

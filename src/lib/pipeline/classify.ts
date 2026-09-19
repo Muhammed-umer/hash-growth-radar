@@ -4,7 +4,7 @@ import { CLASSIFY_SYSTEM, classifyUser } from "../ai/prompts";
 import { ClassificationSchema, type Classification, type ItemRow } from "../types";
 
 export async function classify(
-  item: Pick<ItemRow, "platform" | "community" | "title" | "body">,
+  item: Pick<ItemRow, "platform" | "community" | "title" | "body" | "meta">,
 ): Promise<{ classification: Classification; model: string }> {
   const res = await askJSON({
     system: CLASSIFY_SYSTEM,

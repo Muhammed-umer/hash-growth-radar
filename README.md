@@ -15,7 +15,7 @@ watch list  →  count check  →  read changed videos to the last comment seen 
 
 YouTube is the only source (Reddit, Hacker News, the app stores and Product Hunt were considered and removed on 16 Sep 2026: approval needed, too few reachable people, or no legal automatic door). Google's free allowance is two separate pots, 100 searches a day and 10,000 units a day; every call is counted in a ledger before it is made and the jobs stop at 95 and 9,000.
 
-Three pages: **Today** (the top 10), **YouTube** (status, last run, the people found, what was dropped and why, run history) and **How it works** (the topics, how comments are collected, how they are classified, how the score is computed, a system check). There is no Settings page; topics and keyword lists live in `src/lib/config.ts`.
+Three pages: **Today** (the top 10), **YouTube** (every person found, 25 a page, with filters by group, condition or medicine, and minimum score; plus what was dropped and why) and **How it works** (the topics, how comments are collected, how they are classified, how the score is computed, a system check). There is no Settings page; topics and keyword lists live in `src/lib/config.ts`.
 
 **Privacy rule (enforced in code):** the tool tags the question, never the person. No username field exists anywhere; the commenter's channel id is compared in memory with the video's channel (to drop the creator's own comments) and then discarded. Stored comments are deleted 30 days after YouTube last returned them (YouTube's Developer Policy III.E.4.d).
 
@@ -64,6 +64,7 @@ Open http://localhost:3000, then:
   curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/cron/sweep?wait=1"      # fill the watch list (month sweep)
   curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/cron/channels?wait=1"   # follow the channels
   curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/cron/collect?wait=1"    # read comments + tag
+  curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/cron/retag"             # one-off: re-check app-request tags (see below)
   ```
 
 - Today page → the top 10. Open a comment, approach the person yourself if you want to, then press "Skip" to clear the card.

@@ -163,6 +163,9 @@ export default async function HowPage() {
               <b>Gemini&apos;s judgement.</b> Dropped as <i>ai:irrelevant</i> when the group is &ldquo;irrelevant&rdquo; (praise, chit-chat, off topic). Marked <b>not suitable</b> when the person asks for a dosage or a diagnosis, describes an emergency, or talks about eating disorders, self-harm or mental health. Both never appear on Today; the YouTube page shows their text, without a link, under &ldquo;Recently dropped&rdquo;.
             </li>
           </ol>
+          <p className="mt-3 text-stone-700">
+            <b>A rule check after Gemini.</b> If Gemini says &ldquo;asking for an app&rdquo; or &ldquo;complaint about an app&rdquo; but the comment never mentions an app, tracker or product name (&ldquo;which is better, sugar or jaggery?&rdquo;), the group is corrected to a food question and the score recomputed. Gemini&apos;s original answer is kept alongside for checking.
+          </p>
         </div>
       </Section>
 
@@ -207,7 +210,7 @@ export default async function HowPage() {
             <b>Fit</b> is not shown on the card, but the score is built from it. It is Gemini&apos;s own judgement, 0 to 100, of how directly a food tracker that understands medicines and conditions answers that exact comment: food with a named medicine or condition 80 to 100, a direct request for a calorie app 70 to 90, a complaint that an app fails on Indian food or ignores medication 60 to 85, a general diet question 20 to 50.
           </p>
           <p className="mt-2">
-            <b>Score</b>, the only number on the card, is plain arithmetic on top of fit, done by the app, not by Gemini: fit, plus a bonus for the group (medicine and food 15, asking for an app 10, competitor complaint 5, general nutrition 0), plus 0, 3 or 6 for urgency, minus 2 for every full day since the comment was posted, at most 14 (so the penalty stops growing after 7 days). The penalty is recalculated every hour, so the order stays current. Today shows the top {TOP_N}, by score or by newest comment, whichever you pick.
+            <b>Score</b>, the only number on the card, is plain arithmetic on top of fit, done by the app, not by Gemini: fit, plus a bonus for the group (medicine and food 15, asking for an app 10, complaint about an app 5, general nutrition 0), plus 0, 3 or 6 for urgency, minus 2 for every full day since the comment was posted, at most 14 (so the penalty stops growing after 7 days). The penalty is recalculated every hour, so the order stays current. Today shows the top {TOP_N}, by score or by newest comment, whichever you pick.
           </p>
           <p className="mt-2">
             <b>Skip</b> is the only button that changes anything: it hides a card once you have looked at it. It only marks the card as skipped; whether you approached the person is never recorded.
