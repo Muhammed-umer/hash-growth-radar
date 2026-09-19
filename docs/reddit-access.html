@@ -93,13 +93,13 @@ blockquote p+p{margin-top:.45em}
       <p>Public posts and comments in the communities we choose — r/diabetes, r/PCOS, r/prediabetes, r/diabetes_t2 and similar. Our keyword filter then surfaces the people asking diet questions. A person decides what to do next.</p>
     </div>
     <div class="card">
-      <h3>How much we would use</h3>
-      <p>About <b>25 requests per minute</b>. For comparison, Reddit's published limit for individuals who qualify for free access is:</p>
+      <h3>How much we could read</h3>
+      <p>Reddit publishes a limit only for free, non-commercial access:</p>
       <blockquote><p>"We enforce rate limits <b>for those eligible for free access</b> usage of our Data API. The limit is: 100 queries per minute (QPM) per OAuth client id"</p></blockquote>
-      <p>That free tier is for non-commercial use, so it does not apply to us — but it shows our load is a quarter of what Reddit gives away.</p>
+      <p>For commercial access the limit is not published. The Data API Terms say Reddit "may set and enforce limits on your use of the Data APIs … in our sole discretion" (§2.9), so it is agreed in the contract.</p>
     </div>
   </div>
-  <div class="src"><b>Source</b> — Reddit Data API Wiki, Updated 11 May 2026 · <a href="https://support.reddithelp.com/hc/en-us/articles/16160319875092-Reddit-Data-API-Wiki">support.reddithelp.com/hc/en-us/articles/16160319875092-Reddit-Data-API-Wiki</a></div>
+  <div class="src"><b>Sources</b> — Reddit Data API Wiki, Updated 11 May 2026 · <a href="https://support.reddithelp.com/hc/en-us/articles/16160319875092-Reddit-Data-API-Wiki">articles/16160319875092</a> &nbsp;·&nbsp; Reddit Data API Terms §2.9, Last Revised 20 Jul 2026 · <a href="https://www.redditinc.com/policies/data-api-terms">redditinc.com/policies/data-api-terms</a></div>
 </section>
 
 <!-- 3 -->
@@ -174,7 +174,7 @@ blockquote p+p{margin-top:.45em}
         <li>No price list exists on any Reddit page.</li>
         <li>The figure is worked out through the application and the contract that follows, which is why the form asks for our data budget.</li>
         <li>The free tier is for non-commercial use only ("free access to moderators and developers creating these tools for non-commercial use cases"), so it is not open to a business. Whether we pay, and how much, is decided in that contract.</li>
-        <li>Our argument: ~25 requests a minute, a quarter of what Reddit allows individuals for free.</li>
+        <li>Rate limits for commercial access are not published either; Reddit sets them "in our sole discretion" (§2.9).</li>
       </ul>
     </div>
   </div>
@@ -239,7 +239,7 @@ blockquote p+p{margin-top:.45em}
         <li>Delete content that a user deletes — purging within 48 hours is recommended; Reddit gives licensees tools that signal deletions in real time</li>
         <li>Do not sell, license or share Reddit data without written approval; keep only what the approved use case needs</li>
         <li>Publish a privacy policy saying what we collect and how it is used (§7.2)</li>
-        <li>Requests from our server must carry an OAuth token</li>
+        <li>Requests from our server must carry an OAuth token and a unique, descriptive User-Agent that names the app, its version and a contact username</li>
       </ul>
     </div>
     <div class="card good">
