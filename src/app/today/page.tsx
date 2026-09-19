@@ -17,7 +17,15 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
 
   return (
     <Suspense>
-      <SortableList value={sort} title={<h1 className="text-2xl font-semibold">Today</h1>}>
+      <SortableList
+        value={sort}
+        title={
+          <div>
+            <h1 className="text-2xl font-semibold">Today</h1>
+            <p className="mt-1 text-sm text-stone-600">The {TOP_N} best YouTube comments waiting for you right now — people asking a question Hash can answer. Open one, decide yourself, then Skip it.</p>
+          </div>
+        }
+      >
         {queue.length === 0 ? (
           <div className="rounded-xl border border-dashed border-stone-300 bg-white p-6 text-sm text-stone-600">
             Nothing to show yet. The schedule reads new YouTube comments every 2 hours; see the{" "}
