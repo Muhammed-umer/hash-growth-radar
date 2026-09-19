@@ -4,7 +4,7 @@ Internal tool for the Hash Health team. It keeps a watch list of every YouTube v
 
 - How every video under a topic is found and every new comment is read, the jobs, the budget, the failure cases: [docs/coverage-plan.html](docs/coverage-plan.html) (open in a browser). **This is the design that is built.**
 - What Hash is, the competitors and the YouTube facts behind that design: [docs/knowledge-and-plan.md](docs/knowledge-and-plan.md)
-- The API calls, the AI form and the keyword filter in detail: [docs/youtube.html](docs/youtube.html) (its sections on searching and topic rotation describe the version before 17 Sep 2026)
+- The API calls, the AI form and the keyword filter in detail: [docs/youtube.html](docs/youtube.html) (its sections 1, 2, 3, 4, 5, 8, 9 and 10 describe the version before 17 Sep 2026, as the file itself says; the current collection is in docs/coverage-plan.html)
 
 ## How it works
 
@@ -36,7 +36,7 @@ Copy `.env.example` to `.env.local` and fill in:
 
 Free-tier note: Google may use free-tier Gemini prompts to improve its products. The prompts contain public post text only, never usernames. Move to a paid Gemini tier or to Claude if that matters to you.
 
-**Gemini key rotation.** Set `GEMINI_API_KEY_1` … `GEMINI_API_KEY_8` (plus or instead of `GEMINI_API_KEY`) and every AI call takes the next key in turn. When a key returns a rate limit it is parked for a minute, or an hour if the message says the daily quota is gone, and the next key is tried straight away. The "How it works" page shows how many keys are in the rotation. Only when every key is parked does the job fail, and the queue retries it later with its own backoff.
+**Gemini key rotation.** Set `GEMINI_API_KEY_1` … `GEMINI_API_KEY_8` (plus or instead of `GEMINI_API_KEY`) and every AI call takes the next key in turn. When a key returns a rate limit it is parked for a minute, or an hour if the message says the daily quota is gone, and the next key is tried straight away. The "How it works" page shows how many keys are in the rotation. Only when every key is parked does the job stop: it is deferred, no attempt is spent, and the queue picks it up again once the shortest park time is over.
 
 **API key security.** `YOUTUBE_API_KEY` and the Gemini keys are read on the server only and never reach the browser (no `NEXT_PUBLIC_` prefix, so Next.js cannot inline them). In Google Cloud, restrict the YouTube key under "API restrictions" to YouTube Data API v3, and leave "Application restrictions" as **None**: website and IP restrictions are for calls made from a browser or a fixed server address, and the host's outbound addresses are not fixed, so either would break collection.
 
@@ -46,7 +46,7 @@ In Supabase → SQL Editor, paste and run:
 
 1. `supabase/migrations/0001_schema.sql`: every table, index, function and the row-level-security lock. Safe to run again on an existing project; it changes nothing that already exists.
 2. `supabase/migrations/0003_watchlist.sql`: the watch list (topics, videos, channels, sweep_units, quota_ledger, the `upsert_videos` and `spend_quota` functions, the new `items` columns). Safe to run again.
-3. `supabase/migrations/0002_cron.sql`, only after the app is deployed (step 4 below). Replace the two placeholders at the top first.
+3. `supabase/migrations/0002_cron.sql`, only after the app is deployed (step 4 below). The app URL is already filled in; replace the `<CRON_SECRET>` placeholder first.
 
 ### 3. Run locally
 
@@ -75,7 +75,7 @@ Locally there is no schedule (Supabase Cron cannot reach your laptop), but `npm 
 
 1. Push to GitHub and import the repo in Vercel (any Node host works; the app is plain Next.js).
 2. Add every variable from `.env.local` under Project → Settings → Environment Variables (Production). Deploy.
-3. In Supabase → Integrations, enable **Cron** and **pg_net** (or just run the SQL, it enables both).
+3. In Supabase → Integrations, enable **Cron**, and under Database → Extensions enable **pg_net**. The SQL in the next step only checks for them and stops with a message if either is missing; it does not enable them itself.
 4. Open `supabase/migrations/0002_cron.sql` (the app URL is already filled in), replace `<CRON_SECRET>` with the same value you set in step 2, paste it into the SQL Editor and run it. Safe to run again later with a new URL or secret. Keep the filled-in copy out of git: any file named `*.local.sql` is ignored.
 
 That registers seven jobs inside your database (docs/coverage-plan.html section 6). Checked against supabase.com/docs/guides/cron on 16 Sep 2026: any schedule from every second to once a year, at most 8 jobs at once, each under 10 minutes.
@@ -90,7 +90,7 @@ That registers seven jobs inside your database (docs/coverage-plan.html section 
 | radar_cleanup | daily 03:00 | `/api/cron/cleanup` | Job 7: 30-day purge, unfollow quiet channels |
 | radar_coverage | Mondays 09:00 | `/api/cron/coverage` | Job 8: compare 20 followed channels' real upload lists with the watch list |
 
-The database calls each route with `Authorization: Bearer <CRON_SECRET>` and waits only 10 seconds, so collect and process answer "started" at once and do the work in the background (they still get the full 5 minutes). Add `?wait=1` to run inline and see the result, for example by hand:
+The database calls each route with `Authorization: Bearer <CRON_SECRET>` and waits only 10 seconds (30 for cleanup), so every route except cleanup answers "started" at once and does the work in the background (it still gets the full 5 minutes). Add `?wait=1` to run inline and see the result, for example by hand:
 
 ```bash
 curl -H "Authorization: Bearer $CRON_SECRET" "https://<your-app>.vercel.app/api/cron/collect?wait=1"
@@ -113,7 +113,7 @@ There is no login yet, by decision. The dashboard is open to anyone who has the 
 
 ```bash
 npm run dev        # local server
-npm test           # unit tests (prefilter, scoring, AI schema, key rotation, cron auth)
+npm test           # unit tests (prefilter, guards, scoring, AI schema, key rotation, cron auth, YouTube api / quota / reader / sweep)
 npm run typecheck  # tsc --noEmit
 npm run lint
 npm run build
@@ -122,15 +122,15 @@ npm run build
 ## Project layout
 
 ```
-src/app/today                 top 10 across platforms
-src/app/platforms/[platform]  one page per platform: status, collect / paste, list, dropped, runs
-src/app/how                   the topics, how comments are collected, how they are classified, system check
-src/app/api/cron/*            collect, sweep, discover, channels, coverage, process, cleanup (CRON_SECRET protected, called by Supabase Cron)
+src/app/today                 top 10
+src/app/platforms/[platform]  the YouTube page: everyone found (filters, 25 a page) and what was dropped
+src/app/how                   the topics, how comments are collected, how they are classified, the score, system check
+src/app/api/cron/*            collect, sweep, discover, channels, coverage, process, cleanup, retag (CRON_SECRET protected, called by Supabase Cron)
 src/app/actions.ts            server action (skip)
-src/lib/youtube/              api (the five calls + ledger), quota, rules (pure decisions), sweep, discover, channels, reader, coverage, watchlist (tables)
+src/lib/youtube/              api (the five calls + ledger), client, quota, rules (pure decisions), sweep, discover, channels, reader, coverage, watchlist (tables)
 src/lib/collectors/           youtube (= the reader)
-src/lib/pipeline/             prefilter, classify, score, run
-src/lib/ai/                   askJSON() with Gemini (default) or Anthropic behind one interface
+src/lib/pipeline/             prefilter, classify, guards, score, run
+src/lib/ai/                   askJSON() with Gemini (default) or Anthropic behind one interface; prompts, keyring
 src/lib/queue.ts              small Postgres-backed job queue
 supabase/migrations/          0001 schema, 0002 cron schedule, 0003 watch list
 tests/                        vitest unit tests
@@ -139,6 +139,6 @@ tests/                        vitest unit tests
 ## Rules the code enforces
 
 - The tool never writes, suggests, or posts a reply. "Skip" only hides the card; what you did is never stored.
-- Items the AI flags as dosage, diagnosis, emergency, eating disorder or mental health are marked "not suitable" and never enter the list.
+- Items the AI flags as dosage, starting or stopping a medicine, side effects, diagnosis, lab results, emergency, eating disorder, mental health, pregnancy, breastfeeding or a child are marked "not suitable" and never enter the list.
 - No username is stored anywhere. Stored comments are deleted 30 days after YouTube last returned them.
 - Every YouTube call is counted in `quota_ledger` before it is made; the jobs stop at 95 of the 100 daily searches and 9,000 of the 10,000 daily units.

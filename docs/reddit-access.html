@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reddit Access</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#F4F6FB; --slide:#FFFFFF; --ink:#0F172A; --ink-2:#475569; --ink-3:#64748B; --line:#E2E8F0;
+  --brand:#2457E6; --brand-deep:#1B44B8; --brand-soft:#E9EFFF; --brand-tint:#F6F9FF;
+  --green:#047857; --green-soft:#D1FAE5; --amber:#B45309; --amber-soft:#FEF3C7;
+  --display:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --sans:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--ground);background-image:radial-gradient(1100px 560px at 8% -12%,#E6EDFF 0%,transparent 62%),radial-gradient(800px 460px at 100% 112%,#FDF1E7 0%,transparent 58%);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;padding:16px}
+a{color:var(--brand-deep)}
+.stage{height:calc(100% - 52px);display:grid;place-items:center}
+.deck{position:relative;width:min(100%,calc((100vh - 84px) * 16 / 9));aspect-ratio:16/9;max-width:1240px}
+.slide{position:absolute;inset:0;background:var(--slide);border:1px solid var(--line);border-radius:18px;box-shadow:0 1px 2px rgba(15,23,42,.06),0 14px 36px -14px rgba(15,23,42,.2);padding:clamp(22px,3.6cqw,52px) clamp(24px,4cqw,60px);display:none;flex-direction:column;overflow:auto;container-type:inline-size}
+.slide.on{display:flex}
+.slide::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;border-radius:18px 0 0 18px;background:linear-gradient(180deg,var(--brand),#7FA0FF)}
+.top{display:flex;align-items:center;justify-content:space-between;gap:1em;margin-bottom:1em}
+.eyebrow{font-family:var(--mono);font-size:clamp(10px,1cqw,13px);letter-spacing:.1em;text-transform:uppercase;color:var(--brand-deep);display:flex;align-items:center;gap:.6em}
+.eyebrow::before{content:"";width:22px;height:2px;background:var(--brand)}
+.num{font-family:var(--display);font-weight:800;font-size:clamp(11px,1.1cqw,14px);color:var(--ink-3)}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(30px,5cqw,64px);line-height:1.02;margin:0 0 .35em;letter-spacing:-.02em;text-wrap:balance}
+h2{font-family:var(--display);font-weight:700;font-size:clamp(22px,3.4cqw,44px);line-height:1.08;margin:0 0 .5em;letter-spacing:-.015em;text-wrap:balance}
+h3{font-family:var(--display);font-weight:700;font-size:clamp(15px,1.85cqw,24px);margin:0 0 .3em}
+p,li{font-size:clamp(14px,1.55cqw,21px)}
+p{margin:0 0 .55em}
+ul{margin:0 0 .5em;padding-left:1.25em}
+li{margin:.25em 0}
+li::marker{color:var(--brand)}
+.lede{font-size:clamp(15px,1.8cqw,24px);color:var(--ink-2);max-width:60ch}
+.body{flex:1;min-height:0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:clamp(14px,2.2cqw,30px)}
+@container (max-width:660px){.two{grid-template-columns:1fr}}
+.card{border:1px solid var(--line);border-radius:14px;padding:clamp(13px,1.7cqw,24px);background:var(--brand-tint)}
+.card.plain{background:var(--slide)}
+.card.good{background:#F0FDF9;border-color:#A7F3D0}
+blockquote{margin:.4em 0 .6em;padding:.55em 1em;border-left:3px solid var(--brand);background:var(--brand-tint);border-radius:0 10px 10px 0;font-size:clamp(13.5px,1.5cqw,20px);line-height:1.45}
+blockquote p{margin:0}
+blockquote p+p{margin-top:.45em}
+.src{margin-top:auto;padding-top:.8em;border-top:1px dashed var(--line);font-family:var(--mono);font-size:clamp(10px,1.02cqw,13px);color:var(--ink-3);line-height:1.6}
+.src b{color:var(--ink-2);font-weight:500}
+.src a{color:var(--ink-3);word-break:break-all}
+.big{font-family:var(--display);font-weight:800;font-size:clamp(22px,3cqw,38px);color:var(--brand-deep);letter-spacing:-.015em;line-height:1.1;margin:0 0 .3em}
+.pill{display:inline-block;font-family:var(--mono);font-size:clamp(9.5px,.95cqw,12px);letter-spacing:.06em;text-transform:uppercase;padding:2px 9px;border-radius:999px;background:var(--green-soft);color:var(--green)}
+.pill.amber{background:var(--amber-soft);color:var(--amber)}
+.link{display:inline-block;margin:.3em 0 .1em;font-family:var(--mono);font-size:clamp(11px,1.15cqw,15px);background:var(--brand-soft);color:var(--brand-deep);padding:.4em .7em;border-radius:8px;word-break:break-all}
+.kicker{display:inline-block;font-family:var(--mono);font-size:clamp(10px,1cqw,13px);letter-spacing:.1em;text-transform:uppercase;color:var(--brand-deep);background:var(--brand-soft);padding:4px 11px;border-radius:999px;margin-bottom:1.1em}
+.title-slide{background:linear-gradient(135deg,#FFFFFF 0%,#F1F5FF 62%,#FFF8F1 100%)}
+.title-slide::before{background:linear-gradient(180deg,var(--brand),#F59E0B)}
+.bar{height:52px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-family:var(--mono);font-size:13px;color:var(--ink-3)}
+.bar button{font:inherit;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 14px;cursor:pointer}
+.bar button:hover{border-color:#B8CBFF;background:var(--brand-tint)}
+.bar button:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.bar button:disabled{opacity:.4;cursor:default}
+@media print{
+  body{padding:0;background:#fff}
+  .bar{display:none}
+  .stage{height:auto;display:block}
+  .deck{width:100%;max-width:none;aspect-ratio:auto}
+  .slide{position:static;display:flex!important;break-after:page;height:100vh;border:0;border-radius:0;box-shadow:none}
+}
+</style>
+</head>
+<body>
+<div class="stage">
+<div class="deck">
+
+<!-- 1 -->
+<section class="slide title-slide on">
+  <span class="kicker">Hash Growth Radar</span>
+  <h1>Reddit: what we can get, and how to get permission</h1>
+  <p class="lede">Reading public health conversations on Reddit the way we already read YouTube. What Reddit allows, the one form that grants it, what it costs, and what we can start today.</p>
+  <div class="body"></div>
+  <div class="src"><b>All quotes are from Reddit's own pages, read on 18 Sep 2026.</b> Each slide carries the page it came from.</div>
+</section>
+
+<!-- 2 -->
+<section class="slide">
+  <div class="top"><span class="eyebrow">What we get</span><span class="num">02 / 08</span></div>
+  <h2>Read-only access to public posts and comments</h2>
+  <div class="body two">
+    <div class="card plain">
+      <h3>What we would read</h3>
+      <p>Public posts and comments in the communities we choose — r/diabetes, r/PCOS, r/prediabetes, r/diabetes_t2 and similar. Our keyword filter then surfaces the people asking diet questions. A person decides what to do next.</p>
+    </div>
+    <div class="card">
+      <h3>How much we would use</h3>
+      <p>About <b>25 requests per minute</b>. For comparison, Reddit's published limit for individuals who qualify for free access is:</p>
+      <blockquote><p>"We enforce rate limits <b>for those eligible for free access</b> usage of our Data API. The limit is: 100 queries per minute (QPM) per OAuth client id"</p></blockquote>
+      <p>That free tier is for non-commercial use, so it does not apply to us — but it shows our load is a quarter of what Reddit gives away.</p>
+    </div>
+  </div>
+  <div class="src"><b>Source</b> — Reddit Data API Wiki, Updated 11 May 2026 · <a href="https://support.reddithelp.com/hc/en-us/articles/16160319875092-Reddit-Data-API-Wiki">support.reddithelp.com/hc/en-us/articles/16160319875092-Reddit-Data-API-Wiki</a></div>
+</section>
+
+<!-- 3 -->
+<section class="slide">
+  <div class="top"><span class="eyebrow">The rule</span><span class="num">03 / 08</span></div>
+  <h2>Permission comes first</h2>
+  <div class="body">
+    <blockquote><p>"Approval is required: You must request access and get explicit approval before accessing any Reddit data through our API, and you must agree to comply with all applicable terms."</p></blockquote>
+    <blockquote><p>"Be transparent: You must not misrepresent or mask how or why you are accessing Reddit data."</p></blockquote>
+    <p style="margin-top:.8em">So the first step is an application that describes the tool honestly. Nothing is built until Reddit approves.</p>
+  </div>
+  <div class="src"><b>Source</b> — Responsible Builder Policy, Updated 05 Jun 2026 · <a href="https://support.reddithelp.com/hc/en-us/articles/42728983564564-Responsible-Builder-Policy">support.reddithelp.com/hc/en-us/articles/42728983564564-Responsible-Builder-Policy</a></div>
+</section>
+
+<!-- 4 -->
+<section class="slide">
+  <div class="top"><span class="eyebrow">Our category</span><span class="num">04 / 08</span></div>
+  <h2>We apply as a commercial developer</h2>
+  <div class="body two">
+    <div>
+      <blockquote><p>"We consider commercial purposes to include <b>any use of our services by a business or on behalf of a business</b> or as part of a monetized product or service."</p></blockquote>
+      <p>Internal use and no revenue do not change this.</p>
+    </div>
+    <div class="card">
+      <h3>What that means</h3>
+      <blockquote><p>"you'll need our permission, and we'll require a contract."</p></blockquote>
+      <p>So: application first, then an agreement with Reddit, then access.</p>
+    </div>
+  </div>
+  <div class="src"><b>Source</b> — Developer Platform &amp; Accessing Reddit Data, Updated 28 May 2026 · <a href="https://support.reddithelp.com/hc/en-us/articles/14945211791892-Developer-Platform-Accessing-Reddit-Data">support.reddithelp.com/hc/en-us/articles/14945211791892-Developer-Platform-Accessing-Reddit-Data</a></div>
+</section>
+
+<!-- 5 -->
+<section class="slide">
+  <div class="top"><span class="eyebrow">The action</span><span class="num">05 / 08</span></div>
+  <h2>One form to submit</h2>
+  <div class="body two">
+    <div>
+      <span class="link">support.reddithelp.com/hc/en-us/requests/new?ticket_form_id=14868593862164</span>
+      <p style="margin-top:.6em">Role to select:</p>
+      <p class="big">I'm an enterprise partner/commercial developer</p>
+    </div>
+    <div class="card">
+      <h3>What it asks for</h3>
+      <ul>
+        <li>Company name, corporate email, website</li>
+        <li>Company description, industries, locations, size</li>
+        <li>Purpose of our product or service</li>
+        <li>What we deliver to users with Reddit data</li>
+        <li><b>"What is your data budget?"</b></li>
+      </ul>
+      <p>The same form also has fields for the subreddits to be used and a link to the code that will access the API; whether they show for our role depends on the form's own logic. Have both ready.</p>
+    </div>
+  </div>
+  <div class="src"><b>Source</b> — Data Access Request form, read live 18 Sep 2026 · <a href="https://support.reddithelp.com/hc/en-us/requests/new?ticket_form_id=14868593862164">support.reddithelp.com/hc/en-us/requests/new?ticket_form_id=14868593862164</a></div>
+</section>
+
+<!-- 6 -->
+<section class="slide">
+  <div class="top"><span class="eyebrow">Cost</span><span class="num">06 / 08</span></div>
+  <h2>No published price — it is agreed in the ticket</h2>
+  <div class="body two">
+    <div>
+      <blockquote><p>"Reddit offers both free and paid access. Whether your use will require paid access depends on how you access and use the data."</p></blockquote>
+      <blockquote><p>§3.1: "Reddit reserves the right to charge fees … rates to be determined at Reddit's sole discretion."</p></blockquote>
+    </div>
+    <div class="card">
+      <h3>What we can say</h3>
+      <ul>
+        <li>No price list exists on any Reddit page.</li>
+        <li>The figure is settled inside the application, which is why it asks for our data budget.</li>
+        <li>The free tier is for non-commercial use only, so a business pays regardless of how little it reads.</li>
+        <li>Our argument: ~25 requests a minute, a quarter of what Reddit allows individuals for free.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="src"><b>Sources</b> — Developer Platform &amp; Accessing Reddit Data, Updated 28 May 2026 · <a href="https://support.reddithelp.com/hc/en-us/articles/14945211791892-Developer-Platform-Accessing-Reddit-Data">articles/14945211791892</a> &nbsp;·&nbsp; Reddit Data API Terms, Last Revised 20 Jul 2026 · <a href="https://www.redditinc.com/policies/data-api-terms">redditinc.com/policies/data-api-terms</a></div>
+</section>
+
+<!-- 7 -->
+<section class="slide">
+  <div class="top"><span class="eyebrow">Available today</span><span class="num">07 / 08</span></div>
+  <h2>Reddit Pro — free, self-serve, no approval <span class="pill">start now</span></h2>
+  <div class="body two">
+    <div>
+      <blockquote><p>"Reddit Pro is a free suite of organic business tools to help business users discover, join, and contribute to Reddit's communities and conversations."</p><p>"Trends allow you to monitor keywords to see where, when, and how they're being discussed on Reddit."</p><p>"Standard keywords … return the standard set of insights (i.e., <b>posts and comments mentioning your keyword</b> and communities talking about your keyword)."</p><p>"There is currently no limit to the number of keywords you can track in Trends."</p></blockquote>
+      <p>Sign up at <b>redditforpros.com</b> — a Reddit account with a verified email, plus business name, website and category. Teammates get read-only access.</p>
+    </div>
+    <div class="card good">
+      <h3>Its limits</h3>
+      <ul>
+        <li>"Reddit Pro is intended for your internal use."</li>
+        <li>"you may not download other redditors posts and comments … whether manually or via automated tools."</li>
+        <li>"Currently Reddit Pro only aggregates English conversations."</li>
+        <li>"some sensitive topics, are excluded" — Reddit does not say whether health is one <span class="pill amber">unknown</span></li>
+      </ul>
+      <p>So it is a view inside Reddit, not a feed into our app. Free to try, and it tells us whether Reddit is worth pursuing before any contract.</p>
+    </div>
+  </div>
+  <div class="src"><b>Sources</b> — What is Reddit Pro?, Updated 30 Mar 2026 · <a href="https://support.reddithelp.com/hc/en-us/articles/24368510335892-What-is-Reddit-Pro">articles/24368510335892-What-is-Reddit-Pro</a> &nbsp;·&nbsp; Reddit Pro Feature: Trends, Updated 28 May 2026 · <a href="https://support.reddithelp.com/hc/en-us/articles/47619216411284-Reddit-Pro-Feature-Trends">articles/47619216411284-Reddit-Pro-Feature-Trends</a> &nbsp;·&nbsp; Sign up for Reddit Pro · <a href="https://support.reddithelp.com/hc/en-us/articles/24368958859668-Sign-up-for-Reddit-Pro">articles/24368958859668</a> &nbsp;·&nbsp; Reddit Pro Feature: Dashboard ("Manage users … read-only access"), Updated 27 Mar 2026 · <a href="https://support.reddithelp.com/hc/en-us/articles/47618399765396-Reddit-Pro-Feature-Dashboard">articles/47618399765396</a></div>
+</section>
+
+<!-- 8 -->
+<section class="slide">
+  <div class="top"><span class="eyebrow">If approved</span><span class="num">08 / 08</span></div>
+  <h2>Rules we build to, and the next step</h2>
+  <div class="body two">
+    <div class="card plain">
+      <h3>Conditions</h3>
+      <ul>
+        <li>No profiling users by health condition</li>
+        <li>Show the username and link back to Reddit</li>
+        <li>Delete content that a user deletes — purging within 48 hours is recommended</li>
+        <li>Do not sell, license or share Reddit data without written approval; keep only what the approved use case needs</li>
+        <li>Publish a privacy policy saying what we collect and how it is used (§7.2)</li>
+        <li>Requests from our server must carry an OAuth token</li>
+      </ul>
+    </div>
+    <div class="card good">
+      <h3>Next step</h3>
+      <ul>
+        <li>Confirm company details and the budget line, then submit the form</li>
+        <li>Sign up for Reddit Pro in parallel so the team can start immediately</li>
+      </ul>
+      <p style="margin-top:.5em">Two things deliberately not stated anywhere here, because Reddit publishes neither: how long a reply takes, and any price figure.</p>
+    </div>
+  </div>
+  <div class="src"><b>Sources</b> — Responsible Builder Policy, Updated 05 Jun 2026 · <a href="https://support.reddithelp.com/hc/en-us/articles/42728983564564-Responsible-Builder-Policy">articles/42728983564564</a> &nbsp;·&nbsp; Reddit Data API Wiki, Updated 11 May 2026 · <a href="https://support.reddithelp.com/hc/en-us/articles/16160319875092-Reddit-Data-API-Wiki">articles/16160319875092</a> &nbsp;·&nbsp; Reddit Data API Terms §3.2, Last Revised 20 Jul 2026 · <a href="https://www.redditinc.com/policies/data-api-terms">redditinc.com/policies/data-api-terms</a> &nbsp;·&nbsp; Reddit Developer Terms §5.2, §7.2, Last Revised 24 Mar 2026 · <a href="https://www.redditinc.com/policies/developer-terms">redditinc.com/policies/developer-terms</a></div>
+</section>
+
+</div>
+</div>
+
+<div class="bar">
+  <button type="button" id="prev" aria-label="Previous slide">← Prev</button>
+  <span id="counter">1 / 8</span>
+  <span>← → or space to move · P to print</span>
+  <button type="button" id="next" aria-label="Next slide">Next →</button>
+</div>
+
+<script>
+(function(){
+  var slides=[].slice.call(document.querySelectorAll('.slide'));
+  var i=0, prev=document.getElementById('prev'), next=document.getElementById('next'), counter=document.getElementById('counter');
+  function hashIndex(){var n=parseInt((location.hash||'').replace('#',''),10);return isFinite(n)&&n>=1&&n<=slides.length?n-1:0;}
+  function show(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach(function(s,k){s.classList.toggle('on',k===i);});
+    counter.textContent=(i+1)+' / '+slides.length;
+    prev.disabled=i===0; next.disabled=i===slides.length-1;
+    if(history.replaceState) history.replaceState(null,'','#'+(i+1));
+    slides[i].scrollTop=0;
+  }
+  prev.addEventListener('click',function(){show(i-1);});
+  next.addEventListener('click',function(){show(i+1);});
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();show(i+1);}
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();show(i-1);}
+    else if(e.key==='Home'){show(0);} else if(e.key==='End'){show(slides.length-1);}
+    else if(e.key==='p'||e.key==='P'){window.print();}
+  });
+  window.addEventListener('hashchange',function(){show(hashIndex());});
+  show(hashIndex());
+})();
+</script>
+</body>
+</html>

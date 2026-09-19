@@ -3,8 +3,9 @@
 --
 -- BEFORE RUNNING, replace the placeholder below (or paste the git-ignored
 -- 0002_cron.local.sql, which has it filled in):
---   https://hash-growth-radar.vercel.app      your deployed app, e.g. https://hash-growth-radar.vercel.app  (no trailing slash)
 --   <CRON_SECRET>  the same value as CRON_SECRET in the app's environment variables
+-- The app URL (https://hash-growth-radar.vercel.app, no trailing slash) is
+-- already filled in below; change it if the app moves.
 --
 -- Enable the Cron integration and the pg_net extension in the dashboard first.
 -- Then paste into Supabase → SQL Editor → Run. Needs a deployed app: the

@@ -1,6 +1,6 @@
 /**
  * Central place to read environment variables. Values never leave the server;
- * the Settings page only shows whether a key is present.
+ * the How it works page only shows whether a key is present.
  */
 export const ENV_KEYS = [
   { key: "SUPABASE_URL", purpose: "Supabase project URL (server only)", required: true },

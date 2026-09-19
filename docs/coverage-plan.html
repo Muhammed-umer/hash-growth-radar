@@ -215,7 +215,7 @@
       <li><strong>Store</strong> as in job 1, marked <code>search_new</code>. Then set the phrase's last "new since" time to the run's start. If the search failed, the time is not moved, so the next run catches up.</li>
       <li><strong>Cost:</strong> usually 1 search per phrase per run because only a handful of videos appear in 6 hours. 6 phrases × 4 runs = usually 24 searches a day (up to 5 pages per phrase per run when a lot is new).</li>
     </ol>
-    <p class="note">The first time this job runs it uses "30 days ago" as the starting point so nothing is lost while job 1 is still working.</p>
+    <p class="note">The starting point for a phrase is set when job 1 first seeds it (the current month ends at that instant), so nothing is lost while job 1 is still working. If this job ever runs before job 1 has seeded a phrase, it falls back to "30 days ago".</p>
   </div>
 
   <div class="card">
@@ -275,7 +275,7 @@
           <tr><td class="k">Job 3 relevance net</td><td class="s">searches</td><td class="s num">6</td><td class="s num">6</td><td></td></tr>
           <tr><td class="k"><b>Searches total</b></td><td class="s"><b>100</b></td><td class="s num"><b>≤ 95</b></td><td class="s num"><b>≈ 30</b></td><td>Ledger halts at 95</td></tr>
           <tr><td class="k">Job 4 history walks</td><td class="s">units</td><td class="s num">≤ 2,000</td><td class="s num">0 once walked</td><td>New channels only</td></tr>
-          <tr><td class="k">Job 4 daily newest page</td><td class="s">units</td><td class="s num">≤ 600</td><td class="s num">≤ 600</td><td>1 page per channel, up to 3 for busy channels</td></tr>
+          <tr><td class="k">Job 4 daily newest page</td><td class="s">units</td><td class="s num">≤ 1,800</td><td class="s num">≤ 1,800</td><td>Up to 600 channels a run, 1 page each, up to 3 for busy channels (usually far fewer)</td></tr>
           <tr><td class="k">Job 6 count checks</td><td class="s">units</td><td class="s num">≤ 240</td><td class="s num">≤ 240</td><td>≤ 1,000 videos per run = ≤ 20 units, 12 runs</td></tr>
           <tr><td class="k">Job 6 comment reads</td><td class="s">units</td><td class="s num">until 7,000</td><td class="s num">what changed</td><td>The reader stops once the day reaches 7,000 units</td></tr>
           <tr><td class="k">Job 8 coverage check</td><td class="s">units</td><td class="s num">≤ 800 a week</td><td class="s num">≤ 800 a week</td><td>20 channels × up to 40 pages, worst case</td></tr>
@@ -306,10 +306,10 @@
           <tr><td class="k">Question asked as a reply</td><td>Missed</td><td><code>part=replies</code> brings a limited set of replies with each thread at no extra cost. <code>comments.list</code> is not used, and a new reply under an old thread is not picked up.</td></tr>
           <tr><td class="k">New upload from a followed channel</td><td>Seen late</td><td>Job 4 lists the channel the next day (push is not built).</td></tr>
           <tr><td class="k">A pot runs out mid-run</td><td>Half-read videos, errors</td><td>Ledger stops at 95 / 9,000 before the call; a <code>quotaExceeded</code> answer ends the run cleanly; state is per video, per window and per phrase, so the next run continues where it stopped.</td></tr>
-          <tr><td class="k">Google error or network failure</td><td>A run dies half-way</td><td>Server errors and network failures are retried twice (each attempt counted); every request has a 20-second timeout; one failing video or channel is skipped and tried later, and a run stops after 5 errors in a row.</td></tr>
+          <tr><td class="k">Google error or network failure</td><td>A run dies half-way</td><td>Server errors and network failures are retried twice (each attempt counted); every request has a 20-second timeout. In the reader and the channel job one failing video or channel is skipped and tried later, and a run stops after 5 errors in a row. The sweep ends its run on the first non-quota error and resumes from its saved page next time; job 2 skips the failing phrase; job 8 counts the error and carries on.</td></tr>
           <tr><td class="k">One job uses a whole pot</td><td>Other jobs starve</td><td>The ledger counts per Pacific quota day, so no job needs the reset hour. The sweep stops at 64 searches, leaving about 30 for jobs 2 and 3. The reader stops at 7,000 units, leaving at least 2,000 for jobs 4 and 8, which run just after the reset (08:30 and 09:00 UTC).</td></tr>
           <tr><td class="k">Two runs overlap</td><td>Same video read twice</td><td>No lock. Overlaps are harmless: videos and comments are stored by id, so repeats are ignored, and cursors move only after comments are saved. The schedules are staggered so runs do not normally overlap.</td></tr>
-          <tr><td class="k">Host time limit per request</td><td>Job cut off</td><td>Every job stops at its time budget (reader 150 s, others 240 s, inside the 300 s route limit), saves its position, and the next scheduled run continues.</td></tr>
+          <tr><td class="k">Host time limit per request</td><td>Job cut off</td><td>The long jobs stop at a time budget (reader 150 s; sweep, channels and coverage 240 s, inside the 300 s route limit), save their position, and the next scheduled run continues. Job 2 has no budget because it is bounded by at most 6 phrases × 6 searches; cleanup runs inline with a 120 s limit.</td></tr>
           <tr><td class="k">Creator's own comments and pinned comments</td><td>Noise, and a name we must not keep</td><td>Commenter channel id compared with video channel id in memory, then discarded.</td></tr>
         </tbody>
       </table>

@@ -12,7 +12,8 @@ const JOBS = [
   { name: "Find older videos", when: "Every 2 hours, until done", what: "Works backwards month by month to January 2026. Switches itself off when finished." },
   { name: "Follow channels", when: "Once a day", what: "Reads the newest uploads from channels that have made a video on our topics." },
   { name: "Catch up", when: "Every hour", what: "Sends anything still waiting to Gemini and refreshes the scores." },
-  { name: "Clean up", when: "Once a day", what: `Deletes comments ${RETENTION_DAYS} days after YouTube last showed them.` },
+  { name: "Clean up", when: "Once a day", what: `Deletes comments ${RETENTION_DAYS} days after YouTube last showed them. Stops following channels that have gone quiet.` },
+  { name: "Coverage check", when: "Once a week", what: "Compares the real upload lists of 20 followed channels with the watch list, to catch anything the searches missed." },
 ];
 
 const th = "px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-stone-500";
@@ -127,7 +128,10 @@ export default async function HowPage() {
       <Section title="6 · What Gemini does">
         <div className={box}>
           <p className="text-stone-700">
-            Gemini reads each surviving comment once and answers a few fixed questions about it. It does not find videos, does not do the word check, does not calculate the score, and never writes a reply.
+            Gemini reads each surviving comment and answers a few fixed questions about it. It does not find videos, does not do the word check, does not calculate the score, and never writes a reply.
+          </p>
+          <p className="mt-2 text-stone-700">
+            One rule check runs on its answer: if Gemini calls a comment an app question but the comment names no app or tracker, the app files it as a medicine + food question (when a medicine or condition is named) or as a nutrition question with the fit capped at 50.
           </p>
           <ul className="mt-3 grid gap-1.5 text-stone-700 sm:grid-cols-2">
             <li className="rounded-lg bg-stone-50 px-3 py-2">What kind of question is this?</li>
