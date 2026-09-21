@@ -24,7 +24,15 @@ function isActive(pathname: string, href: string): boolean {
 export function NavLinks({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
   const [clicked, setClicked] = useState<{ href: string; from: string } | null>(null);
-  // A click only counts while we are still on the page it was made from.
+  // A click counts only until the page changes. Comparing against the page it
+  // was made from is not enough: a link in the page body could later bring
+  // you back to that page and revive the old click, leaving the highlight on
+  // the wrong tab. So the click is forgotten the moment the pathname moves.
+  const [seenPathname, setSeenPathname] = useState(pathname);
+  if (pathname !== seenPathname) {
+    setSeenPathname(pathname);
+    setClicked(null);
+  }
   const pendingHref = clicked && clicked.from === pathname ? clicked.href : null;
   const activeHref = pendingHref ?? items.find((i) => isActive(pathname, i.href))?.href ?? null;
 
