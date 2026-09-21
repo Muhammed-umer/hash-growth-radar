@@ -155,7 +155,8 @@ function rankTop(m: Map<string, number>, top: number, keep?: string): Array<[str
  *
  * Counted in the database by tag_facets (supabase/migrations/0004_facets.sql).
  * If that function has not been created yet, the same counting is done here
- * from at most 3,000 rows, so the page keeps working.
+ * over every row, read 1,000 at a time (Supabase returns at most 1,000 rows
+ * per request), so the counts are still exact, only slower.
  */
 export async function tagFacets(platform: Platform, filter: QueueFilter = {}, top = 25): Promise<TagFacets> {
   const rpc = await db().rpc("tag_facets", {
@@ -178,14 +179,22 @@ export async function tagFacets(platform: Platform, filter: QueueFilter = {}, to
   // PostgREST answers PGRST202 when the function does not exist yet.
   if (!/tag_facets/.test(rpc.error.message) && rpc.error.code !== "PGRST202") throw new Error(`tagFacets: ${rpc.error.message}`);
 
-  let q = db().from("items").select("id, tags!inner(intent, conditions, medicines)").eq("status", "tagged").eq("platform", platform);
-  if (typeof filter.minScore === "number") q = q.gte("score", filter.minScore);
-  const res = await q.limit(3000);
-  if (res.error) throw new Error(`tagFacets: ${res.error.message}`);
+  const PAGE = 1000;
+  const MAX_ROWS = 50_000;
+  const rows: Array<{ tags: unknown }> = [];
+  for (let from = 0; from < MAX_ROWS; from += PAGE) {
+    let q = db().from("items").select("id, tags!inner(intent, conditions, medicines)").eq("status", "tagged").eq("platform", platform);
+    if (typeof filter.minScore === "number") q = q.gte("score", filter.minScore);
+    const res = await q.order("id").range(from, from + PAGE - 1);
+    if (res.error) throw new Error(`tagFacets: ${res.error.message}`);
+    const batch = (res.data ?? []) as Array<{ tags: unknown }>;
+    rows.push(...batch);
+    if (batch.length < PAGE) break;
+  }
   const cond = new Map<string, number>();
   const med = new Map<string, number>();
   const intents: Partial<Record<Intent, number>> = {};
-  for (const row of (res.data ?? []) as Array<{ tags: unknown }>) {
+  for (const row of rows) {
     const t = normaliseTag(row.tags);
     if (!t) continue;
     const terms = [...(t.conditions ?? []), ...(t.medicines ?? [])];

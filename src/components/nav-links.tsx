@@ -3,12 +3,24 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { BookOpen, ListChecks } from "lucide-react";
 import { cx } from "@/lib/format";
+import { YouTubeIcon } from "./icons";
+
+/** A name, not a component: the nav is built on the server and icons cannot cross to the client. */
+export type NavIcon = "shortlist" | "youtube" | "how";
 
 export interface NavItem {
   href: string;
   label: string;
+  icon?: NavIcon;
   badge?: number;
+}
+
+function Icon({ name, active }: { name: NavIcon; active: boolean }) {
+  if (name === "youtube") return <YouTubeIcon className={cx("size-4 transition", active && "[&_rect]:fill-white [&_path]:fill-emerald-700")} />;
+  const C = name === "shortlist" ? ListChecks : BookOpen;
+  return <C className="size-4" aria-hidden />;
 }
 
 function isActive(pathname: string, href: string): boolean {
@@ -64,7 +76,7 @@ export function NavLinks({ items }: { items: NavItem[] }) {
   }, [measure]);
 
   return (
-    <div ref={containerRef} className="relative flex flex-wrap items-center gap-1 text-sm">
+    <div ref={containerRef} className="relative flex items-center gap-1 whitespace-nowrap text-sm">
       <span
         aria-hidden
         className={cx(
@@ -87,19 +99,21 @@ export function NavLinks({ items }: { items: NavItem[] }) {
             onClick={() => setClicked({ href: item.href, from: pathname })}
             aria-current={active && !pendingHref ? "page" : undefined}
             className={cx(
-              "relative z-10 flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-colors duration-300 motion-reduce:transition-none",
-              active ? "text-white" : "text-stone-700 hover:bg-stone-100 hover:text-stone-900",
+              "relative z-10 flex items-center gap-2 rounded-full px-3 py-1.5 font-medium transition-colors duration-300 motion-reduce:transition-none",
+              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700",
+              active ? "text-white" : "text-stone-600 hover:bg-stone-100 hover:text-stone-900",
             )}
           >
+            {item.icon && <Icon name={item.icon} active={active} />}
             {item.label}
             {item.badge ? (
               <span
                 className={cx(
-                  "rounded-full px-1.5 text-[11px] font-semibold transition-colors duration-300",
-                  active ? "bg-white text-emerald-800" : "bg-emerald-600 text-white",
+                  "rounded-full px-1.5 py-px text-[11px] font-semibold tabular-nums transition-colors duration-300",
+                  active ? "bg-white/20 text-white" : "bg-stone-100 text-stone-600",
                 )}
               >
-                {item.badge}
+                {item.badge.toLocaleString()}
               </span>
             ) : null}
           </Link>

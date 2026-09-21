@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { CalendarClock, Gauge, Inbox, ListChecks, MessageCircleQuestion } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { SHORTLIST } from "@/lib/config";
-import { pageHref, timeAgo } from "@/lib/format";
+import { timeAgo } from "@/lib/format";
 import { loadQueuePage, parsePage, parseQueueSort, shortlistFilter } from "@/lib/queries";
 import { ItemCard } from "@/components/item-card";
+import { Pagination } from "@/components/pagination";
 import { SortableList } from "@/components/sort-toggle";
+import { PageHeader } from "@/components/stat";
 
 export const dynamic = "force-dynamic";
 
@@ -34,67 +37,75 @@ export default async function ShortlistPage({ searchParams }: { searchParams: Pr
   const from = total === 0 ? 0 : (page - 1) * SHORTLIST.page_size + 1;
   const to = Math.min(total, page * SHORTLIST.page_size);
 
+  const rules = [
+    { icon: MessageCircleQuestion, text: "Medicine, app or complaint question" },
+    { icon: Gauge, text: `Score ${SHORTLIST.min_score} or more` },
+    { icon: CalendarClock, text: `Posted in the last ${SHORTLIST.max_age_days} days` },
+  ];
+
   return (
-    <Suspense>
-      <SortableList
-        value={sort}
-        title={
-          <div>
-            <h1 className="text-2xl font-semibold">Shortlist ({total.toLocaleString()})</h1>
-            <p className="mt-1 max-w-3xl text-sm text-stone-600">
-              Medicine, app and complaint questions with a score of {SHORTLIST.min_score} or more, posted in the last {SHORTLIST.max_age_days} days. Open one, decide yourself, then Skip it. Everyone else is on the{" "}
-              <Link href="/platforms/youtube" className="underline">
-                YouTube
-              </Link>{" "}
-              page.
-            </p>
-          </div>
-        }
-      >
-        {entries.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-stone-300 bg-white p-6 text-sm text-stone-600">
-            Nothing on the shortlist right now. The schedule reads new YouTube comments every 2 hours. The{" "}
-            <Link href="/platforms/youtube" className="underline">
-              YouTube
-            </Link>{" "}
-            page lists everyone found so far and what was dropped.
-          </div>
-        ) : (
-          <>
-            <p className="text-xs text-stone-500">
-              Showing {from}–{to} of {total.toLocaleString()}
-            </p>
-            <ul className="mt-2 space-y-4">
-              {entries.map((e, i) => (
-                <li key={e.item.id} className="animate-card-in motion-reduce:animate-none" style={{ animationDelay: `${Math.min(i, 9) * 30}ms` }}>
-                  <ItemCard item={e.item} tag={e.tag} postedLabel={`posted ${timeAgo(e.item.posted_at ?? e.item.collected_at, now)}`} showPlatform />
-                </li>
-              ))}
-            </ul>
-            {pages > 1 && (
-              <nav className="mt-4 flex items-center justify-between text-sm" aria-label="Pages">
-                {page > 1 ? (
-                  <Link href={pageHref(sp, page - 1)} className="rounded-md border border-stone-300 bg-white px-3 py-1.5 hover:bg-stone-50">
-                    ← Previous
-                  </Link>
+    <div>
+      <PageHeader icon={<ListChecks className="size-5 text-emerald-700" aria-hidden />} title="Shortlist" count={total}>
+        The best people to look at right now. Open one, decide yourself, then Skip it. Everyone else is on the{" "}
+        <Link href="/platforms/youtube" className="font-medium text-emerald-800 underline decoration-emerald-300 underline-offset-2 hover:decoration-emerald-700">
+          YouTube
+        </Link>{" "}
+        page.
+      </PageHeader>
+
+      <ul className="mt-5 flex flex-wrap gap-2" aria-label="Rules of the shortlist">
+        {rules.map((r) => (
+          <li key={r.text} className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-medium text-stone-700 shadow-sm ring-1 ring-stone-200">
+            <r.icon className="size-3.5 text-emerald-700" aria-hidden />
+            {r.text}
+          </li>
+        ))}
+      </ul>
+
+      <section className="mt-8">
+        <Suspense>
+          <SortableList
+            value={sort}
+            title={
+              <p className="text-sm text-stone-500">
+                {total === 0 ? (
+                  "Nothing to show"
                 ) : (
-                  <span />
+                  <>
+                    Showing <span className="font-medium tabular-nums text-stone-800">{from}–{to}</span> of{" "}
+                    <span className="font-medium tabular-nums text-stone-800">{total.toLocaleString()}</span>
+                  </>
                 )}
-                <span className="text-stone-500">
-                  Page {page} of {pages}
-                </span>
-                {page < pages ? (
-                  <Link href={pageHref(sp, page + 1)} className="rounded-md border border-stone-300 bg-white px-3 py-1.5 hover:bg-stone-50">
-                    Next →
-                  </Link>
-                ) : (
-                  <span />
-                )}
-              </nav>
+              </p>
+            }
+          >
+            {entries.length === 0 ? (
+              <div className="flex flex-col items-center rounded-2xl border border-dashed border-stone-300 bg-white px-6 py-12 text-center">
+                <Inbox className="size-8 text-stone-400" aria-hidden />
+                <p className="mt-3 font-medium text-stone-800">Nothing on the shortlist right now</p>
+                <p className="mt-1 max-w-md text-sm text-stone-500">
+                  New YouTube comments are read every 2 hours. The{" "}
+                  <Link href="/platforms/youtube" className="underline">
+                    YouTube
+                  </Link>{" "}
+                  page lists everyone found so far and what was dropped.
+                </p>
+              </div>
+            ) : (
+              <>
+                <ul className="space-y-4">
+                  {entries.map((e, i) => (
+                    <li key={e.item.id} className="animate-card-in motion-reduce:animate-none" style={{ animationDelay: `${Math.min(i, 9) * 30}ms` }}>
+                      <ItemCard item={e.item} tag={e.tag} postedLabel={`posted ${timeAgo(e.item.posted_at ?? e.item.collected_at, now)}`} />
+                    </li>
+                  ))}
+                </ul>
+                <Pagination sp={sp} page={page} pages={pages} />
+              </>
             )}
-          </>
-        )}
-      </SortableList>
-    </Suspense>
+          </SortableList>
+        </Suspense>
+      </section>
+    </div>
   );
 }

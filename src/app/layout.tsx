@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import { ShieldCheck } from "lucide-react";
 import "./globals.css";
 import { Nav } from "@/components/nav";
+import { RETENTION_DAYS } from "@/lib/config";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 
 export const metadata: Metadata = {
   title: "Hash Growth Radar",
@@ -9,12 +14,17 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="h-full antialiased">
-      <body className="min-h-full flex flex-col">
+    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+      <body className="flex min-h-full flex-col font-sans">
         <Nav />
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6">{children}</main>
-        <footer className="px-6 py-4 text-center text-xs text-stone-500">
-          Internal tool for the Hash Health team. We tag the question, never the person. Stored comments are deleted 30 days after YouTube last returned them.
+        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6">{children}</main>
+        <footer className="border-t border-stone-200/80">
+          <div className="mx-auto flex max-w-5xl items-start gap-2 px-4 py-5 text-xs text-stone-500 sm:px-6">
+            <ShieldCheck className="mt-px size-4 shrink-0 text-emerald-700" aria-hidden />
+            <p>
+              Internal tool for the Hash Health team. We tag the question, never the person. Stored comments are deleted {RETENTION_DAYS} days after YouTube last returned them.
+            </p>
+          </div>
         </footer>
       </body>
     </html>

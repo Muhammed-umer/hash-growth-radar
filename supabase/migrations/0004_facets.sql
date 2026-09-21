@@ -8,8 +8,8 @@
 -- whole list and ignored the other two dropdowns (and stopped at 3,000 rows).
 --
 -- Until this file has been run, the app falls back to counting in JavaScript
--- (same rules, capped at 3,000 rows), so nothing breaks; it is just slower
--- and, past 3,000 tagged rows, approximate.
+-- with the same rules, reading every tagged row 1,000 at a time. The counts
+-- are the same; it is just slower, and gets slower as the list grows.
 
 create or replace function tag_facets(
   p_platform  text,

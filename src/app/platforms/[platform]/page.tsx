@@ -1,14 +1,17 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { Ban, ChevronDown, Info, SearchX, Timer, Trash2 } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { NAV_PLATFORMS, PLATFORM_INFO, SHORTLIST } from "@/lib/config";
-import { pageHref, STATUS_LABEL, timeAgo } from "@/lib/format";
+import { STATUS_LABEL, timeAgo } from "@/lib/format";
 import { loadQueuePage, MIN_SCORE_OPTIONS, parseIntent, parseMinScore, parsePage, parseQueueSort, parseTerm, recentDropped, tagFacets } from "@/lib/queries";
 import { FilterBar } from "@/components/filter-bar";
+import { YouTubeIcon } from "@/components/icons";
 import { ItemCard } from "@/components/item-card";
+import { Pagination } from "@/components/pagination";
 import { SortableList } from "@/components/sort-toggle";
-import { Section } from "@/components/stat";
+import { PageHeader, Section } from "@/components/stat";
 
 export const dynamic = "force-dynamic";
 
@@ -47,32 +50,65 @@ export default async function PlatformPage({ params, searchParams }: { params: P
 
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-semibold">{info.label}</h1>
-        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-900">Automatic: comments every 2 hours, new videos every 6, channels daily</span>
-      </div>
-      <p className="mt-1 max-w-3xl text-sm text-stone-600">{info.blurb}</p>
-      <p className="mt-1 max-w-3xl text-sm text-stone-600">
-        This page lists everyone found. The{" "}
-        <Link href="/shortlist" className="underline">
+      <PageHeader
+        icon={<YouTubeIcon className="size-6" />}
+        title={info.label}
+        aside={
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-900 ring-1 ring-emerald-200">
+            <Timer className="size-3.5" aria-hidden />
+            Comments every 2 h · new videos every 6 h · channels daily
+          </span>
+        }
+      >
+        Everyone found on {info.label} who asked a question Hash can answer. The{" "}
+        <Link href="/shortlist" className="font-medium text-emerald-800 underline decoration-emerald-300 underline-offset-2 hover:decoration-emerald-700">
           Shortlist
         </Link>{" "}
         shows only the best recent ones.
-      </p>
+      </PageHeader>
+
+      <details className="group mt-4 rounded-xl bg-white shadow-sm ring-1 ring-stone-200">
+        <summary className="flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-stone-700 hover:bg-stone-50 focus-visible:outline-2 focus-visible:outline-emerald-700">
+          <Info className="size-4 text-emerald-700" aria-hidden />
+          How this list is collected
+          <ChevronDown className="ml-auto size-4 text-stone-400 transition group-open:rotate-180" aria-hidden />
+        </summary>
+        <p className="border-t border-stone-100 px-4 py-3 text-sm leading-relaxed text-stone-600">{info.blurb}</p>
+      </details>
 
       <section className="mt-8">
         <Suspense>
-          <SortableList value={sort} title={<h2 className="text-sm font-semibold uppercase tracking-wide text-emerald-800">People to look at ({total.toLocaleString()})</h2>}>
+          <SortableList
+            value={sort}
+            title={
+              <h2 className="text-base font-semibold text-stone-900">
+                People to look at <span className="ml-1 font-normal tabular-nums text-stone-500">{total.toLocaleString()}{filtered ? " matching" : ""}</span>
+              </h2>
+            }
+          >
             <Suspense>
-              <FilterBar intent={filter.intent} term={filter.term} minScore={filter.minScore} minScoreOptions={MIN_SCORE_OPTIONS} conditions={facets.conditions} medicines={facets.medicines} intents={facets.intents} />
+              <FilterBar
+                intent={filter.intent}
+                term={filter.term}
+                minScore={filter.minScore}
+                minScoreOptions={MIN_SCORE_OPTIONS}
+                conditions={facets.conditions}
+                medicines={facets.medicines}
+                intents={facets.intents}
+              />
             </Suspense>
 
             {entries.length === 0 ? (
-              <p className="mt-4 text-sm text-stone-500">{filtered ? "Nothing matches these filters." : `Nothing to look at on ${info.label} right now.`}</p>
+              <div className="mt-4 flex flex-col items-center rounded-2xl border border-dashed border-stone-300 bg-white px-6 py-12 text-center">
+                <SearchX className="size-8 text-stone-400" aria-hidden />
+                <p className="mt-3 font-medium text-stone-800">{filtered ? "Nothing matches these filters" : `Nothing to look at on ${info.label} right now`}</p>
+                {filtered && <p className="mt-1 text-sm text-stone-500">Try a lower minimum score or another group.</p>}
+              </div>
             ) : (
               <>
-                <p className="mt-4 text-xs text-stone-500">
-                  Showing {from}–{to} of {total.toLocaleString()}
+                <p className="mt-5 text-xs text-stone-500">
+                  Showing <span className="font-medium tabular-nums text-stone-700">{from}–{to}</span> of{" "}
+                  <span className="font-medium tabular-nums text-stone-700">{total.toLocaleString()}</span>
                   {filtered ? " matching" : ""}
                 </p>
                 <div className="mt-2 space-y-4">
@@ -80,43 +116,28 @@ export default async function PlatformPage({ params, searchParams }: { params: P
                     <ItemCard key={e.item.id} item={e.item} tag={e.tag} postedLabel={`posted ${timeAgo(e.item.posted_at ?? e.item.collected_at, now)}`} />
                   ))}
                 </div>
-                {pages > 1 && (
-                  <nav className="mt-4 flex items-center justify-between text-sm" aria-label="Pages">
-                    {page > 1 ? (
-                      <Link href={pageHref(sp, page - 1)} className="rounded-md border border-stone-300 bg-white px-3 py-1.5 hover:bg-stone-50">
-                        ← Previous
-                      </Link>
-                    ) : (
-                      <span />
-                    )}
-                    <span className="text-stone-500">
-                      Page {page} of {pages}
-                    </span>
-                    {page < pages ? (
-                      <Link href={pageHref(sp, page + 1)} className="rounded-md border border-stone-300 bg-white px-3 py-1.5 hover:bg-stone-50">
-                        Next →
-                      </Link>
-                    ) : (
-                      <span />
-                    )}
-                  </nav>
-                )}
+                <Pagination sp={sp} page={page} pages={pages} />
               </>
             )}
           </SortableList>
         </Suspense>
       </section>
 
-      <Section title="Recently dropped">
+      <Section title="Recently dropped" icon={Trash2} description="The last comments the keyword filter or the AI left out, and why. Shown without a link.">
         {dropped.length === 0 ? (
           <p className="text-sm text-stone-500">Nothing dropped yet.</p>
         ) : (
-          <ul className="divide-y divide-stone-100 rounded-xl border border-stone-200 bg-white text-sm">
+          <ul className="divide-y divide-stone-100 overflow-hidden rounded-2xl bg-white text-sm shadow-sm ring-1 ring-stone-200">
             {dropped.map((d) => (
-              <li key={d.id} className="flex flex-wrap items-start gap-2 px-3 py-2">
-                <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs">{STATUS_LABEL[d.status]}</span>
-                <span className="text-xs text-stone-500">{d.filter_reason ?? "AI: not suitable to approach"}</span>
-                <span className="w-full truncate text-stone-700">{d.title ?? d.body ?? ""}</span>
+              <li key={d.id} className="flex items-start gap-3 px-4 py-3">
+                <Ban className="mt-0.5 size-4 shrink-0 text-stone-400" aria-hidden />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    <span className="rounded-full bg-stone-100 px-2 py-0.5 font-medium text-stone-700">{STATUS_LABEL[d.status]}</span>
+                    <span className="text-stone-500">{d.filter_reason ?? "AI: not suitable to approach"}</span>
+                  </div>
+                  <p className="mt-1 truncate text-stone-700">{d.title ?? d.body ?? ""}</p>
+                </div>
               </li>
             ))}
           </ul>
