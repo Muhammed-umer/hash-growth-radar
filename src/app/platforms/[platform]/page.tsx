@@ -35,7 +35,7 @@ export default async function PlatformPage({ params, searchParams }: { params: P
 
   const [{ entries, total }, facets, dropped] = await Promise.all([
     loadQueuePage({ platform, limit: PAGE_SIZE, offset: (requestedPage - 1) * PAGE_SIZE, sort, filter }),
-    tagFacets(platform),
+    tagFacets(platform, filter),
     recentDropped(platform, 8),
   ]);
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -64,7 +64,7 @@ export default async function PlatformPage({ params, searchParams }: { params: P
         <Suspense>
           <SortableList value={sort} title={<h2 className="text-sm font-semibold uppercase tracking-wide text-emerald-800">People to look at ({total.toLocaleString()})</h2>}>
             <Suspense>
-              <FilterBar intent={filter.intent} term={filter.term} minScore={filter.minScore} minScoreOptions={MIN_SCORE_OPTIONS} conditions={facets.conditions} medicines={facets.medicines} />
+              <FilterBar intent={filter.intent} term={filter.term} minScore={filter.minScore} minScoreOptions={MIN_SCORE_OPTIONS} conditions={facets.conditions} medicines={facets.medicines} intents={facets.intents} />
             </Suspense>
 
             {entries.length === 0 ? (

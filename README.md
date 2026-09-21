@@ -46,7 +46,8 @@ In Supabase → SQL Editor, paste and run:
 
 1. `supabase/migrations/0001_schema.sql`: every table, index, function and the row-level-security lock. Safe to run again on an existing project; it changes nothing that already exists.
 2. `supabase/migrations/0003_watchlist.sql`: the watch list (topics, videos, channels, sweep_units, quota_ledger, the `upsert_videos` and `spend_quota` functions, the new `items` columns). Safe to run again.
-3. `supabase/migrations/0002_cron.sql`, only after the app is deployed (step 4 below). The app URL is already filled in; replace the `<CRON_SECRET>` placeholder first.
+3. `supabase/migrations/0004_facets.sql`: the `tag_facets` function behind the filter dropdown counts on the YouTube page. Safe to run again. (Without it the app counts in JavaScript, capped at 3,000 rows.)
+4. `supabase/migrations/0002_cron.sql`, only after the app is deployed (step 4 below). The app URL is already filled in; replace the `<CRON_SECRET>` placeholder first.
 
 ### 3. Run locally
 
@@ -132,7 +133,7 @@ src/lib/collectors/           youtube (= the reader)
 src/lib/pipeline/             prefilter, classify, guards, score, run
 src/lib/ai/                   askJSON() with Gemini (default) or Anthropic behind one interface; prompts, keyring
 src/lib/queue.ts              small Postgres-backed job queue
-supabase/migrations/          0001 schema, 0002 cron schedule, 0003 watch list
+supabase/migrations/          0001 schema, 0002 cron schedule, 0003 watch list, 0004 dropdown counts
 tests/                        vitest unit tests
 ```
 

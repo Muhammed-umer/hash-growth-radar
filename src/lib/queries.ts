@@ -136,27 +136,66 @@ export async function shortlistCount(now = new Date()): Promise<number> {
 export interface TagFacets {
   conditions: Array<[string, number]>;
   medicines: Array<[string, number]>;
+  /** Rows per group, counted with the term and score filters applied. */
+  intents: Partial<Record<Intent, number>>;
+}
+
+function rankTop(m: Map<string, number>, top: number, keep?: string): Array<[string, number]> {
+  const ranked = [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  const out = ranked.slice(0, top);
+  if (keep && m.has(keep) && !out.some(([k]) => k === keep)) out.push([keep, m.get(keep)!]);
+  return out;
 }
 
 /**
- * The conditions and medicines the AI actually wrote on the listed comments,
- * most frequent first, so the filter dropdown offers real values rather than a
- * fixed list. Reads at most 3,000 rows; the list is a rolling month, so that
- * is plenty.
+ * What the filter dropdowns offer, with counts that respect the OTHER
+ * dropdowns: the condition / medicine list is counted over rows that match
+ * the group and score filters, the group counts over rows that match the term
+ * and score filters. So "metformin (38)" means 38 rows you will actually get.
+ *
+ * Counted in the database by tag_facets (supabase/migrations/0004_facets.sql).
+ * If that function has not been created yet, the same counting is done here
+ * from at most 3,000 rows, so the page keeps working.
  */
-export async function tagFacets(platform: Platform, top = 25): Promise<TagFacets> {
-  const res = await db().from("items").select("id, tags!inner(conditions, medicines)").eq("status", "tagged").eq("platform", platform).limit(3000);
+export async function tagFacets(platform: Platform, filter: QueueFilter = {}, top = 25): Promise<TagFacets> {
+  const rpc = await db().rpc("tag_facets", {
+    p_platform: platform,
+    p_intent: filter.intent ?? null,
+    p_min_score: filter.minScore ?? null,
+    p_term: filter.term ?? null,
+  });
+  if (!rpc.error) {
+    const cond = new Map<string, number>();
+    const med = new Map<string, number>();
+    const intents: Partial<Record<Intent, number>> = {};
+    for (const row of (rpc.data ?? []) as Array<{ kind: string; value: string; n: number }>) {
+      if (row.kind === "condition") cond.set(row.value, Number(row.n));
+      else if (row.kind === "medicine") med.set(row.value, Number(row.n));
+      else if (row.kind === "intent") intents[row.value as Intent] = Number(row.n);
+    }
+    return { conditions: rankTop(cond, top, filter.term), medicines: rankTop(med, top, filter.term), intents };
+  }
+  // PostgREST answers PGRST202 when the function does not exist yet.
+  if (!/tag_facets/.test(rpc.error.message) && rpc.error.code !== "PGRST202") throw new Error(`tagFacets: ${rpc.error.message}`);
+
+  let q = db().from("items").select("id, tags!inner(intent, conditions, medicines)").eq("status", "tagged").eq("platform", platform);
+  if (typeof filter.minScore === "number") q = q.gte("score", filter.minScore);
+  const res = await q.limit(3000);
   if (res.error) throw new Error(`tagFacets: ${res.error.message}`);
   const cond = new Map<string, number>();
   const med = new Map<string, number>();
+  const intents: Partial<Record<Intent, number>> = {};
   for (const row of (res.data ?? []) as Array<{ tags: unknown }>) {
     const t = normaliseTag(row.tags);
     if (!t) continue;
-    for (const c of t.conditions ?? []) cond.set(c, (cond.get(c) ?? 0) + 1);
-    for (const m of t.medicines ?? []) med.set(m, (med.get(m) ?? 0) + 1);
+    const terms = [...(t.conditions ?? []), ...(t.medicines ?? [])];
+    if (!filter.intent || t.intent === filter.intent) {
+      for (const c of t.conditions ?? []) cond.set(c, (cond.get(c) ?? 0) + 1);
+      for (const m of t.medicines ?? []) med.set(m, (med.get(m) ?? 0) + 1);
+    }
+    if (!filter.term || terms.includes(filter.term)) intents[t.intent] = (intents[t.intent] ?? 0) + 1;
   }
-  const rank = (m: Map<string, number>) => [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, top);
-  return { conditions: rank(cond), medicines: rank(med) };
+  return { conditions: rankTop(cond, top, filter.term), medicines: rankTop(med, top, filter.term), intents };
 }
 
 export type StatusCounts = Record<Platform, Record<ItemStatus, number>>;
