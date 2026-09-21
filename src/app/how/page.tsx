@@ -1,6 +1,6 @@
 import { aiConfigured } from "@/lib/ai";
 import { requireUser } from "@/lib/auth";
-import { CONFIG, RETENTION_DAYS, TOP_N } from "@/lib/config";
+import { CONFIG, RETENTION_DAYS, SHORTLIST } from "@/lib/config";
 import { envPresence } from "@/lib/env";
 import { Section } from "@/components/stat";
 
@@ -122,7 +122,7 @@ export default async function HowPage() {
             </tbody>
           </table>
         </div>
-        <p className="mt-2 text-xs text-stone-500">Dropped comments never appear on Today. The YouTube page shows them, without a link, under &ldquo;Recently dropped&rdquo;.</p>
+        <p className="mt-2 text-xs text-stone-500">Dropped comments never appear on the Shortlist or in the YouTube list. The YouTube page shows them, without a link, under &ldquo;Recently dropped&rdquo;.</p>
       </Section>
 
       <Section title="6 · What Gemini does">
@@ -192,7 +192,9 @@ export default async function HowPage() {
 
         <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-stone-700">
           <li>Scores are refreshed every hour, so newer comments keep moving up.</li>
-          <li>Today shows the top {TOP_N}. You can sort by score or by newest.</li>
+          <li>
+            The <b>Shortlist</b> shows medicine + food, app and complaint questions with a score of {SHORTLIST.min_score} or more, posted in the last {SHORTLIST.max_age_days} days. The YouTube page shows everyone, {SHORTLIST.page_size} a page, with filters. Both can be sorted by score or by newest.
+          </li>
           <li><b>Skip</b> hides a card once you have looked at it. Whether you approached the person is never recorded.</li>
         </ul>
       </Section>

@@ -4,7 +4,7 @@ Internal tool for the Hash Health team. It keeps a watch list of every YouTube v
 
 - How every video under a topic is found and every new comment is read, the jobs, the budget, the failure cases: [docs/coverage-plan.html](docs/coverage-plan.html) (open in a browser). **This is the design that is built.**
 - What Hash is, the competitors and the YouTube facts behind that design: [docs/knowledge-and-plan.md](docs/knowledge-and-plan.md)
-- The API calls, the AI form and the keyword filter in detail: [docs/youtube.html](docs/youtube.html) (its sections 1, 2, 3, 4, 5, 8, 9 and 10 describe the version before 17 Sep 2026, as the file itself says; the current collection is in docs/coverage-plan.html)
+- How videos are found, checked and read, the limits, the score and every table, in plain terms: [docs/youtube.html](docs/youtube.html) (rewritten 21 Sep 2026)
 
 ## How it works
 
@@ -15,7 +15,7 @@ watch list  →  count check  →  read changed videos to the last comment seen 
 
 YouTube is the only source (Reddit, Hacker News, the app stores and Product Hunt were considered and removed on 16 Sep 2026: approval needed, too few reachable people, or no legal automatic door). Google's free allowance is two separate pots, 100 searches a day and 10,000 units a day; every call is counted in a ledger before it is made and the jobs stop at 95 and 9,000.
 
-Three pages: **Today** (the top 10), **YouTube** (every person found, 25 a page, with filters by group, condition or medicine, and minimum score; plus what was dropped and why) and **How it works** (the topics, how comments are collected, how they are classified, how the score is computed, a system check). There is no Settings page; topics and keyword lists live in `src/lib/config.ts`.
+Three pages: **Shortlist** (medicine, app and complaint questions with a score of 70 or more, posted in the last 30 days, 25 a page), **YouTube** (every person found, 25 a page, with filters by group, condition or medicine, and minimum score; plus what was dropped and why) and **How it works** (the topics, how comments are collected, how they are classified, how the score is computed, a system check). There is no Settings page; topics and keyword lists live in `src/lib/config.ts`.
 
 **Privacy rule (enforced in code):** the tool tags the question, never the person. No username field exists anywhere; the commenter's channel id is compared in memory with the video's channel (to drop the creator's own comments) and then discarded. Stored comments are deleted 30 days after YouTube last returned them (YouTube's Developer Policy III.E.4.d).
 
@@ -67,7 +67,7 @@ Open http://localhost:3000, then:
   curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/cron/retag"             # one-off: re-check app-request tags (see below)
   ```
 
-- Today page → the top 10. Open a comment, approach the person yourself if you want to, then press "Skip" to clear the card.
+- Shortlist page → the best recent comments (score 70 or more, posted in the last 30 days, no general nutrition questions). Open a comment, approach the person yourself if you want to, then press "Skip" to clear the card. The rules live in `SHORTLIST` in `src/lib/config.ts`.
 
 Locally there is no schedule (Supabase Cron cannot reach your laptop), but `npm run dev` reads the same Supabase database the deployed app writes to, so everything the cron collected is already there. Use the curl above only if you want an extra run right now.
 
@@ -122,7 +122,7 @@ npm run build
 ## Project layout
 
 ```
-src/app/today                 top 10
+src/app/shortlist             the best recent comments (rules: SHORTLIST in src/lib/config.ts)
 src/app/platforms/[platform]  the YouTube page: everyone found (filters, 25 a page) and what was dropped
 src/app/how                   the topics, how comments are collected, how they are classified, the score, system check
 src/app/api/cron/*            collect, sweep, discover, channels, coverage, process, cleanup, retag (CRON_SECRET protected, called by Supabase Cron)

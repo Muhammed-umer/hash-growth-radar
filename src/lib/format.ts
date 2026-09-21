@@ -45,6 +45,21 @@ export const STATUS_LABEL: Record<string, string> = {
   posted: "Approached (old)",
 };
 
+/**
+ * The href of another page of the same list: every current query value is
+ * kept, ?page= is set (or dropped for page 1).
+ */
+export function pageHref(sp: Record<string, string | string[] | undefined>, page: number): string {
+  const params = new URLSearchParams();
+  for (const [k, v] of Object.entries(sp)) {
+    const s = Array.isArray(v) ? v[0] : v;
+    if (s && k !== "page") params.set(k, s);
+  }
+  if (page > 1) params.set("page", String(page));
+  const qs = params.toString();
+  return qs ? `?${qs}` : "?";
+}
+
 export function cx(...parts: Array<string | false | null | undefined>): string {
   return parts.filter(Boolean).join(" ");
 }

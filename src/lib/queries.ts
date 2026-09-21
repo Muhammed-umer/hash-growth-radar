@@ -1,5 +1,6 @@
 import "server-only";
-import { NAV_PLATFORMS, TOP_N } from "./config";
+import { NAV_PLATFORMS, SHORTLIST } from "./config";
+import { shortlistFilter } from "./shortlist";
 import { db } from "./db";
 import { INTENTS, type Intent, type ItemRow, type ItemStatus, type Platform, type RunRow, type TagRow } from "./types";
 
@@ -30,7 +31,13 @@ export interface QueueFilter {
   /** A condition or medicine as the AI wrote it, e.g. "metformin" or "type 2 diabetes". */
   term?: string;
   minScore?: number;
+  /** Only these intents (the Shortlist uses it). */
+  intents?: Intent[];
+  /** Only comments posted at or after this ISO instant. */
+  postedAfter?: string;
 }
+
+export { shortlistFilter };
 
 export const MIN_SCORE_OPTIONS = [60, 70, 80, 90] as const;
 
@@ -74,13 +81,15 @@ export async function loadQueuePage(
   opts: { platform?: Platform; statuses?: ItemStatus[]; limit?: number; offset?: number; sort?: QueueSort; filter?: QueueFilter } = {},
 ): Promise<{ entries: QueueEntry[]; total: number }> {
   const f = opts.filter ?? {};
-  const needsTags = Boolean(f.intent || f.term);
+  const needsTags = Boolean(f.intent || f.term || f.intents);
   let q = db()
     .from("items")
     .select(needsTags ? "*, tags!inner(*)" : "*, tags(*)", { count: "exact" })
     .in("status", opts.statuses ?? ["tagged"]);
   q = opts.platform ? q.eq("platform", opts.platform) : q.in("platform", NAV_PLATFORMS);
   if (f.intent) q = q.eq("tags.intent", f.intent);
+  if (f.intents) q = q.in("tags.intent", f.intents);
+  if (f.postedAfter) q = q.gte("posted_at", f.postedAfter);
   if (f.term) {
     const lit = `{"${f.term.replace(/"/g, "")}"}`;
     q = q.or(`conditions.cs.${lit},medicines.cs.${lit}`, { referencedTable: "tags" });
@@ -90,7 +99,7 @@ export async function loadQueuePage(
     opts.sort === "latest"
       ? q.order("posted_at", { ascending: false, nullsFirst: false }).order("collected_at", { ascending: false })
       : q.order("score", { ascending: false, nullsFirst: false }).order("collected_at", { ascending: false });
-  const limit = opts.limit ?? TOP_N;
+  const limit = opts.limit ?? SHORTLIST.page_size;
   const offset = opts.offset ?? 0;
   const res = await q.range(offset, offset + limit - 1);
   if (res.error) {
@@ -107,6 +116,21 @@ export async function loadQueuePage(
 
 export async function loadQueue(opts: { platform?: Platform; statuses?: ItemStatus[]; limit?: number; sort?: QueueSort } = {}): Promise<QueueEntry[]> {
   return (await loadQueuePage(opts)).entries;
+}
+
+/** How many comments are on the Shortlist right now (the nav badge). */
+export async function shortlistCount(now = new Date()): Promise<number> {
+  const f = shortlistFilter(now);
+  const res = await db()
+    .from("items")
+    .select("id, tags!inner(intent)", { count: "exact", head: true })
+    .eq("status", "tagged")
+    .in("platform", NAV_PLATFORMS)
+    .in("tags.intent", f.intents)
+    .gte("score", f.minScore)
+    .gte("posted_at", f.postedAfter);
+  if (res.error) throw new Error(`shortlistCount: ${res.error.message}`);
+  return res.count ?? 0;
 }
 
 export interface TagFacets {

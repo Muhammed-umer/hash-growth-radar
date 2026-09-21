@@ -66,7 +66,7 @@ The same person can be a Hash user or a user of any app below. Their names matte
 
 ## 3 · YouTube facts the plan depends on
 
-`docs/youtube.html` already documents the two calls the radar makes today. These are the extra facts, checked on 17 Sep 2026, that make the new plan possible.
+`docs/youtube.html` documents the calls the radar makes (rewritten 21 Sep 2026 for the watch-list design). These are the extra facts, checked on 17 Sep 2026, that make the new plan possible.
 
 | Fact | Detail | Source |
 |---|---|---|
@@ -226,7 +226,7 @@ Plus one non-cron route, `/api/youtube/push`, that answers Google's subscription
 | Host's time limit per call | Job cut off | Built: each job stops at a time budget (150 to 240 s), saves its position, and the next scheduled run continues. |
 | Free database pauses after a week idle | Everything stops | Cron traffic keeps it awake, as today. |
 | More items reach the AI | Free AI keys exhausted | Strict keyword filter stays; keys rotate; when all are parked the queue waits without spending attempts (already built). |
-| January comments look stale | Old questions crowd Today | The age penalty is at most 14 points, so an old comment with a high fit can still rank above a fresh one. "Latest" order on Today shows newest first; a month filter was planned, not built. |
+| January comments look stale | Old questions crowd Today | The age penalty is at most 14 points, so an old comment with a high fit can still rank above a fresh one. "Latest" order shows newest first. Since 21 Sep 2026 the Shortlist page shows only comments posted in the last 30 days with a score of 70 or more; the YouTube page still lists everyone. |
 | Dosage, diagnosis, emergency | Must never be approached | Unchanged "not suitable" rule, matching Hash's own disclaimer. |
 | Competitor channels moderate their comments | Fewer complaints there | Still read; expect questions rather than complaints; independent review videos are the complaint source. |
 

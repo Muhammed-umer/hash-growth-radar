@@ -2,8 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { requireUser } from "@/lib/auth";
-import { NAV_PLATFORMS, PLATFORM_INFO } from "@/lib/config";
-import { STATUS_LABEL, timeAgo } from "@/lib/format";
+import { NAV_PLATFORMS, PLATFORM_INFO, SHORTLIST } from "@/lib/config";
+import { pageHref, STATUS_LABEL, timeAgo } from "@/lib/format";
 import { loadQueuePage, MIN_SCORE_OPTIONS, parseIntent, parseMinScore, parsePage, parseQueueSort, parseTerm, recentDropped, tagFacets } from "@/lib/queries";
 import { FilterBar } from "@/components/filter-bar";
 import { ItemCard } from "@/components/item-card";
@@ -12,7 +12,7 @@ import { Section } from "@/components/stat";
 
 export const dynamic = "force-dynamic";
 
-const PAGE_SIZE = 25;
+const PAGE_SIZE = SHORTLIST.page_size;
 
 type NavPlatform = (typeof NAV_PLATFORMS)[number];
 
@@ -21,17 +21,6 @@ function isNavPlatform(p: string): p is NavPlatform {
 }
 
 type Params = Record<string, string | string[] | undefined>;
-
-function pageHref(sp: Params, page: number): string {
-  const params = new URLSearchParams();
-  for (const [k, v] of Object.entries(sp)) {
-    const s = Array.isArray(v) ? v[0] : v;
-    if (s && k !== "page") params.set(k, s);
-  }
-  if (page > 1) params.set("page", String(page));
-  const qs = params.toString();
-  return qs ? `?${qs}` : "?";
-}
 
 export default async function PlatformPage({ params, searchParams }: { params: Promise<{ platform: string }>; searchParams: Promise<Params> }) {
   await requireUser();
@@ -63,6 +52,13 @@ export default async function PlatformPage({ params, searchParams }: { params: P
         <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-900">Automatic: comments every 2 hours, new videos every 6, channels daily</span>
       </div>
       <p className="mt-1 max-w-3xl text-sm text-stone-600">{info.blurb}</p>
+      <p className="mt-1 max-w-3xl text-sm text-stone-600">
+        This page lists everyone found. The{" "}
+        <Link href="/shortlist" className="underline">
+          Shortlist
+        </Link>{" "}
+        shows only the best recent ones.
+      </p>
 
       <section className="mt-8">
         <Suspense>

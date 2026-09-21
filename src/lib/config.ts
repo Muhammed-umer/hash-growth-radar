@@ -1,4 +1,4 @@
-import type { Platform } from "./types";
+import type { Intent, Platform } from "./types";
 
 /**
  * Everything the collector and the filter need, in one place. There is no
@@ -34,8 +34,20 @@ export const NAV_PLATFORMS: Platform[] = ["youtube"];
  */
 export const RETENTION_DAYS = 30;
 
-/** How many items the Today page shows. */
-export const TOP_N = 10;
+/**
+ * The Shortlist page: the comments worth a look right now. A comment is on it
+ * when the AI called it a medicine, app or complaint question (not a general
+ * nutrition question), its score is at least min_score, and it was posted in
+ * the last max_age_days. Everything tagged stays on the platform page.
+ * Added 21 Sep 2026 (replaced the "Today" top 10).
+ */
+export const SHORTLIST = {
+  min_score: 70,
+  max_age_days: 30,
+  intents: ["medicine_food_question", "app_recommendation", "competitor_complaint"] as Intent[],
+  /** Rows per page on the Shortlist and the platform pages. */
+  page_size: 25,
+} as const;
 
 /**
  * Every knob of the YouTube watch list (docs/coverage-plan.html). Times in

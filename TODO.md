@@ -5,7 +5,7 @@ Scope (changed 16 Sep 2026 by the founder, YouTube only since the same evening):
 ## 0. Foundations
 - [x] Node 24.18, npm 11.5, git 2.47
 - [x] Next.js 16.3 (App Router, TypeScript, Tailwind 4, src/)
-- [x] Docs: docs/knowledge-and-plan.md (17 Sep 2026), docs/youtube.html (parameters verified against Google's reference pages 16 Sep 2026), README.md
+- [x] Docs: docs/knowledge-and-plan.md (17 Sep 2026), docs/youtube.html (rewritten from the code 21 Sep 2026), README.md
 - [x] Deps: @supabase/supabase-js 2.116, @google/genai 2.22, @anthropic-ai/sdk 0.126, zod 4.6, vitest 3
 - [x] `.env.example` with every key and where to get it
 
@@ -30,8 +30,8 @@ Scope (changed 16 Sep 2026 by the founder, YouTube only since the same evening):
 - [x] No login for now (user's decision); `requireUser()` stub in `src/lib/auth.ts`
 
 ## 4. UI
-- [x] Navbar: Today · YouTube · How it works, with badges
-- [x] `/today` top 10
+- [x] Navbar: Shortlist · YouTube · How it works, with badges
+- [x] `/shortlist`: score 70+, posted in the last 30 days, no general nutrition questions (replaced the `/today` top 10 on 21 Sep 2026; `/today` redirects)
 - [x] `/platforms/youtube` people list (filters, 25 a page), dropped-with-reason
 - [x] `/how` topics, how comments are collected, how they are classified, how fit and score work, system check (read-only)
 - [x] Card: platform, community, time, post, video title, tags, summary, score (fit is folded into it); buttons Open thread / Copy link / Skip. No draft, no reply text
