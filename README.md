@@ -15,7 +15,7 @@ watch list  →  count check  →  read changed videos to the last comment seen 
 
 YouTube is the only source (Reddit, Hacker News, the app stores and Product Hunt were considered and removed on 16 Sep 2026: approval needed, too few reachable people, or no legal automatic door). Google's free allowance is two separate pots, 100 searches a day and 10,000 units a day; every call is counted in a ledger before it is made and the jobs stop at 95 and 9,000.
 
-Three pages: **Shortlist** (medicine, app and complaint questions with a score of 70 or more, posted in the last 30 days, 25 a page), **YouTube** (every person found, 25 a page, with filters by group, condition or medicine, and minimum score; plus what was dropped and why) and **How it works** (the topics, how comments are collected, how they are classified, how the score is computed, a system check). There is no Settings page; topics and keyword lists live in `src/lib/config.ts`.
+Four pages: **Shortlist** (medicine, app and complaint questions with a score of 70 or more, posted in the last 30 days, 25 a page), **YouTube** (every person found, 25 a page, with filters by group, condition or medicine, and minimum score; plus what was dropped and why), **Read** (comments marked as read, most recent first, with Move back) and **How it works** (the topics, how comments are collected, how they are classified, how the score is computed, a system check). There is no Settings page; topics and keyword lists live in `src/lib/config.ts`.
 
 **Privacy rule (enforced in code):** the tool tags the question, never the person. No username field exists anywhere; the commenter's channel id is compared in memory with the video's channel (to drop the creator's own comments) and then discarded. Stored comments are deleted 30 days after YouTube last returned them (YouTube's Developer Policy III.E.4.d).
 
@@ -68,7 +68,7 @@ Open http://localhost:3000, then:
   curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/cron/retag"             # one-off: re-check app-request tags (see below)
   ```
 
-- Shortlist page → the best recent comments (score 70 or more, posted in the last 30 days, no general nutrition questions). Open a comment, approach the person yourself if you want to, then press "Skip" to clear the card. The rules live in `SHORTLIST` in `src/lib/config.ts`.
+- Shortlist page → the best recent comments (score 70 or more, posted in the last 30 days, no general nutrition questions). Open a comment, approach the person yourself if you want to, then press "Mark as read": the card moves to the Read page, and the notice at the bottom offers Undo. The round "?" button at the bottom right explains the colours and the score. The rules live in `SHORTLIST` in `src/lib/config.ts`.
 
 Locally there is no schedule (Supabase Cron cannot reach your laptop), but `npm run dev` reads the same Supabase database the deployed app writes to, so everything the cron collected is already there. Use the curl above only if you want an extra run right now.
 
@@ -108,7 +108,7 @@ Free Supabase projects pause after a week with no API activity. Each cron call m
 
 ### Login
 
-There is no login yet, by decision. The dashboard is open to anyone who has the URL, so keep the deployed URL private: anyone who finds it can read the list and press "Skip". When you want a password gate, implement it in `src/lib/auth.ts` (every page and action already calls `requireUser()`), for example a signed cookie checked against an `APP_PASSWORD` env var. The cron routes are already protected by `CRON_SECRET`.
+There is no login yet, by decision. The dashboard is open to anyone who has the URL, so keep the deployed URL private: anyone who finds it can read the list and mark comments as read. When you want a password gate, implement it in `src/lib/auth.ts` (every page and action already calls `requireUser()`), for example a signed cookie checked against an `APP_PASSWORD` env var. The cron routes are already protected by `CRON_SECRET`.
 
 ## Scripts
 
@@ -127,7 +127,9 @@ src/app/shortlist             the best recent comments (rules: SHORTLIST in src/
 src/app/platforms/[platform]  the YouTube page: everyone found (filters, 25 a page) and what was dropped
 src/app/how                   the topics, how comments are collected, how they are classified, the score, system check
 src/app/api/cron/*            collect, sweep, discover, channels, coverage, process, cleanup, retag (CRON_SECRET protected, called by Supabase Cron)
-src/app/actions.ts            server action (skip)
+src/app/read                  comments marked as read (Move back returns one)
+src/app/api/nav-counts        the navbar badges, fetched again after every page change
+src/app/actions.ts            server actions: markRead, markUnread
 src/lib/youtube/              api (the five calls + ledger), client, quota, rules (pure decisions), sweep, discover, channels, reader, coverage, watchlist (tables)
 src/lib/collectors/           youtube (= the reader)
 src/lib/pipeline/             prefilter, classify, guards, score, run
@@ -139,7 +141,7 @@ tests/                        vitest unit tests
 
 ## Rules the code enforces
 
-- The tool never writes, suggests, or posts a reply. "Skip" only hides the card; what you did is never stored.
+- The tool never writes, suggests, or posts a reply. "Mark as read" only moves the card to the Read page; whether you approached the person is never stored.
 - Items the AI flags as dosage, starting or stopping a medicine, side effects, diagnosis, lab results, emergency, eating disorder, mental health, pregnancy, breastfeeding or a child are marked "not suitable" and never enter the list.
 - No username is stored anywhere. Stored comments are deleted 30 days after YouTube last returned them.
 - Every YouTube call is counted in `quota_ledger` before it is made; the jobs stop at 95 of the 100 daily searches and 9,000 of the 10,000 daily units.

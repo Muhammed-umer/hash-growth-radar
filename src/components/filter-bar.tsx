@@ -95,7 +95,7 @@ export function FilterBar({ intent, term, minScore, minScoreOptions, conditions,
           <button
             type="button"
             onClick={clear}
-            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-stone-600 transition hover:bg-white hover:text-stone-900 focus-visible:outline-2 focus-visible:outline-emerald-700"
+            className="inline-flex min-h-8 items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-stone-600 transition hover:bg-white hover:text-stone-900 focus-visible:outline-2 focus-visible:outline-emerald-700"
           >
             <X className="size-3.5" aria-hidden />
             Clear filters

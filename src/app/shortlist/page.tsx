@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { CalendarClock, Gauge, Inbox, ListChecks, MessageCircleQuestion } from "lucide-react";
@@ -11,6 +12,7 @@ import { SortableList } from "@/components/sort-toggle";
 import { PageHeader } from "@/components/stat";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "Shortlist" };
 
 type Params = Record<string, string | string[] | undefined>;
 
@@ -46,7 +48,7 @@ export default async function ShortlistPage({ searchParams }: { searchParams: Pr
   return (
     <div>
       <PageHeader icon={<ListChecks className="size-5 text-emerald-700" aria-hidden />} title="Shortlist" count={total}>
-        The best people to look at right now. Open one, decide yourself, then Skip it. Everyone else is on the{" "}
+        The best people to look at right now. Open one, decide yourself, then mark it as read. Everyone else is on the{" "}
         <Link href="/platforms/youtube" className="font-medium text-emerald-800 underline decoration-emerald-300 underline-offset-2 hover:decoration-emerald-700">
           YouTube
         </Link>{" "}
@@ -67,7 +69,7 @@ export default async function ShortlistPage({ searchParams }: { searchParams: Pr
           <SortableList
             value={sort}
             title={
-              <p className="text-sm text-stone-500">
+              <p className="text-sm text-stone-600">
                 {total === 0 ? (
                   "Nothing to show"
                 ) : (

@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { Ban, ChevronDown, Info, SearchX, Timer, Trash2 } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { NAV_PLATFORMS, PLATFORM_INFO, SHORTLIST } from "@/lib/config";
-import { STATUS_LABEL, timeAgo } from "@/lib/format";
+import { dropReasonLabel, STATUS_LABEL, timeAgo } from "@/lib/format";
 import { loadQueuePage, MIN_SCORE_OPTIONS, parseIntent, parseMinScore, parsePage, parseQueueSort, parseTerm, recentDropped, tagFacets } from "@/lib/queries";
 import { FilterBar } from "@/components/filter-bar";
 import { YouTubeIcon } from "@/components/icons";
@@ -14,6 +14,11 @@ import { SortableList } from "@/components/sort-toggle";
 import { PageHeader, Section } from "@/components/stat";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: Promise<{ platform: string }> }) {
+  const { platform } = await params;
+  return { title: isNavPlatform(platform) ? PLATFORM_INFO[platform].label : "Not found" };
+}
 
 const PAGE_SIZE = SHORTLIST.page_size;
 
@@ -54,7 +59,7 @@ export default async function PlatformPage({ params, searchParams }: { params: P
         icon={<YouTubeIcon className="size-6" />}
         title={info.label}
         aside={
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-900 ring-1 ring-emerald-200">
+          <span className="hidden items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-900 ring-1 ring-emerald-200 sm:inline-flex">
             <Timer className="size-3.5" aria-hidden />
             Comments every 2 h · new videos every 6 h · channels daily
           </span>
@@ -82,7 +87,7 @@ export default async function PlatformPage({ params, searchParams }: { params: P
             value={sort}
             title={
               <h2 className="text-base font-semibold text-stone-900">
-                People to look at <span className="ml-1 font-normal tabular-nums text-stone-500">{total.toLocaleString()}{filtered ? " matching" : ""}</span>
+                People to look at <span className="ml-1 font-normal tabular-nums text-stone-600">{total.toLocaleString()}{filtered ? " matching" : ""}</span>
               </h2>
             }
           >
@@ -106,10 +111,8 @@ export default async function PlatformPage({ params, searchParams }: { params: P
               </div>
             ) : (
               <>
-                <p className="mt-5 text-xs text-stone-500">
-                  Showing <span className="font-medium tabular-nums text-stone-700">{from}–{to}</span> of{" "}
-                  <span className="font-medium tabular-nums text-stone-700">{total.toLocaleString()}</span>
-                  {filtered ? " matching" : ""}
+                <p className="mt-5 text-xs text-stone-600">
+                  Showing <span className="font-medium tabular-nums text-stone-700">{from}–{to}</span>
                 </p>
                 <div className="mt-2 space-y-4">
                   {entries.map((e) => (
@@ -125,7 +128,7 @@ export default async function PlatformPage({ params, searchParams }: { params: P
 
       <Section title="Recently dropped" icon={Trash2} description="The last comments the keyword filter or the AI left out, and why. Shown without a link.">
         {dropped.length === 0 ? (
-          <p className="text-sm text-stone-500">Nothing dropped yet.</p>
+          <p className="text-sm text-stone-600">Nothing dropped yet.</p>
         ) : (
           <ul className="divide-y divide-stone-100 overflow-hidden rounded-2xl bg-white text-sm shadow-sm ring-1 ring-stone-200">
             {dropped.map((d) => (
@@ -134,7 +137,7 @@ export default async function PlatformPage({ params, searchParams }: { params: P
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2 text-xs">
                     <span className="rounded-full bg-stone-100 px-2 py-0.5 font-medium text-stone-700">{STATUS_LABEL[d.status]}</span>
-                    <span className="text-stone-500">{d.filter_reason ?? "AI: not suitable to approach"}</span>
+                    <span className="text-stone-500">{dropReasonLabel(d.filter_reason)}</span>
                   </div>
                   <p className="mt-1 truncate text-stone-700">{d.title ?? d.body ?? ""}</p>
                 </div>

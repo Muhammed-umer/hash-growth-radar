@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import {
   BookOpen,
   Bot,
@@ -26,6 +27,7 @@ import { envPresence } from "@/lib/env";
 import { PageHeader, Section } from "@/components/stat";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "How it works" };
 
 const JOBS: Array<{ name: string; when: string; what: string; icon: LucideIcon }> = [
   { name: "Read comments", when: "Every 2 hours", what: "Checks which watched videos got new comments, reads them, filters them, sends the survivors to Gemini.", icon: MessageSquareText },
@@ -167,7 +169,7 @@ export default async function HowPage() {
             </tbody>
           </table>
         </div>
-        <p className="mt-2 text-xs text-stone-500">Dropped comments never appear on the Shortlist or in the YouTube list. The YouTube page shows them, without a link, under &ldquo;Recently dropped&rdquo;.</p>
+        <p className="mt-2 text-xs text-stone-600">Dropped comments never appear on the Shortlist or in the YouTube list. The YouTube page shows them, without a link, under &ldquo;Recently dropped&rdquo;.</p>
       </Section>
 
       <Section step={6} icon={Bot} title="What Gemini does">
@@ -262,7 +264,7 @@ export default async function HowPage() {
           <li className="flex items-start gap-2.5">
             <CircleCheck className="mt-0.5 size-4 shrink-0 text-stone-400" aria-hidden />
             <span>
-              <b>Skip</b> hides a card once you have looked at it. Whether you approached the person is never recorded.
+              <b>Mark as read</b> moves a card to the Read page once you have looked at it, and <b>Move back</b> returns it. Whether you approached the person is never recorded.
             </span>
           </li>
         </ul>

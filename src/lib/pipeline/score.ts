@@ -6,7 +6,7 @@ export interface ScoreInput {
   now?: Date;
 }
 
-const INTENT_BONUS: Record<Classification["intent"], number> = {
+export const INTENT_BONUS: Record<Classification["intent"], number> = {
   medicine_food_question: 15,
   app_recommendation: 10,
   competitor_complaint: 5,
@@ -14,11 +14,15 @@ const INTENT_BONUS: Record<Classification["intent"], number> = {
   irrelevant: -1000,
 };
 
-const URGENCY_BONUS: Record<Classification["urgency"], number> = {
+export const URGENCY_BONUS: Record<Classification["urgency"], number> = {
   low: 0,
   medium: 3,
   high: 6,
 };
+
+/** Points taken off per full day since the comment was posted, and the most that can be taken off. */
+export const AGE_PENALTY_PER_DAY = 2;
+export const AGE_PENALTY_MAX = 14;
 
 /**
  * Ranking score used to pick the daily top 10. Fit score is the main signal;
@@ -33,7 +37,7 @@ export function score(input: ScoreInput): number {
     const posted = new Date(input.postedAt).getTime();
     if (!Number.isNaN(posted)) {
       const ageDays = Math.max(0, ((input.now ?? new Date()).getTime() - posted) / 86_400_000);
-      s -= Math.min(14, Math.floor(ageDays) * 2);
+      s -= Math.min(AGE_PENALTY_MAX, Math.floor(ageDays) * AGE_PENALTY_PER_DAY);
     }
   }
 

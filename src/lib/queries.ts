@@ -18,8 +18,11 @@ const EMPTY_COUNTS: Record<ItemStatus, number> = {
   posted: 0,
 };
 
-/** score: highest score first. latest: newest comment first (by when it was posted on YouTube). */
-export type QueueSort = "score" | "latest";
+/**
+ * score: highest score first. latest: newest comment first (by when it was
+ * posted on YouTube). read: most recently marked as read first (Read page).
+ */
+export type QueueSort = "score" | "latest" | "read";
 
 export function parseQueueSort(v: string | string[] | undefined): QueueSort {
   return v === "latest" ? "latest" : "score";
@@ -98,7 +101,9 @@ export async function loadQueuePage(
   q =
     opts.sort === "latest"
       ? q.order("posted_at", { ascending: false, nullsFirst: false }).order("collected_at", { ascending: false })
-      : q.order("score", { ascending: false, nullsFirst: false }).order("collected_at", { ascending: false });
+      : opts.sort === "read"
+        ? q.order("meta->>read_at", { ascending: false, nullsFirst: false }).order("collected_at", { ascending: false })
+        : q.order("score", { ascending: false, nullsFirst: false }).order("collected_at", { ascending: false });
   const limit = opts.limit ?? SHORTLIST.page_size;
   const offset = opts.offset ?? 0;
   const res = await q.range(offset, offset + limit - 1);
@@ -116,6 +121,31 @@ export async function loadQueuePage(
 
 export async function loadQueue(opts: { platform?: Platform; statuses?: ItemStatus[]; limit?: number; sort?: QueueSort } = {}): Promise<QueueEntry[]> {
   return (await loadQueuePage(opts)).entries;
+}
+
+export interface NavCounts {
+  shortlist: number;
+  /** Everyone tagged, per platform. */
+  platforms: Record<string, number>;
+  /** Marked as read. */
+  read: number;
+}
+
+/**
+ * Every navbar badge in one place. The layout renders them on a full page
+ * load, and the nav asks /api/nav-counts again after every page change and
+ * every "mark as read", so the badge always matches the page under it.
+ */
+export async function navCounts(): Promise<NavCounts> {
+  const [all, shortlist] = await Promise.all([statusCounts(), shortlistCount()]);
+  const platforms: Record<string, number> = {};
+  let read = 0;
+  for (const p of NAV_PLATFORMS) {
+    const c = countsFor(all, p);
+    platforms[p] = c.tagged;
+    read += c.skipped;
+  }
+  return { shortlist, platforms, read };
 }
 
 /** How many comments are on the Shortlist right now (the nav badge). */

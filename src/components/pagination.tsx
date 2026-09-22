@@ -17,7 +17,7 @@ export function Pagination({ sp, page, pages }: { sp: Record<string, string | st
       ) : (
         <span />
       )}
-      <span className="text-sm tabular-nums text-stone-500">
+      <span className="text-sm tabular-nums text-stone-600">
         Page {page} of {pages}
       </span>
       {page < pages ? (

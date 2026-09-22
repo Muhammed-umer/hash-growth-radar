@@ -9,9 +9,9 @@ export function timeAgo(iso: string | null | undefined, now: Date = new Date()):
   const m = Math.floor(s / 60);
   if (m < 60) return `${m} min ago`;
   const h = Math.floor(m / 60);
-  if (h < 48) return `${h} h ago`;
+  if (h < 24) return `${h} h ago`;
   const d = Math.floor(h / 24);
-  return `${d} d ago`;
+  return d === 1 ? "1 day ago" : `${d} days ago`;
 }
 
 export function fmtDateTime(iso: string | null | undefined): string {
@@ -41,7 +41,7 @@ export const STATUS_LABEL: Record<string, string> = {
   queued: "Waiting for AI",
   tagged: "To look at",
   do_not_reply: "Not suitable",
-  skipped: "Skipped",
+  skipped: "Read",
   posted: "Approached (old)",
 };
 
@@ -59,6 +59,23 @@ export function pageHref(sp: Record<string, string | string[] | undefined>, page
   const qs = params.toString();
   return qs ? `?${qs}` : "?";
 }
+
+/** The keyword filter's and the AI's drop codes, in words (Recently dropped list). */
+export function dropReasonLabel(reason: string | null | undefined): string {
+  if (!reason) return "AI: not suitable to approach (dose, diagnosis, emergency, mental health, pregnancy or a child)";
+  if (reason === "too_short") return "Too short";
+  if (reason === "too_old") return "Posted before January 2026";
+  if (reason === "no_keyword") return "Names no medicine, condition, app or food";
+  if (reason === "not_a_question") return "Not a question";
+  if (reason === "ai:irrelevant") return "AI: not a question Hash can answer";
+  if (reason.startsWith("blocked:")) return `Spam word: ${reason.slice(8)}`;
+  return reason;
+}
+
+export const LANGUAGE_LABEL: Record<string, string> = { en: "English", hinglish: "Hinglish", other: "Other language" };
+
+/** Colour bands of the score tile on a card. The help panel explains the same bands. */
+export const SCORE_BANDS = { strong: 90, good: 70 } as const;
 
 export function cx(...parts: Array<string | false | null | undefined>): string {
   return parts.filter(Boolean).join(" ");

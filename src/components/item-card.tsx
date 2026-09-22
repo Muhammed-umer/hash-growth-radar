@@ -1,53 +1,70 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Check, CirclePlay, Clock, Copy, ExternalLink, EyeOff, Flame, HeartPulse, Languages, MessageCircleQuestion, Pill, Smartphone, Sparkles } from "lucide-react";
-import { skipItem } from "@/app/actions";
+import { Check, CheckCheck, CirclePlay, Clock, Copy, ExternalLink, HeartPulse, Languages, Pill, Sparkles, Undo2 } from "lucide-react";
+import { markRead, markUnread } from "@/app/actions";
 import { PLATFORM_INFO } from "@/lib/config";
-import { cx, INTENT_LABEL } from "@/lib/format";
+import { cx, LANGUAGE_LABEL, SCORE_BANDS, timeAgo } from "@/lib/format";
 import type { ItemRow, TagRow } from "@/lib/types";
 import { YouTubeIcon } from "./icons";
+import { countsChanged, showToast } from "./toast";
 
 export interface ItemCardProps {
   item: ItemRow;
   tag: TagRow | null;
   postedLabel: string;
+  /** "open": on a list, with "Mark as read". "read": on the Read page, with "Move back". */
+  mode?: "open" | "read";
 }
 
-/** Colour band of the score: 90+ strong, 70+ good, below that muted. */
+/** Colour band of the score tile. The "?" help panel explains the same bands. */
 function scoreTone(score: number): string {
-  if (score >= 90) return "bg-emerald-700 text-white ring-emerald-700";
-  if (score >= 70) return "bg-emerald-50 text-emerald-800 ring-emerald-200";
+  if (score >= SCORE_BANDS.strong) return "bg-emerald-700 text-white ring-emerald-700";
+  if (score >= SCORE_BANDS.good) return "bg-emerald-50 text-emerald-800 ring-emerald-200";
   return "bg-stone-100 text-stone-600 ring-stone-200";
 }
 
 /**
- * One person worth approaching: where they asked, what they asked, the AI's
- * tags, and the score the list is sorted by. No reply is suggested; you open
- * the thread and decide yourself, then Skip the card when you are done with it.
+ * One person worth approaching: where they asked, what they asked, what the
+ * question names, and the score the list is sorted by. No reply is suggested;
+ * you open the thread and decide yourself, then mark the card as read.
  */
-export function ItemCard({ item, tag, postedLabel }: ItemCardProps) {
+export function ItemCard({ item, tag, postedLabel, mode = "open" }: ItemCardProps) {
   const [copied, setCopied] = useState(false);
   const [pending, start] = useTransition();
   const [leaving, setLeaving] = useState(false);
-  const [skipError, setSkipError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  function skip() {
-    setSkipError(null);
+  // Mark as read (or move back), with Undo in the notice at the bottom.
+  function move(toRead: boolean) {
+    setError(null);
     setLeaving(true);
     start(async () => {
       try {
-        await skipItem(item.id);
+        await (toRead ? markRead(item.id) : markUnread(item.id));
+        countsChanged();
+        showToast({
+          message: toRead ? "Marked as read. It is on the Read page." : "Moved back to the list.",
+          action: {
+            label: "Undo",
+            run: () => {
+              void (toRead ? markUnread(item.id) : markRead(item.id)).then(countsChanged, () =>
+                showToast({ message: "Could not undo. Try again from the Read page." }),
+              );
+            },
+          },
+        });
       } catch (e) {
         // Put the card back and say why.
         setLeaving(false);
-        setSkipError(e instanceof Error ? e.message : "Could not skip. Try again.");
+        setError(e instanceof Error ? e.message : "That did not work. Try again.");
       }
     });
   }
 
   const info = PLATFORM_INFO[item.platform];
   const videoTitle = typeof item.meta?.video_title === "string" ? item.meta.video_title : null;
+  const readAt = typeof item.meta?.read_at === "string" ? item.meta.read_at : null;
   // community is stored as "YouTube · Channel name"; the icon already says YouTube.
   const channel = item.community?.replace(new RegExp(`^${info.label}\\s*·\\s*`), "") ?? null;
   const score = typeof item.score === "number" ? Math.round(item.score) : null;
@@ -64,6 +81,7 @@ export function ItemCard({ item, tag, postedLabel }: ItemCardProps) {
   }
 
   const focus = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700";
+  const hasTags = Boolean(tag && (tag.medicines.length || tag.conditions.length || tag.language !== "en"));
 
   return (
     <div
@@ -74,20 +92,25 @@ export function ItemCard({ item, tag, postedLabel }: ItemCardProps) {
       aria-hidden={leaving}
     >
       <div className="min-h-0 overflow-hidden">
-        <article className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-stone-200 transition hover:shadow-md hover:ring-stone-300 sm:p-5">
+        <article className={cx("rounded-2xl bg-white p-4 shadow-sm ring-1 ring-stone-200 transition hover:shadow-md hover:ring-stone-300 sm:p-5", mode === "read" && "bg-stone-50/60")}>
           <div className="flex gap-4">
             {score !== null && (
               <div
-                className={cx("flex size-12 shrink-0 flex-col items-center justify-center rounded-xl ring-1", scoreTone(score))}
-                title="Score: fit + question type + urgency − age"
+                className={cx("hidden size-14 shrink-0 flex-col items-center justify-center rounded-xl ring-1 sm:flex", scoreTone(score))}
+                title="Score. The ? button at the bottom right explains it."
               >
-                <span className="text-lg font-bold leading-none tabular-nums">{score}</span>
-                <span className="mt-0.5 text-[9px] font-medium uppercase tracking-wider opacity-80">score</span>
+                <span className="text-xl font-bold leading-none tabular-nums">{score}</span>
+                <span className="mt-0.5 text-[11px] font-medium opacity-90">score</span>
               </div>
             )}
 
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-stone-500">
+                {score !== null && (
+                  <span className={cx("rounded-md px-1.5 py-0.5 text-xs font-bold tabular-nums ring-1 sm:hidden", scoreTone(score))} title="Score. The ? button explains it.">
+                    score {score}
+                  </span>
+                )}
                 <span className="flex min-w-0 items-center gap-1.5 font-medium text-stone-700">
                   <YouTubeIcon className="size-4 shrink-0" />
                   <span className="truncate">{channel ?? info.label}</span>
@@ -96,10 +119,10 @@ export function ItemCard({ item, tag, postedLabel }: ItemCardProps) {
                   <Clock className="size-3.5" aria-hidden />
                   {postedLabel}
                 </span>
-                {tag && tag.urgency !== "low" && (
-                  <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-900">
-                    <Flame className="size-3.5" aria-hidden />
-                    {tag.urgency} urgency
+                {mode === "read" && readAt && (
+                  <span className="flex items-center gap-1 text-emerald-700">
+                    <CheckCheck className="size-3.5" aria-hidden />
+                    read {timeAgo(readAt)}
                   </span>
                 )}
               </div>
@@ -118,33 +141,29 @@ export function ItemCard({ item, tag, postedLabel }: ItemCardProps) {
                 </p>
               )}
 
-              {tag && (
-                <div className="mt-3 flex flex-wrap gap-1.5 text-xs">
-                  <Chip tone="dark" icon={<MessageCircleQuestion className="size-3.5" aria-hidden />}>
-                    {INTENT_LABEL[tag.intent] ?? tag.intent}
-                  </Chip>
+              {tag && hasTags && (
+                <ul className="mt-3 flex flex-wrap gap-1.5 text-xs" aria-label="Named in the comment">
                   {tag.medicines.map((m) => (
-                    <Chip key={`m-${m}`} tone="blue" icon={<Pill className="size-3.5" aria-hidden />}>
+                    <Chip key={`m-${m}`} tone="blue" title="Medicine named in the comment" icon={<Pill className="size-3.5" aria-hidden />}>
                       {m}
                     </Chip>
                   ))}
                   {tag.conditions.map((c) => (
-                    <Chip key={`c-${c}`} tone="violet" icon={<HeartPulse className="size-3.5" aria-hidden />}>
+                    <Chip key={`c-${c}`} tone="violet" title="Health condition named in the comment" icon={<HeartPulse className="size-3.5" aria-hidden />}>
                       {c}
                     </Chip>
                   ))}
-                  {tag.competitor && (
-                    <Chip tone="amber" icon={<Smartphone className="size-3.5" aria-hidden />}>
-                      about {tag.competitor}
+                  {tag.language !== "en" && (
+                    <Chip title="Language the comment is written in" icon={<Languages className="size-3.5" aria-hidden />}>
+                      {LANGUAGE_LABEL[tag.language ?? ""] ?? tag.language}
                     </Chip>
                   )}
-                  {tag.language !== "en" && <Chip icon={<Languages className="size-3.5" aria-hidden />}>{tag.language}</Chip>}
-                </div>
+                </ul>
               )}
 
               {tag?.summary && (
                 <p className="mt-3 flex items-start gap-2 rounded-lg bg-stone-50 px-3 py-2 text-sm text-stone-600">
-                  <Sparkles className="mt-0.5 size-4 shrink-0 text-emerald-600" aria-hidden />
+                  <Sparkles className="mt-0.5 size-4 shrink-0 text-emerald-600" aria-label="AI summary" />
                   <span>{tag.summary}</span>
                 </p>
               )}
@@ -155,7 +174,7 @@ export function ItemCard({ item, tag, postedLabel }: ItemCardProps) {
                     href={item.url}
                     target="_blank"
                     rel="noreferrer"
-                    className={cx("inline-flex items-center gap-1.5 rounded-lg bg-stone-900 px-3 py-1.5 font-medium text-white shadow-sm transition hover:bg-stone-700", focus)}
+                    className={cx("inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 font-medium text-emerald-800 ring-1 ring-emerald-200 transition hover:bg-emerald-100", focus)}
                   >
                     <ExternalLink className="size-4" aria-hidden />
                     Open on {info.label}
@@ -165,22 +184,27 @@ export function ItemCard({ item, tag, postedLabel }: ItemCardProps) {
                   <button
                     type="button"
                     onClick={copyLink}
-                    className={cx("inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 font-medium text-stone-700 ring-1 ring-stone-200 transition hover:bg-stone-50", focus)}
+                    aria-label={copied ? "Copied" : "Copy link"}
+                    title="Copy link"
+                    className={cx("inline-flex items-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 font-medium text-stone-700 ring-1 ring-stone-200 transition hover:bg-stone-50 max-sm:min-h-8 sm:px-3", focus)}
                   >
                     {copied ? <Check className="size-4 text-emerald-600" aria-hidden /> : <Copy className="size-4" aria-hidden />}
-                    {copied ? "Copied" : "Copy link"}
+                    <span className="hidden sm:inline">{copied ? "Copied" : "Copy link"}</span>
                   </button>
                 )}
-                {skipError && <span className="text-xs text-red-700">{skipError}</span>}
+                {error && <span className="text-xs text-red-700">{error}</span>}
                 <button
                   type="button"
                   disabled={pending || leaving}
-                  onClick={skip}
-                  className={cx("ml-auto inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-medium text-stone-500 transition hover:bg-stone-100 hover:text-stone-800 disabled:opacity-50", focus)}
-                  title="Hide this card, whether you approached the person or not."
+                  onClick={() => move(mode === "open")}
+                  className={cx(
+                    "ml-auto inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-medium text-stone-600 ring-1 ring-stone-200 transition hover:bg-stone-100 hover:text-stone-900 disabled:opacity-50",
+                    focus,
+                  )}
+                  title={mode === "open" ? "Done with this one? It moves to the Read page, where you can bring it back." : "Put this comment back on the list."}
                 >
-                  <EyeOff className="size-4" aria-hidden />
-                  Skip
+                  {mode === "open" ? <CheckCheck className="size-4" aria-hidden /> : <Undo2 className="size-4" aria-hidden />}
+                  {mode === "open" ? "Mark as read" : "Move back"}
                 </button>
               </div>
             </div>
@@ -191,21 +215,13 @@ export function ItemCard({ item, tag, postedLabel }: ItemCardProps) {
   );
 }
 
-function Chip({ children, tone, icon }: { children: React.ReactNode; tone?: "dark" | "blue" | "violet" | "amber"; icon?: React.ReactNode }) {
-  const cls =
-    tone === "dark"
-      ? "bg-stone-900 text-white"
-      : tone === "blue"
-        ? "bg-sky-50 text-sky-900 ring-1 ring-sky-200"
-        : tone === "violet"
-          ? "bg-violet-50 text-violet-900 ring-1 ring-violet-200"
-          : tone === "amber"
-            ? "bg-amber-50 text-amber-900 ring-1 ring-amber-200"
-            : "bg-white text-stone-700 ring-1 ring-stone-200";
+function Chip({ children, tone, icon, title }: { children: React.ReactNode; tone?: "blue" | "violet"; icon?: React.ReactNode; title: string }) {
+  const cls = tone === "blue" ? "bg-sky-50 text-sky-900 ring-sky-200" : tone === "violet" ? "bg-violet-50 text-violet-900 ring-violet-200" : "bg-white text-stone-700 ring-stone-200";
   return (
-    <span className={cx("inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium", cls)}>
+    <li title={title} className={cx("inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium ring-1", cls)}>
       {icon}
+      <span className="sr-only">{title}: </span>
       {children}
-    </span>
+    </li>
   );
 }
