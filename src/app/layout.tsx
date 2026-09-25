@@ -10,7 +10,8 @@ import { RETENTION_DAYS } from "@/lib/config";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 
 export const metadata: Metadata = {
-  title: { default: "Hash Growth Radar", template: "%s · Hash Growth Radar" },
+  // Browser tab: the page name alone. "Growth Radar" shows only where a page sets no title.
+  title: { default: "Growth Radar", template: "%s" },
   description: "Find the people who need Hash today, and show them to you. You decide whom to approach.",
 };
 
