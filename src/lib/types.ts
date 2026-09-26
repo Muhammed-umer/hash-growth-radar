@@ -82,7 +82,6 @@ export const ClassificationSchema = z.object({
     .max(100)
     .describe("0-100: how well a medication- and condition-aware nutrition tracker answers this exact question."),
   urgency: z.enum(URGENCIES),
-  language: z.enum(["en", "hinglish", "other"]),
   do_not_reply: z
     .boolean()
     .describe("true if this is NOT someone to approach: the text asks for a dosage or a diagnosis, describes an emergency, or is about eating disorders or mental health."),

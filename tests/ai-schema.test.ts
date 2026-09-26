@@ -54,7 +54,6 @@ describe("ClassificationSchema", () => {
       competitor: null,
       fit_score: 92,
       urgency: "medium",
-      language: "en",
       do_not_reply: false,
       do_not_reply_reason: null,
       summary: "Asks whether rice and roti are fine on metformin.",

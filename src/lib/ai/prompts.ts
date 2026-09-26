@@ -61,9 +61,6 @@ Fit answers "does Hash's product answer this?", not "is this a good question?".
 - is about pregnancy or breastfeeding, or is written by or about a child under 18.
 Naming a medicine or a condition inside a food question is NOT a reason. When true, still fill in every other field honestly.
 
-## "language"
-- "en": English. "hinglish": Hindi or another Indian language in Latin letters mixed with English ("PCOS hai, kya khana chahiye"). "other": Devanagari or any other script or language.
-
 ## "summary"
 One plain English sentence saying what is being asked, for example "Asks whether rice at night is fine while taking metformin." No names, no handles, no quotes from the comment, no advice.
 

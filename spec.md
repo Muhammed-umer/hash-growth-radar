@@ -69,7 +69,7 @@ The Supabase tables. Row-level security is on and no policies exist, so only the
 | Table | One row per | Key columns |
 |---|---|---|
 | `items` | collected comment | `platform` = 'youtube', `external_id` (the comment ID, unique with platform), `url`, `community` ("YouTube · channel"), `body`, `posted_at`, `last_seen_at`, `video_id`, `status`, `filter_reason`, `score`, `meta` (video_title and similar) |
-| `tags` | tagged item | `intent`, `conditions[]`, `medicines[]`, `competitor`, `fit_score` 0–100, `urgency`, `language`, `do_not_reply`, `do_not_reply_reason`, `summary`, `model` |
+| `tags` | tagged item | `intent`, `conditions[]`, `medicines[]`, `competitor`, `fit_score` 0–100, `urgency`, `do_not_reply`, `do_not_reply_reason`, `summary`, `model` |
 | `runs` | job run | job name, status, counts, error, notes |
 | `jobs` | queued AI task | claimed atomically by `claim_jobs()` |
 | `topics` | search phrase | search watermarks |
@@ -131,7 +131,7 @@ It removes about 99 of every 100 comments.
 The schema is `ClassificationSchema` in `src/lib/types.ts`, and the prompt is `CLASSIFY_SYSTEM` in `src/lib/ai/prompts.ts`.
 
 - `intent` is one of `medicine_food_question`, `app_recommendation`, `nutrition_question`, `competitor_complaint` or `irrelevant`.
-- The other fields are `conditions[]`, `medicines[]`, `competitor`, `fit_score` from 0 to 100, `urgency` (low, medium or high), `language` (en, hinglish or other), `do_not_reply`, `do_not_reply_reason` and a one-sentence `summary`.
+- The other fields are `conditions[]`, `medicines[]`, `competitor`, `fit_score` from 0 to 100, `urgency` (low, medium or high), `do_not_reply`, `do_not_reply_reason` and a one-sentence `summary`.
 - Output is validated with Zod. If it is invalid, the AI is asked once more with the error attached.
 - Key rotation: a key that hits a rate limit is parked for 1 minute, or 1 hour if its daily quota is gone. If every key is parked, the job is deferred without using up an attempt.
 
@@ -187,7 +187,7 @@ Every hour, the tagged items posted in the last 9 days are rescored (`RESCORE_WI
 
 - **Score tile.** Solid green means 90 or more, light green means 70 or more, and grey means below 70.
 - **Details.** The card shows the channel, the time posted and the video title, the comment text, and the AI summary.
-- **Tags.** Only what the comment names: medicines in blue with a pill icon, conditions in purple with a heart icon, and the language in grey when it is not English. Colours are fixed by tag kind, never random. Each has a tooltip. The question type, urgency and competitor app are not shown on cards (removed 22 Sep 2026 as noise); the Group filter covers the type.
+- **Tags.** Only what the comment names: medicines in blue with a pill icon, conditions in purple with a heart icon. Colours are fixed by tag kind, never random. Each has a tooltip. The question type, urgency and competitor app are not shown on cards (removed 22 Sep 2026 as noise); the Group filter covers the type. The AI no longer detects the language (removed 26 Sep 2026: its "Hinglish" label also covered Tamil and other Indian languages, which misled). The tags.language column stays and is null for new rows.
 - **Buttons.** Open on YouTube (light green), Copy link, and Mark as read. On the Read page the last one is Move back. Both show a notice at the bottom with Undo.
 - **Help.** A round ? button at the bottom right of every page opens a panel: the three score colours, the three tag colours with a note on where tags come from, and the score formula. Its numbers are imported from `src/lib/pipeline/score.ts`, so they cannot drift.
 

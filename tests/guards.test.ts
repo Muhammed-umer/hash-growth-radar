@@ -9,7 +9,6 @@ const base: Classification = {
   competitor: null,
   fit_score: 82,
   urgency: "low",
-  language: "en",
   do_not_reply: false,
   do_not_reply_reason: null,
   summary: "Asks which is better.",

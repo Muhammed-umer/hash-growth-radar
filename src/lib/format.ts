@@ -72,8 +72,6 @@ export function dropReasonLabel(reason: string | null | undefined): string {
   return reason;
 }
 
-export const LANGUAGE_LABEL: Record<string, string> = { en: "English", hinglish: "Hinglish", other: "Other language" };
-
 /** Colour bands of the score tile on a card. The help panel explains the same bands. */
 export const SCORE_BANDS = { strong: 90, good: 70 } as const;
 

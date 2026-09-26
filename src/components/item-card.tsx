@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Check, CheckCheck, CirclePlay, Clock, Copy, ExternalLink, HeartPulse, Languages, Pill, Sparkles, Undo2 } from "lucide-react";
+import { Check, CheckCheck, CirclePlay, Clock, Copy, ExternalLink, HeartPulse, Pill, Sparkles, Undo2 } from "lucide-react";
 import { markRead, markUnread } from "@/app/actions";
 import { PLATFORM_INFO } from "@/lib/config";
-import { cx, LANGUAGE_LABEL, SCORE_BANDS, timeAgo } from "@/lib/format";
+import { cx, SCORE_BANDS, timeAgo } from "@/lib/format";
 import type { ItemRow, TagRow } from "@/lib/types";
 import { YouTubeIcon } from "./icons";
 import { countsChanged, showToast } from "./toast";
@@ -81,7 +81,7 @@ export function ItemCard({ item, tag, postedLabel, mode = "open" }: ItemCardProp
   }
 
   const focus = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700";
-  const hasTags = Boolean(tag && (tag.medicines.length || tag.conditions.length || tag.language !== "en"));
+  const hasTags = Boolean(tag && (tag.medicines.length || tag.conditions.length));
 
   return (
     <div
@@ -153,11 +153,6 @@ export function ItemCard({ item, tag, postedLabel, mode = "open" }: ItemCardProp
                       {c}
                     </Chip>
                   ))}
-                  {tag.language !== "en" && (
-                    <Chip title="Language the comment is written in" icon={<Languages className="size-3.5" aria-hidden />}>
-                      {LANGUAGE_LABEL[tag.language ?? ""] ?? tag.language}
-                    </Chip>
-                  )}
                 </ul>
               )}
 

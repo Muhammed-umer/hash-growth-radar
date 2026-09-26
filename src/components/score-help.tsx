@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CircleHelp, Languages, Pill, HeartPulse, X } from "lucide-react";
+import { CircleHelp, Pill, HeartPulse, X } from "lucide-react";
 import { AGE_PENALTY_MAX, AGE_PENALTY_PER_DAY, INTENT_BONUS, URGENCY_BONUS } from "@/lib/pipeline/score";
 import { SCORE_BANDS } from "@/lib/format";
 
@@ -94,10 +94,6 @@ export function ScoreHelp() {
             <li className={row}>
               <Tag cls="bg-violet-50 text-violet-900 ring-violet-200" icon={<HeartPulse className="size-3.5" aria-hidden />} text="pcos" />
               <span className={k}>Purple: a health condition.</span>
-            </li>
-            <li className={row}>
-              <Tag cls="bg-white text-stone-700 ring-stone-200" icon={<Languages className="size-3.5" aria-hidden />} text="Hinglish" />
-              <span className={k}>Grey: written in Hinglish or another language.</span>
             </li>
           </ul>
 
